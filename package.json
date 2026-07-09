@@ -1,0 +1,9 @@
+{
+  "name": "kiro-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo done",
+    "start": "echo done"
+  }
+}

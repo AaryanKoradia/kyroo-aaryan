@@ -1,0 +1,15 @@
+name: KIRO Daily Morning Nudges
+
+on:
+  schedule:
+    - cron: '30 1 * * *'  # 1:30 AM UTC = 7:00 AM IST
+  workflow_dispatch:  # Manual trigger for testing
+
+jobs:
+  send-nudges:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Morning Nudges
+        run: |
+          curl -X POST https://kiro-backend-wnmo.onrender.com/whatsapp/send-all-nudges \
+          -H "Content-Type: application/json"
