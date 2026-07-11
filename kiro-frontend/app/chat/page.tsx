@@ -295,19 +295,6 @@ export default function ChatTest() {
                 }}
               >
                 {m.text}
-                {m.module && (
-                  <div
-                    style={{
-                      fontSize: 10,
-                      opacity: 0.5,
-                      marginTop: 6,
-                      textTransform: "uppercase",
-                      letterSpacing: 0.5,
-                    }}
-                  >
-                    {m.module}
-                  </div>
-                )}
               </div>
             </div>
           ))}
