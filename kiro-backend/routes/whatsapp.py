@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from database import get_db
 from brain import kyroo_brain, generate_morning_nudge, validate_response
+from debounce import buffer_message
 import requests
 import asyncio
 import random
@@ -188,19 +189,26 @@ async def whatsapp_webhook(request: Request):
                         send_whatsapp(phone, "Hey! 👋 I'm KYROO, your AI best friend.\n\nSign up here to get started:\nhttps://kyroo.co.in\n\nMain hoon yahan 24/7! 💚")
                         continue
 
-                    user    = user_data.data[0]
-                    result  = kyroo_brain(user, text, [])
-                    reply   = result["response"]
-                    bubbles = result.get("bubbles", [reply])
+                    user = user_data.data[0]
 
-                    db.table("chat_history").insert({
-                        "user_id":       user["id"],
-                        "user_message":  text,
-                        "kiro_response": reply,
-                        "module":        result["module"]
-                    }).execute()
+                    async def _reply_to_batch(combined_text: str, user=user, phone=phone, db=db):
+                        result  = kyroo_brain(user, combined_text, [])
+                        reply   = result["response"]
+                        bubbles = result.get("bubbles", [reply])
 
-                    await send_whatsapp_bubbles(phone, bubbles)
+                        db.table("chat_history").insert({
+                            "user_id":       user["id"],
+                            "user_message":  combined_text,
+                            "kiro_response": reply,
+                            "module":        result["module"]
+                        }).execute()
+
+                        await send_whatsapp_bubbles(phone, bubbles)
+
+                    # buffers rapid consecutive messages (someone splitting one
+                    # thought across 2-3 texts) into a single reply instead of
+                    # responding to each fragment separately
+                    await buffer_message(user["id"], text, _reply_to_batch)
 
         return {"status": "ok"}
 

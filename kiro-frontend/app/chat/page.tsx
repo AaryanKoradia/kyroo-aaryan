@@ -22,6 +22,9 @@ export default function ChatTest() {
   const [setupError, setSetupError] = useState("");
 
   const bottomRef = useRef<HTMLDivElement>(null);
+  const pendingRef = useRef<string[]>([]);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const DEBOUNCE_MS = 2500;
 
   useEffect(() => {
     const savedId = localStorage.getItem("kyroo_test_user_id");
@@ -74,11 +77,26 @@ export default function ChatTest() {
     setMessages([]);
   };
 
-  const sendMessage = async () => {
+  // Debounces rapid consecutive sends into one combined message before
+  // hitting the backend, mirroring how someone splits one thought across
+  // 2-3 texts in real chat instead of writing it all in one message.
+  const sendMessage = () => {
     const text = input.trim();
-    if (!text || !userId || sending) return;
+    if (!text || !userId) return;
     setInput("");
     setMessages((m) => [...m, { role: "user", text }]);
+    pendingRef.current.push(text);
+
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      const combined = pendingRef.current.join("\n");
+      pendingRef.current = [];
+      debounceTimerRef.current = null;
+      dispatchToBackend(combined);
+    }, DEBOUNCE_MS);
+  };
+
+  const dispatchToBackend = async (text: string) => {
     setSending(true);
     try {
       const res = await fetch(`${BACKEND_URL}/ai/chat`, {

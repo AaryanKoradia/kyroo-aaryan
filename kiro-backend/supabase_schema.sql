@@ -112,6 +112,8 @@ create table if not exists user_style (
     uses_hinglish         boolean,
     common_emojis         text,
     energy_level          text,
+    engagement_score      real default 0,
+    message_count         int default 0,
     created_at            timestamptz default now()
 );
 
