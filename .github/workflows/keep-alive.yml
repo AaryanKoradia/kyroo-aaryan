@@ -1,0 +1,14 @@
+name: KYROO Backend Keep-Alive
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # every 10 minutes, keeps Render's free tier from sleeping
+  workflow_dispatch:  # manual trigger for testing
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping backend health endpoint
+        run: |
+          curl -sf https://kyroo-backend.onrender.com/health
