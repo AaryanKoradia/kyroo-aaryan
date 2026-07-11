@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://kiro-backend-wnmo.onrender.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://kyroo-backend.onrender.com";
 
 const steps = [
   { id: 1, domain: "Getting Started", title: "Hey! I'm Kiro 👋\nLet's get to know each other", sub: "I'll ask you 10 quick questions. The more you share, the smarter I get. Takes about 3 minutes." },

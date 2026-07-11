@@ -46,3 +46,6 @@ credentials/
 # ML models
 *.pkl
 *.model
+
+# Local Netlify folder
+.netlify
