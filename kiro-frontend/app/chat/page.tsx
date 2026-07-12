@@ -334,7 +334,7 @@ export default function ChatTest() {
           />
           <button
             onClick={sendMessage}
-            disabled={sending || !input.trim()}
+            disabled={!input.trim()}
             style={{
               width: 50,
               height: 50,
@@ -345,7 +345,7 @@ export default function ChatTest() {
               fontSize: 18,
               cursor: "pointer",
               flexShrink: 0,
-              opacity: sending || !input.trim() ? 0.5 : 1,
+              opacity: !input.trim() ? 0.5 : 1,
             }}
           >
             →

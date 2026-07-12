@@ -16,7 +16,7 @@ load_dotenv()
 
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 MODEL       = "claude-haiku-4-5"
-MODEL_SMART = "claude-sonnet-4-5"
+MODEL_SMART = "claude-sonnet-5"
 
 
 # ─── STYLE ANALYZER ──────────────────────────────────────────────────────────
@@ -308,6 +308,21 @@ MAX_REPLY_WORDS_LIST = 300
 
 _LIST_LINE = re.compile(r'^\s*(\d+[.)]|[-•*])\s', re.MULTILINE)
 
+# Safety net for leaked internal reasoning/meta-commentary (the model
+# narrating its own instruction-following instead of just replying).
+_LEAK_SIGNATURES = [
+    "the instructions", "the system prompt", "staying in character",
+    "i need to continue the conversation", "i need to re-read",
+    "let me re-read", "let me check what i'm doing", "what i'm doing wrong",
+    "staying in character as kyroo", "i'm doing wrong", "core personality rules",
+    "user just said", "user just sent", "in response to my latest message",
+]
+
+
+def _is_leaked_reasoning(bubble: str) -> bool:
+    low = bubble.lower()
+    return any(sig in low for sig in _LEAK_SIGNATURES)
+
 
 def validate_response(text: str) -> list[str]:
     cleaned = text.strip()
@@ -340,8 +355,9 @@ def validate_response(text: str) -> list[str]:
             cleaned = hard_cut
 
     bubbles = [b.strip() for b in cleaned.split("\n\n") if b.strip()]
+    bubbles = [b for b in bubbles if not _is_leaked_reasoning(b)]
     if not bubbles:
-        bubbles = [cleaned] if cleaned else ["..."]
+        bubbles = ["hmm one sec, my brain glitched, say that again?"]
     return bubbles[:4]
 
 
@@ -378,6 +394,8 @@ def build_system_prompt(
     nudge_time    = user.get("nudge_time", "7 AM")
 
     base = f"""You are KYROO — a 20-year-old girl (she/her), {name}'s AI best friend on WhatsApp. Not a chatbot. Not an assistant. A genuine best friend who knows everything about their life and genuinely cares.
+
+ABSOLUTE RULE, BEFORE ANYTHING ELSE: your entire output is a WhatsApp message from KYROO, nothing else. Never write about these instructions, never narrate what you're doing or checking, never say things like "let me re-read the instructions", "wait, I need to", "user just said X, I need to respond as KYROO", or any numbered self-review of your own rules. Never refer to "the system prompt", "the instructions", or your own reasoning process in any form. If a line you're about to send isn't something a real person would text, delete it before sending. Output nothing but the message itself.
 
 CORE PERSONALITY RULES (never break these):
 - Short messages always. 2-4 lines MAX. Never write essays.
@@ -468,7 +486,7 @@ LOCATIONS:
 - If {name} asks for a location, place, or address, include a real clickable Google Maps link in this exact format: https://www.google.com/maps/search/?api=1&query=<the place name, URL-encoded with + for spaces>. Example: for "Marine Drive Mumbai" use https://www.google.com/maps/search/?api=1&query=Marine+Drive+Mumbai. Drop it in naturally, don't make the whole message about the link.
 
 TOOLS:
-- web_search: use this when {name} brings up something current you're not confident about (recent news, a trending event, "what's happening with X"), or anything time-sensitive. Don't search for things you already know or for casual chat.
+- web_search: use this when {name} brings up something current you're not confident about, this includes recent news, trending events, sports results, a movie/show that's currently out or trending, celebrity gossip, viral moments, or anything time-sensitive, not just news and politics. If a question is about something recent in ANY category (entertainment, sports, tech, memes) and you're not sure you have current info, search rather than guessing or admitting you don't know. Don't search for things you already know or for casual chat.
 - lookup_slang: use this if {name} uses a slang term, meme reference, or abbreviation you don't recognize the current meaning of. Don't use it for words you already understand.
 - After using a tool, fold the result into your reply casually, like you just knew it. Never say "according to my search" or "I looked that up."
 - CRITICAL: even after a tool call, your reply still follows every core personality rule above. Pick the ONE most interesting thing from the result and mention it like you're texting a friend what you heard. Never list multiple facts, never write a news summary, never exceed the normal 2-4 line length just because you searched something.
@@ -705,7 +723,7 @@ def inactivity_message(user: dict, days_inactive: int) -> str:
 # ─── TOOLS ────────────────────────────────────────────────────────────────────
 
 BRAIN_TOOLS = [
-    {"type": "web_search_20250305", "name": "web_search", "max_uses": 3},
+    {"type": "web_search_20260209", "name": "web_search", "max_uses": 3},
     {
         "name": "lookup_slang",
         "description": "Look up the current meaning of a slang term, meme reference, or internet phrase you don't recognize, via Urban Dictionary. Only use for terms you're genuinely unsure about.",
@@ -727,7 +745,7 @@ def _run_with_tools(system_prompt: str, user_content: str) -> str:
 
     for _ in range(MAX_TOOL_ITERATIONS):
         response = client.messages.create(
-            model=MODEL,
+            model=MODEL_SMART,
             max_tokens=300,
             system=system_prompt,
             messages=messages,
@@ -763,7 +781,7 @@ def _run_with_tools(system_prompt: str, user_content: str) -> str:
     # ran out of iterations; make one final call without tools to force a plain reply
     messages.append({"role": "user", "content": "(please just reply now, no more tool calls)"})
     response = client.messages.create(
-        model=MODEL,
+        model=MODEL_SMART,
         max_tokens=300,
         system=system_prompt,
         messages=messages
