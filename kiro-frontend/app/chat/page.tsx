@@ -325,12 +325,25 @@ export default function ChatTest() {
         }}
       >
         <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", gap: 10 }}>
-          <input
-            style={{ ...inputStyle, marginBottom: 0, flex: 1 }}
-            placeholder="Type a message..."
+          <textarea
+            style={{
+              ...inputStyle,
+              marginBottom: 0,
+              flex: 1,
+              resize: "none",
+              maxHeight: 120,
+              fontFamily: "sans-serif",
+            }}
+            placeholder="Type a message... (Shift+Enter for new line)"
             value={input}
+            rows={Math.min(5, input.split("\n").length)}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
           />
           <button
             onClick={sendMessage}
