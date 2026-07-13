@@ -21,10 +21,20 @@ export default function ChatTest() {
   const [settingUp, setSettingUp] = useState(false);
   const [setupError, setSetupError] = useState("");
 
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef<string[]>([]);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recognitionRef = useRef<any>(null);
   const DEBOUNCE_MS = 2500;
+
+  const EMOJI_OPTIONS = [
+    "😭", "💀", "🔥", "😩", "🥲", "👀", "🙏", "😤", "💯", "🫡",
+    "😂", "❤️", "💪", "😍", "🤔", "😅", "🙈", "✨", "🎉", "😴",
+  ];
 
   useEffect(() => {
     const savedId = localStorage.getItem("kyroo_test_user_id");
@@ -34,6 +44,43 @@ export default function ChatTest() {
       setUserName(savedName || "");
     }
   }, []);
+
+  useEffect(() => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    setVoiceSupported(true);
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-IN";
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+    };
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => setListening(false);
+
+    recognitionRef.current = recognition;
+  }, []);
+
+  const toggleVoiceInput = () => {
+    if (!recognitionRef.current) return;
+    if (listening) {
+      recognitionRef.current.stop();
+      setListening(false);
+    } else {
+      recognitionRef.current.start();
+      setListening(true);
+    }
+  };
+
+  const addEmoji = (emoji: string) => {
+    setInput((prev) => prev + emoji);
+    setShowEmojiPicker(false);
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -322,9 +369,84 @@ export default function ChatTest() {
         style={{
           padding: "14px 16px",
           borderTop: "0.5px solid rgba(240,237,232,0.06)",
+          position: "relative",
         }}
       >
-        <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", gap: 10 }}>
+        {showEmojiPicker && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: "100%",
+              left: "50%",
+              transform: "translateX(-50%)",
+              marginBottom: 8,
+              background: "#161616",
+              border: "0.5px solid rgba(240,237,232,0.1)",
+              borderRadius: 14,
+              padding: 10,
+              display: "grid",
+              gridTemplateColumns: "repeat(5, 1fr)",
+              gap: 4,
+              maxWidth: 560,
+              width: "calc(100% - 32px)",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+            }}
+          >
+            {EMOJI_OPTIONS.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => addEmoji(emoji)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  fontSize: 22,
+                  padding: 8,
+                  cursor: "pointer",
+                  borderRadius: 8,
+                }}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
+        <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", gap: 8 }}>
+          <button
+            onClick={() => setShowEmojiPicker((v) => !v)}
+            style={{
+              width: 44,
+              height: 50,
+              borderRadius: 14,
+              background: showEmojiPicker ? "rgba(200,240,96,0.15)" : "transparent",
+              border: "0.5px solid rgba(240,237,232,0.12)",
+              color: "#f0ede8",
+              fontSize: 18,
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+            type="button"
+          >
+            😊
+          </button>
+          {voiceSupported && (
+            <button
+              onClick={toggleVoiceInput}
+              style={{
+                width: 44,
+                height: 50,
+                borderRadius: 14,
+                background: listening ? "rgba(255,80,80,0.15)" : "transparent",
+                border: listening ? "0.5px solid rgba(255,80,80,0.4)" : "0.5px solid rgba(240,237,232,0.12)",
+                color: listening ? "#ff5050" : "#f0ede8",
+                fontSize: 18,
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+              type="button"
+            >
+              {listening ? "⏹" : "🎙"}
+            </button>
+          )}
           <textarea
             style={{
               ...inputStyle,
