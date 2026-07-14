@@ -8,8 +8,10 @@ router = APIRouter(prefix="/ai", tags=["ai"])
 
 class ChatMessage(BaseModel):
     user_id: str
-    message: str
+    message: str = ""
     module: str = "general"
+    image_base64: str = None
+    image_media_type: str = None
 
 class NudgeRequest(BaseModel):
     user_id: str
@@ -28,12 +30,12 @@ async def chat(msg: ChatMessage):
     history = db.table("chat_history").select("*").eq("user_id", msg.user_id).order("created_at", desc=True).limit(10).execute()
     
     # Use KIRO brain
-    result = kyroo_brain(user, msg.message, history.data)
-    
+    result = kyroo_brain(user, msg.message, history.data, msg.image_base64, msg.image_media_type)
+
     # Save to chat history
     db.table("chat_history").insert({
         "user_id": msg.user_id,
-        "user_message": msg.message,
+        "user_message": msg.message or "(sent a photo)",
         "kiro_response": result["response"],
         "module": result["module"]
     }).execute()

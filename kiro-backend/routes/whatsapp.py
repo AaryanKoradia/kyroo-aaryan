@@ -5,6 +5,7 @@ from brain import kyroo_brain, generate_morning_nudge, validate_response
 from debounce import buffer_message
 import requests
 import asyncio
+import base64
 import random
 import os
 
@@ -48,13 +49,38 @@ def send_whatsapp(phone: str, message: str) -> dict:
         return {"status": "error", "error": str(e)}
 
 
+def download_whatsapp_media(media_id: str):
+    """Fetches a WhatsApp media file (image, etc.) and returns (base64_data, mime_type), or None on failure."""
+    try:
+        meta_resp = requests.get(
+            f"https://graph.facebook.com/{GRAPH_VERSION}/{media_id}",
+            headers={"Authorization": f"Bearer {WHATSAPP_TOKEN}"},
+            timeout=10
+        )
+        meta = meta_resp.json()
+        media_url = meta.get("url")
+        mime_type = meta.get("mime_type", "image/jpeg")
+        if not media_url:
+            return None
+
+        file_resp = requests.get(
+            media_url,
+            headers={"Authorization": f"Bearer {WHATSAPP_TOKEN}"},
+            timeout=15
+        )
+        return base64.b64encode(file_resp.content).decode("utf-8"), mime_type
+    except Exception as e:
+        print(f"WhatsApp media download error: {e}")
+        return None
+
+
 async def send_whatsapp_bubbles(phone: str, bubbles: list[str]) -> list[dict]:
     """Sends each bubble as a separate WhatsApp message with a human-like typing delay between them."""
     results = []
     for i, bubble in enumerate(bubbles):
         results.append(send_whatsapp(phone, bubble))
         if i < len(bubbles) - 1:
-            await asyncio.sleep(random.uniform(0.8, 2.0))
+            await asyncio.sleep(random.uniform(0.4, 0.9))
     return results
 
 
@@ -164,17 +190,26 @@ async def whatsapp_webhook(request: Request):
                 for msg in messages:
                     phone = msg.get("from", "")
                     text  = ""
+                    image_base64 = None
+                    image_media_type = None
 
-                    if msg.get("type") == "text":
+                    msg_type = msg.get("type")
+                    if msg_type == "text":
                         text = msg.get("text", {}).get("body", "")
-                    elif msg.get("type") == "button":
+                    elif msg_type == "button":
                         text = msg.get("button", {}).get("text", "")
-                    elif msg.get("type") == "interactive":
+                    elif msg_type == "interactive":
                         interactive = msg.get("interactive", {})
                         text = interactive.get("button_reply", {}).get("title", "") or \
                                interactive.get("list_reply", {}).get("title", "")
+                    elif msg_type == "image":
+                        text = msg.get("image", {}).get("caption", "")
+                        media_id = msg.get("image", {}).get("id")
+                        downloaded = download_whatsapp_media(media_id) if media_id else None
+                        if downloaded:
+                            image_base64, image_media_type = downloaded
 
-                    if not phone or not text:
+                    if not phone or (not text and not image_base64):
                         continue
 
                     db = get_db()
@@ -190,6 +225,22 @@ async def whatsapp_webhook(request: Request):
                         continue
 
                     user = user_data.data[0]
+
+                    if image_base64:
+                        # images bypass the text debounce buffer and get a direct reply
+                        result  = kyroo_brain(user, text, [], image_base64, image_media_type)
+                        reply   = result["response"]
+                        bubbles = result.get("bubbles", [reply])
+
+                        db.table("chat_history").insert({
+                            "user_id":       user["id"],
+                            "user_message":  text or "(sent a photo)",
+                            "kiro_response": reply,
+                            "module":        result["module"]
+                        }).execute()
+
+                        await send_whatsapp_bubbles(phone, bubbles)
+                        continue
 
                     async def _reply_to_batch(combined_text: str, user=user, phone=phone, db=db):
                         result  = kyroo_brain(user, combined_text, [])

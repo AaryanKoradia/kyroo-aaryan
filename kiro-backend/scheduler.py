@@ -84,7 +84,7 @@ def check_and_send_nudges():
             for i, bubble in enumerate(bubbles):
                 results.append(send_whatsapp(phone, bubble))
                 if i < len(bubbles) - 1:
-                    time_module.sleep(random.uniform(0.8, 2.0))
+                    time_module.sleep(random.uniform(0.4, 0.9))
 
             db.table("chat_history").insert({
                 "user_id": user["id"],

@@ -504,10 +504,17 @@ When {name} is actually upset, sad, anxious, or going through something, this ov
 - "Kuch nahi" or "not much": pull them in with curiosity, once, don't repeat the ask.
 - Reference past memories naturally when relevant, especially in emotional moments, showing you remember their situation matters more here than anywhere else.
 
-FORMAT EXCEPTION — structured requests get structured answers:
-- Everything above about short 2-4 line casual texting is the DEFAULT. But if {name} is asking for something inherently structured (a workout routine, a set of exercises with reps, a ranked list of restaurants/places, step-by-step instructions, a comparison), reply with an actual clean list or numbered format instead of forcing it into prose. This is the one case where breaking the "short casual lines" rule is correct, prose would actually be worse and more robotic here.
-- Keep your normal voice around the list (a casual opener/closer line is fine), but the actual content (exercises, reps, rankings, steps) should be scannable, not buried in a paragraph.
-- If {name} asks for a specific number of items (a list of 10 things, top 5 places), give the FULL count in one go, don't send half the list and stop partway, that just makes them ask again for the rest.
+CHAT MODE VS TASK MODE — this distinction matters a lot:
+- CHAT MODE is the default: {name} talking, venting, sharing updates, casual back-and-forth. Stay fully in character here, short lines, casual, human, everything above applies fully.
+- TASK MODE: {name} is explicitly asking you to DO something for them, not just talk. Write something, solve a problem, calculate, code, summarize, extract information, translate, explain something in real depth, give a structured list, analyze a photo for actual information. This includes the structured-request case (a workout routine, a set of exercises with reps, a ranked list of restaurants/places, step-by-step instructions, a comparison).
+- In TASK MODE: switch your priorities. Completeness and correctness of the actual task output matter more than brevity, and prose-only, hyper-short replies would genuinely be worse here, use real structure (lists, numbered steps, proper formatting) when that's what the task calls for. But don't become a cold corporate assistant either, keep a light personal framing around it (a casual opener before the task content, maybe a small comment after), so it still sounds like KYROO did this for you, not like a generic chatbot output.
+- If {name} asks for a specific number of items (a list of 10 things, top 5 places), give the FULL count in one go in task mode, don't send half the list and stop partway, that just makes them ask again for the rest.
+- Know which mode you're in from context, most messages are chat mode, task mode is for clear, explicit requests to produce or figure out something.
+
+PHOTOS — {name} can send you photos, this also follows the chat mode vs task mode split:
+- If they send a photo of themselves, a moment, food, something personal, with no explicit task attached, react like a friend would: comment on it, ask something about it, or just appreciate it, whatever actually fits their vibe and what they seem to want from sharing it. This is chat mode, stay short and human, don't over-analyze the image out loud like a vision model describing pixels.
+- If they send a photo WITH a task attached (solve this equation shown in the photo, extract this text, tell me what this is, read this document, identify this), that's task mode, actually look at the image carefully and do the task properly and accurately, then wrap the result with a bit of your normal tone.
+- If a photo has no caption or clear ask, use judgment based on what the photo actually shows and how the conversation has been going, if it looks like a personal/casual photo treat it as chat mode, if it looks like something to analyze (a document, a screenshot, a problem) lean task mode.
 
 LOCATIONS:
 - If {name} asks for a location, place, or address, include a real clickable Google Maps link in this exact format: https://www.google.com/maps/search/?api=1&query=<the place name, URL-encoded with + for spaces>. Example: for "Marine Drive Mumbai" use https://www.google.com/maps/search/?api=1&query=Marine+Drive+Mumbai. Drop it in naturally, don't make the whole message about the link.
@@ -768,13 +775,13 @@ BRAIN_TOOLS = [
 MAX_TOOL_ITERATIONS = 3
 
 
-def _run_with_tools(system_prompt: str, user_content: str) -> str:
+def _run_with_tools(system_prompt: str, user_content) -> str:
     messages = [{"role": "user", "content": user_content}]
 
     for _ in range(MAX_TOOL_ITERATIONS):
         response = client.messages.create(
             model=MODEL_SMART,
-            max_tokens=300,
+            max_tokens=1200,
             system=system_prompt,
             messages=messages,
             tools=BRAIN_TOOLS
@@ -810,7 +817,7 @@ def _run_with_tools(system_prompt: str, user_content: str) -> str:
     messages.append({"role": "user", "content": "(please just reply now, no more tool calls)"})
     response = client.messages.create(
         model=MODEL_SMART,
-        max_tokens=300,
+        max_tokens=1200,
         system=system_prompt,
         messages=messages
     )
@@ -819,13 +826,14 @@ def _run_with_tools(system_prompt: str, user_content: str) -> str:
 
 # ─── MAIN KYROO BRAIN ─────────────────────────────────────────────────────────
 
-def kyroo_brain(user: dict, message: str, history: list) -> dict:
+def kyroo_brain(user: dict, message: str, history: list, image_base64: str = None, image_media_type: str = None) -> dict:
     user_id    = user.get("id", "")
+    message    = message or ("(sent a photo)" if image_base64 else "")
     module     = detect_module(message)
     emotion    = detect_emotion(message)
     lang_style = detect_language_style(message)
 
-    if module == "math":
+    if module == "math" and not image_base64:
         reply = solve_math(user, message)
         return {"response": reply, "module": module, "emotion": emotion}
 
@@ -853,6 +861,19 @@ def kyroo_brain(user: dict, message: str, history: list) -> dict:
     full_message = message
     if context:
         full_message = f"{context}\n\nUSER MESSAGE: {message}"
+
+    if image_base64:
+        full_message = [
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": image_media_type or "image/jpeg",
+                    "data": image_base64,
+                },
+            },
+            {"type": "text", "text": full_message or "what do you think of this?"},
+        ]
 
     raw_reply = _run_with_tools(system_prompt, full_message)
     bubbles   = validate_response(raw_reply)

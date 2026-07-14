@@ -7,6 +7,7 @@ type Message = {
   role: "user" | "kyroo";
   text: string;
   module?: string;
+  imagePreview?: string;
 };
 
 export default function ChatTest() {
@@ -24,12 +25,14 @@ export default function ChatTest() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [listening, setListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
+  const [pendingImage, setPendingImage] = useState<{ base64: string; mediaType: string; previewUrl: string } | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef<string[]>([]);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recognitionRef = useRef<any>(null);
-  const DEBOUNCE_MS = 2500;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const DEBOUNCE_MS = 1200;
 
   const EMOJI_OPTIONS = [
     "😭", "💀", "🔥", "😩", "🥲", "👀", "🙏", "😤", "💯", "🫡",
@@ -82,6 +85,19 @@ export default function ChatTest() {
     setShowEmojiPicker(false);
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const base64 = dataUrl.split(",")[1];
+      setPendingImage({ base64, mediaType: file.type || "image/jpeg", previewUrl: dataUrl });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -129,7 +145,20 @@ export default function ChatTest() {
   // 2-3 texts in real chat instead of writing it all in one message.
   const sendMessage = () => {
     const text = input.trim();
-    if (!text || !userId) return;
+    if (!userId) return;
+
+    // an attached image sends immediately with the current text as caption,
+    // bypassing the multi-message debounce (images aren't meant to be batched)
+    if (pendingImage) {
+      const image = pendingImage;
+      setInput("");
+      setPendingImage(null);
+      setMessages((m) => [...m, { role: "user", text, imagePreview: image.previewUrl }]);
+      dispatchToBackend(text, image);
+      return;
+    }
+
+    if (!text) return;
     setInput("");
     setMessages((m) => [...m, { role: "user", text }]);
     pendingRef.current.push(text);
@@ -143,13 +172,20 @@ export default function ChatTest() {
     }, DEBOUNCE_MS);
   };
 
-  const dispatchToBackend = async (text: string) => {
+  const dispatchToBackend = async (
+    text: string,
+    image?: { base64: string; mediaType: string }
+  ) => {
     setSending(true);
     try {
       const res = await fetch(`${BACKEND_URL}/ai/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, message: text }),
+        body: JSON.stringify({
+          user_id: userId,
+          message: text,
+          ...(image ? { image_base64: image.base64, image_media_type: image.mediaType } : {}),
+        }),
       });
       const data = await res.json();
       const bubbles: string[] =
@@ -157,7 +193,7 @@ export default function ChatTest() {
       for (let i = 0; i < bubbles.length; i++) {
         if (i > 0) {
           setSending(true);
-          await new Promise((r) => setTimeout(r, 700 + Math.random() * 900));
+          await new Promise((r) => setTimeout(r, 350 + Math.random() * 450));
         }
         setMessages((m) => [
           ...m,
@@ -330,7 +366,7 @@ export default function ChatTest() {
               <div
                 style={{
                   maxWidth: "78%",
-                  padding: "11px 15px",
+                  padding: m.imagePreview ? 6 : "11px 15px",
                   borderRadius: 16,
                   borderBottomRightRadius: m.role === "user" ? 4 : 16,
                   borderBottomLeftRadius: m.role === "kyroo" ? 4 : 16,
@@ -341,7 +377,19 @@ export default function ChatTest() {
                   whiteSpace: "pre-wrap",
                 }}
               >
-                {m.text}
+                {m.imagePreview && (
+                  <img
+                    src={m.imagePreview}
+                    alt="sent"
+                    style={{
+                      maxWidth: "100%",
+                      borderRadius: 12,
+                      display: "block",
+                      marginBottom: m.text ? 6 : 0,
+                    }}
+                  />
+                )}
+                {m.text && <span style={{ padding: m.imagePreview ? "0 8px 6px" : 0 }}>{m.text}</span>}
               </div>
             </div>
           ))}
@@ -410,7 +458,73 @@ export default function ChatTest() {
             ))}
           </div>
         )}
+        {pendingImage && (
+          <div
+            style={{
+              maxWidth: 560,
+              margin: "0 auto 10px",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <div style={{ position: "relative" }}>
+              <img
+                src={pendingImage.previewUrl}
+                alt="preview"
+                style={{ height: 56, width: 56, objectFit: "cover", borderRadius: 10 }}
+              />
+              <button
+                onClick={() => setPendingImage(null)}
+                style={{
+                  position: "absolute",
+                  top: -6,
+                  right: -6,
+                  width: 20,
+                  height: 20,
+                  borderRadius: "50%",
+                  background: "#ff5050",
+                  color: "#fff",
+                  border: "none",
+                  fontSize: 12,
+                  cursor: "pointer",
+                  lineHeight: "20px",
+                }}
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+            <span style={{ fontSize: 12, color: "rgba(240,237,232,0.4)" }}>
+              Add a caption or just hit send
+            </span>
+          </div>
+        )}
         <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", gap: 8 }}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={handleImageSelect}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              width: 44,
+              height: 50,
+              borderRadius: 14,
+              background: pendingImage ? "rgba(200,240,96,0.15)" : "transparent",
+              border: "0.5px solid rgba(240,237,232,0.12)",
+              color: "#f0ede8",
+              fontSize: 18,
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+            type="button"
+          >
+            📷
+          </button>
           <button
             onClick={() => setShowEmojiPicker((v) => !v)}
             style={{
@@ -469,7 +583,7 @@ export default function ChatTest() {
           />
           <button
             onClick={sendMessage}
-            disabled={!input.trim()}
+            disabled={!input.trim() && !pendingImage}
             style={{
               width: 50,
               height: 50,
@@ -480,7 +594,7 @@ export default function ChatTest() {
               fontSize: 18,
               cursor: "pointer",
               flexShrink: 0,
-              opacity: !input.trim() ? 0.5 : 1,
+              opacity: !input.trim() && !pendingImage ? 0.5 : 1,
             }}
           >
             →
