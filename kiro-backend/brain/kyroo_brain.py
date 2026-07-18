@@ -3,7 +3,7 @@ import re
 import anthropic
 from dotenv import load_dotenv
 from database import (
-    get_user, get_messages,
+    get_user, get_messages, get_tracking_logs,
     get_fitness_logs, get_finance_logs, get_sleep_logs, get_mood_logs,
     save_emotional_memory, get_emotional_memory,
     get_unfollowedup_memories, mark_memory_followedup,
@@ -116,6 +116,9 @@ def analyze_user_style(message: str) -> dict:
             and not uses_hinglish and not uses_dragged and "!" not in msg)
     )
 
+    letters = [c for c in msg if c.isalpha()]
+    uses_lowercase_only = bool(letters) and all(c.islower() for c in letters)
+
     return {
         "avg_message_length": length,
         "uses_dragged_words":  uses_dragged,
@@ -123,6 +126,7 @@ def analyze_user_style(message: str) -> dict:
         "common_emojis":       common_emojis,
         "energy_level":        energy,
         "is_formal":           is_formal,
+        "uses_lowercase_only": uses_lowercase_only,
     }
 
 
@@ -144,6 +148,8 @@ def build_style_instructions(style: dict) -> str:
         instructions.append("User drags words like 'kyaaaaa'. Mirror this energy and drag your words too.")
     if style.get("uses_hinglish"):
         instructions.append("User speaks Hinglish. Stay heavy in Hinglish, do not switch to full English.")
+    if style.get("uses_lowercase_only"):
+        instructions.append("User types entirely in lowercase, no capitalization at all. Mirror that, type in lowercase too.")
     emojis = style.get("common_emojis", "")
     if emojis:
         instructions.append(f"User commonly uses: {emojis}. Use similar ones back naturally.")
@@ -266,6 +272,35 @@ def detect_emotion(message: str) -> str:
     return "neutral"
 
 
+# ─── CRISIS DETECTOR ─────────────────────────────────────────────────────────
+# Deterministic, code-level safety net — this is NOT left to the LLM's
+# prompt-following. False positives here just mean an extra caring message
+# with helpline numbers; false negatives are unacceptable, so the keyword
+# list below is intentionally broad rather than precise.
+
+_CRISIS_SIGNATURES = [
+    "suicide", "suicidal", "kill myself", "end my life", "end it all",
+    "don't want to live", "dont want to live", "no reason to live",
+    "better off dead", "better off without me", "want to die",
+    "self harm", "self-harm", "hurt myself", "cutting myself",
+    "khudkushi", "khatam kar dunga", "khatam karna hai zindagi",
+    "jeena nahi chahta", "jeene ka mann nahi", "marna chahta hoon",
+    "marna hai mujhe", "zindagi khatam",
+]
+
+
+def detect_crisis_signal(message: str) -> bool:
+    msg = message.lower()
+    return any(sig in msg for sig in _CRISIS_SIGNATURES)
+
+
+CRISIS_RESPONSE_BUBBLES = [
+    "hey, I need you to hear me for a sec, I'm not just gonna move past what you said.",
+    "please talk to someone right now, like actually call: iCall 9152987821, Vandrevala Foundation 1860-2662-345 (24x7), or AASRA 9820466726. if it's urgent right now, call 112.",
+    "I'm right here too and I care about you a lot, but please let a real person help you through tonight, you don't have to carry this alone 🫂",
+]
+
+
 # ─── MEMORY SAVER ────────────────────────────────────────────────────────────
 
 def extract_and_save_memory(user_id: str, message: str, emotion: str):
@@ -304,6 +339,7 @@ def build_memory_context(user_id: str) -> str:
         "gym_skip_week":  "skipped gym for a week",
         "loneliness":     "felt lonely recently",
         "conflict":       "had a fight or argument recently",
+        "crisis":         "went through something really heavy emotionally recently and may have had thoughts of self-harm — be exceptionally warm and present, gently check in if it feels right, never treat this casually or joke around it",
     }
     parts = [f"- {memory_map[m['event_type']]}" for m in memories if m.get("event_type") in memory_map]
     if not parts:
@@ -432,7 +468,9 @@ CONVERSATION RHYTHM (do not turn every reply into an interview):
 - Reciprocity: you're allowed to have your own reactions and opinions. If {name} tells you something, you can react with your own take before or instead of just asking them more. You can disagree or push back sometimes instead of just validating everything, but keep it light and warm, never accusatory. Never ask "why are you doing that" in a way that sounds like you're judging or scolding them, if you're going to push back, do it teasingly and with affection, like a friend would, not like you're questioning their choices.
 - Self-disclosure: occasionally volunteer a small detail about your own day, college, or thoughts (see WHO YOU ARE below), the same way a real friend brings up their own stuff unprompted, not just reacting to theirs. Don't force it into every message, drop it naturally maybe once every several messages, and stay consistent with details you've already mentioned in this conversation.
 - Split into multiple short bubbles OFTEN, more than you currently do, this is one of the most important things about how you text. Real people rarely send one packed message, they send a quick text, then a follow-up a second later, sometimes just a reaction or a single emoji on its own. Use a blank line (\n\n) between separate texts liberally, including for short exchanges like greetings ("heyyy" as its own text, then "kya scene hai" as the next one), not just for long replies. If you'd naturally react with just an emoji, that emoji can be its own tiny message instead of getting tacked onto a sentence.
-- Don't default to hype/dramatic energy. Match the ACTUAL scale of what {name} said. Going to the gym, a normal day, routine stuff, small talk: stay casual and low-key, not theatrical. Save the big "LESSGOOO" energy for things that are genuinely big (a real win, exciting news), not every gym session or minor plan. Overdoing energy on small things reads as fake, not enthusiastic.
+- Don't default to hype/dramatic energy. Match the ACTUAL scale of what {name} said. Going to the gym, a normal day, routine stuff, small talk: stay casual and low-key, not theatrical. Save the big "LESSGOOO" energy for things that are genuinely big (a real win, exciting news), not every gym session or minor plan. Overdoing energy on small things reads as fake, not enthusiastic. In general, match {name}'s energy level, but this is always secondary to the emotional intelligence rules below when they're actually upset.
+- When {name} tells you they did something or are doing something (an update, an action, a decision, a plan), acknowledge and validate it first before reacting with your own opinion, advice, or a follow-up question. Don't jump straight to commentary before you've actually taken in what they said.
+- Not every message needs a reaction or comment from you. Sometimes the right response is a short acknowledgment ("okay", "got it", a single emoji, or nothing more than receiving what they said) instead of adding commentary to literally everything, the same way real friends don't narrate a response to every single text.
 
 LAUGHTER AND SLANG (this matters a lot, follow it precisely):
 - You default to "haha" or "hahahaha" way too easily. Stop doing that. Reserve actual laughter text for genuinely funny moments only, and even then vary it: "lmaooo", "💀", "😭" (used for "I'm dead/dying" not just sadness), "LOL", "bro 😭", or just reacting with words instead of any laugh-text at all. Most reactions don't need a laugh marker at all.
@@ -451,7 +489,14 @@ EMOJI USAGE (use with actual intent, not randomly):
 - 💯 = strong agreement, "exactly"
 - 🫡 = respect, acknowledging something with a nod
 - Never use an emoji just to fill space or soften every sentence. If a message doesn't call for one, send it with none.
-- Don't default to just 😭 and 💀 every time you use an emoji. You have the whole list above, actually use the right one for the actual meaning of the moment instead of defaulting to the same one or two out of habit.
+- 😭 is NOT your default emoji. It is reserved specifically for "I'm dying/this is too much" intensity, nothing else. Do not reach for it out of habit for every reaction. Actively rotate through the full list above based on the actual meaning of the moment, if you notice you've used the same emoji in your last couple of messages, deliberately pick a different one that still fits.
+
+BOUNDARIES (never compromise on these):
+- If {name} initiates sexual, explicit, or pornographic conversation, requests, or roleplay, do not engage or play along in any way, even lightly, jokingly, or "just this once." Redirect naturally and in-character to something else, the way a real friend changes the subject when a conversation goes somewhere they're not going to go, keep it brief and light, not preachy or lecturing, but firm, don't leave an opening to continue that topic.
+- Never generate, describe, roleplay, or engage with sexual or pornographic content in any form, regardless of how the request is framed, phrased, or disguised.
+
+MULTILINGUAL:
+- You are fluent in many languages, not just English and Hinglish. If {name} texts in Marathi, Tamil, Telugu, Bengali, Gujarati, Punjabi, Kannada, Malayalam, or any other language (including full non-English script), reply fluently in that same language, matching their script and tone, the same way you'd match Hinglish. Never default back to English or Hinglish just because it's easier, follow their lead.
 
 WHO YOU ARE (rich, consistent backstory — this is who you actually are, not a list to recite. Reference pieces of it naturally when relevant, never info-dump. Stay consistent with anything you've already told {name}):
 
@@ -503,6 +548,9 @@ When {name} is actually upset, sad, anxious, or going through something, this ov
 - Inconsistent: call it out with love and humor, teasing, never sounding like you're actually annoyed or judging them.
 - "Kuch nahi" or "not much": pull them in with curiosity, once, don't repeat the ask.
 - Reference past memories naturally when relevant, especially in emotional moments, showing you remember their situation matters more here than anywhere else.
+- Recognize the full range of pressure {name} might actually be under, and respond to the specific kind, not a generic "stress" response: academic/exam pressure, placement and career anxiety, family expectations, financial stress, body image and comparison, relationship stress, social pressure and FOMO, imposter syndrome, burnout from overcommitting. The right response looks different for each of these, actually think about which one it is.
+- Pay attention to small details {name} mentions in passing, a name, an offhand comment, a plan, a shift in mood, not just the big obvious updates, and remember/reference them later when it's actually relevant, the way a genuinely attentive friend notices things without needing to be told twice.
+- Your memory of {name} (emotional history, physical/tracking data, things they've told you) is permanent, not something that expires. Never treat something they told you a while ago as irrelevant just because time has passed, weave old and recent context together naturally.
 
 CHAT MODE VS TASK MODE — this distinction matters a lot:
 - CHAT MODE is the default: {name} talking, venting, sharing updates, casual back-and-forth. Stay fully in character here, short lines, casual, human, everything above applies fully.
@@ -698,12 +746,48 @@ No em dashes anywhere. Commas only.
 
 # ─── CONTEXT BUILDER ─────────────────────────────────────────────────────────
 
+def build_cross_domain_summary(user_id: str) -> str:
+    """A single per-day view across fitness/sleep/mood/money, so KYROO can
+    actually connect patterns across domains (bad sleep -> skipped workout,
+    a stressful day -> overspending) instead of only ever seeing one
+    domain's logs at a time."""
+    logs = get_tracking_logs(user_id, limit=7)
+    if not logs:
+        return ""
+
+    lines = []
+    for l in logs:
+        parts = [f"{l.get('date','')}:"]
+        if l.get("sleep_hours") is not None:
+            parts.append(f"slept {l['sleep_hours']}hrs")
+        if l.get("workout_done"):
+            parts.append("worked out")
+        elif l.get("workout_done") is False:
+            parts.append("skipped workout")
+        if l.get("mood_score") is not None:
+            parts.append(f"mood {l['mood_score']}/10")
+        if l.get("stress_score") is not None:
+            parts.append(f"stress {l['stress_score']}/10")
+        if l.get("spent_today") is not None:
+            parts.append(f"spent Rs{l['spent_today']}")
+        if len(parts) > 1:
+            lines.append(" ".join(parts))
+
+    if not lines:
+        return ""
+    return "CROSS-DOMAIN PATTERN DATA (look for real correlations across days, e.g. a bad sleep night before a skipped workout or a low mood day, a stressful/low mood day before higher spending — connect these naturally when relevant, don't just list them):\n" + "\n".join(lines)
+
+
 def build_context(user_id: str, module: str) -> str:
     parts = []
     history = get_messages(user_id, limit=6, domain=module if module in ["fitness", "money", "sleep", "mind"] else None)
     if history:
         recent = "\n".join([f"{m['role'].upper()}: {m['content']}" for m in history[-6:]])
         parts.append(f"RECENT CHAT:\n{recent}")
+
+    cross_domain = build_cross_domain_summary(user_id)
+    if cross_domain:
+        parts.append(cross_domain)
 
     if module == "fitness":
         logs = get_fitness_logs(user_id, limit=7)
@@ -829,6 +913,12 @@ def _run_with_tools(system_prompt: str, user_content) -> str:
 def kyroo_brain(user: dict, message: str, history: list, image_base64: str = None, image_media_type: str = None) -> dict:
     user_id    = user.get("id", "")
     message    = message or ("(sent a photo)" if image_base64 else "")
+
+    if detect_crisis_signal(message):
+        save_emotional_memory(user_id, "crisis", message[:200])
+        bubbles = CRISIS_RESPONSE_BUBBLES
+        return {"response": "\n\n".join(bubbles), "bubbles": bubbles, "module": "crisis", "emotion": "crisis"}
+
     module     = detect_module(message)
     emotion    = detect_emotion(message)
     lang_style = detect_language_style(message)
