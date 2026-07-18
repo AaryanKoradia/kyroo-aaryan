@@ -7,7 +7,7 @@ import pytz
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from database import get_db
-from brain import generate_morning_nudge, validate_response
+from brain.kyroo_brain import generate_morning_nudge, validate_response
 from routes.whatsapp import send_whatsapp
 
 IST = pytz.timezone("Asia/Kolkata")

@@ -9,8 +9,8 @@ from database import (
     get_unfollowedup_memories, mark_memory_followedup,
     get_user_style, save_user_style
 )
-from memory import save_memory, search_memories
-from slang import lookup_slang
+from brain.memory import save_memory, search_memories
+from brain.slang import lookup_slang
 
 load_dotenv()
 

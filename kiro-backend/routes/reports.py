@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from database import get_db
-from brain import generate_weekly_report
+from brain.kyroo_brain import generate_weekly_report
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 

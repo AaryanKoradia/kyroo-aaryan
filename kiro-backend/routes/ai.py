@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from database import get_db
-from brain import kyroo_brain, generate_morning_nudge
+from brain.kyroo_brain import kyroo_brain, generate_morning_nudge
 import os
 
 router = APIRouter(prefix="/ai", tags=["ai"])

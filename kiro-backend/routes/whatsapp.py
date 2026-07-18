@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from database import get_db
-from brain import kyroo_brain, generate_morning_nudge, validate_response
-from debounce import buffer_message
+from brain.kyroo_brain import kyroo_brain, generate_morning_nudge, validate_response
+from brain.debounce import buffer_message
 import requests
 import asyncio
 import base64
