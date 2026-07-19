@@ -144,17 +144,22 @@ export default function Home() {
           .ft-g { grid-template-columns: 1fr !important; }
           .st-g { grid-template-columns: repeat(2,1fr) !important; }
         }
+        @media(max-width: 680px) {
+          .k-nav-links { display: none !important; }
+          .k-nav { padding-left: 20px !important; padding-right: 20px !important; }
+          .hero-float-tag { display: none !important; }
+        }
       `}</style>
 
       {/* NAV */}
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 40px", background: scrolled ? "var(--k-paper)" : "transparent", borderBottom: scrolled ? "3px solid var(--k-ink)" : "3px solid transparent", transition: "all .25s ease" }} className="k-fade-1">
+      <nav className="k-fade-1 k-nav" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 40px", background: scrolled ? "var(--k-paper)" : "transparent", borderBottom: scrolled ? "3px solid var(--k-ink)" : "3px solid transparent", transition: "all .25s ease" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <img src="/kyroo-logo.png" alt="KYROO" style={{ width: 30, height: 30, borderRadius: "50%", border: "2px solid var(--k-ink)", objectFit: "cover" }} />
           <div style={{ fontFamily: "var(--font-display)", fontSize: 22, letterSpacing: -0.5 }}>
             KYROO<span style={{ color: "var(--k-coral)" }}>.</span>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 30 }}>
+        <div className="k-nav-links" style={{ display: "flex", gap: 30 }}>
           {[["How it works", "#how"], ["Features", "#features"], ["Pricing", "#pricing"]].map(([l, h]) => (
             <a key={l} className="k-nav-a" href={h} onClick={(e) => { e.preventDefault(); document.querySelector(h)?.scrollIntoView({ behavior: "smooth" }); }}>{l}</a>
           ))}
@@ -164,16 +169,16 @@ export default function Home() {
 
       {/* HERO */}
       <section style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "150px 24px 80px", overflow: "hidden" }}>
-        <div className="k-float" style={{ "--k-rot": "-8deg", position: "absolute", top: "18%", left: "6%", zIndex: 1 } as React.CSSProperties}>
+        <div className="k-float hero-float-tag" style={{ "--k-rot": "-8deg", position: "absolute", top: "18%", left: "6%", zIndex: 1 } as React.CSSProperties}>
           <div style={{ transform: "rotate(-8deg)" }}><Tag bg="var(--k-lime)">💪 Fitness</Tag></div>
         </div>
-        <div className="k-float" style={{ "--k-rot": "6deg", position: "absolute", top: "26%", right: "8%", zIndex: 1, animationDelay: "1s" } as React.CSSProperties}>
+        <div className="k-float hero-float-tag" style={{ "--k-rot": "6deg", position: "absolute", top: "26%", right: "8%", zIndex: 1, animationDelay: "1s" } as React.CSSProperties}>
           <div style={{ transform: "rotate(6deg)" }}><Tag bg="var(--k-coral)">💰 Money</Tag></div>
         </div>
-        <div className="k-float" style={{ "--k-rot": "5deg", position: "absolute", bottom: "20%", left: "10%", zIndex: 1, animationDelay: "2s" } as React.CSSProperties}>
+        <div className="k-float hero-float-tag" style={{ "--k-rot": "5deg", position: "absolute", bottom: "20%", left: "10%", zIndex: 1, animationDelay: "2s" } as React.CSSProperties}>
           <div style={{ transform: "rotate(5deg)" }}><Tag bg="#fff">😴 Sleep</Tag></div>
         </div>
-        <div className="k-float" style={{ "--k-rot": "-5deg", position: "absolute", bottom: "28%", right: "6%", zIndex: 1, animationDelay: "1.5s" } as React.CSSProperties}>
+        <div className="k-float hero-float-tag" style={{ "--k-rot": "-5deg", position: "absolute", bottom: "28%", right: "6%", zIndex: 1, animationDelay: "1.5s" } as React.CSSProperties}>
           <div style={{ transform: "rotate(-5deg)" }}><Tag bg="var(--k-blue)"><span style={{ color: "#fff" }}>🧠 Mind</span></Tag></div>
         </div>
 
