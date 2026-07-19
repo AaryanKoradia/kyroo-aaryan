@@ -95,79 +95,90 @@ export default function Onboarding() {
   };
 
   const s: React.CSSProperties = {
-    background: "#0a0a0a", minHeight: "100vh",
-    color: "#f0ede8", fontFamily: "sans-serif",
+    background: "var(--k-paper)", minHeight: "100vh",
+    color: "var(--k-ink)", fontFamily: "var(--font-body)",
     display: "flex", flexDirection: "column"
   };
 
   const btn = (active: boolean, onClick: () => void, label: string) => (
     <button key={label} onClick={onClick} style={{
-      padding: "9px 16px", borderRadius: 100,
-      border: active ? "1px solid #c8f060" : "0.5px solid rgba(240,237,232,0.1)",
-      background: active ? "rgba(200,240,96,0.1)" : "#111",
-      color: active ? "#c8f060" : "rgba(240,237,232,0.55)",
-      fontSize: 13, cursor: "pointer", fontFamily: "sans-serif",
-      fontWeight: active ? 500 : 400
+      padding: "9px 15px", border: active ? "2.5px solid var(--k-ink)" : "2.5px solid rgba(20,18,15,0.14)",
+      background: active ? "var(--k-lime)" : "var(--k-paper)",
+      color: "var(--k-ink)",
+      fontSize: 13, cursor: "pointer", fontFamily: "var(--font-body)",
+      fontWeight: active ? 700 : 400,
+      boxShadow: active ? "3px 3px 0 var(--k-ink)" : "none",
+      transition: "all .12s ease",
     }}>{label}</button>
   );
 
   const optBtn = (active: boolean, onClick: () => void, label: string) => (
     <button key={label} onClick={onClick} style={{
       width: "100%", display: "flex", alignItems: "center", gap: 12,
-      padding: "14px 16px", borderRadius: 16,
-      border: active ? "1px solid #c8f060" : "0.5px solid rgba(240,237,232,0.08)",
-      background: active ? "rgba(200,240,96,0.05)" : "#0f0f0f",
-      color: "#f0ede8", fontSize: 14, cursor: "pointer",
-      fontFamily: "sans-serif", fontWeight: active ? 500 : 400,
-      marginBottom: 9, textAlign: "left"
+      padding: "14px 16px",
+      border: active ? "3px solid var(--k-ink)" : "2.5px solid rgba(20,18,15,0.12)",
+      background: active ? "var(--k-lime)" : "var(--k-paper)",
+      color: "var(--k-ink)", fontSize: 14, cursor: "pointer",
+      fontFamily: "var(--font-body)", fontWeight: active ? 700 : 400,
+      marginBottom: 10, textAlign: "left",
+      boxShadow: active ? "4px 4px 0 var(--k-ink)" : "none",
+      transition: "all .12s ease",
     }}>
       <div style={{
         width: 18, height: 18, borderRadius: "50%",
-        border: active ? "none" : "1.5px solid rgba(240,237,232,0.2)",
-        background: active ? "#c8f060" : "transparent",
+        border: active ? "2px solid var(--k-ink)" : "2px solid rgba(20,18,15,0.25)",
+        background: active ? "var(--k-ink)" : "transparent",
         flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center"
       }}>
-        {active && <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#0a0a0a" }}></div>}
+        {active && <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--k-lime)" }}></div>}
       </div>
       {label}
     </button>
   );
 
   const inputStyle: React.CSSProperties = {
-    width: "100%", background: "#111",
-    border: "0.5px solid rgba(240,237,232,0.1)",
-    borderRadius: 14, padding: "13px 16px",
-    fontSize: 15, color: "#f0ede8",
-    fontFamily: "sans-serif", outline: "none", marginBottom: 12
+    width: "100%", background: "var(--k-paper)",
+    border: "2.5px solid rgba(20,18,15,0.14)",
+    padding: "13px 16px",
+    fontSize: 15, color: "var(--k-ink)",
+    fontFamily: "var(--font-body)", outline: "none", marginBottom: 12
   };
 
   return (
-    <div style={s}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 28px", borderBottom: "0.5px solid rgba(240,237,232,0.07)" }}>
-        <div style={{ fontSize: 17, fontWeight: 800 }}>KI<span style={{ color: "#c8f060" }}>R</span>O</div>
-        <div style={{ flex: 1, margin: "0 24px", height: 3, background: "rgba(240,237,232,0.08)", borderRadius: 2 }}>
-          <div style={{ width: `${progress}%`, height: 3, background: "#c8f060", borderRadius: 2, transition: "width 0.4s ease" }}></div>
+    <div className="k-grain" style={s}>
+      <style>{`.k-onb-btn { font-family: var(--font-body); font-weight: 700; cursor: pointer; border: 3px solid var(--k-ink); background: var(--k-ink); color: var(--k-paper); box-shadow: 4px 4px 0 var(--k-ink); transition: transform .12s ease, box-shadow .12s ease; }
+      .k-onb-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--k-ink); }
+      .k-onb-btn:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--k-ink); }
+      .k-onb-btn:disabled { opacity: .6; cursor: default; }
+      .k-onb-back { font-family: var(--font-body); cursor: pointer; border: 3px solid var(--k-ink); background: var(--k-paper); color: var(--k-ink); box-shadow: 4px 4px 0 var(--k-ink); transition: transform .12s ease, box-shadow .12s ease; }
+      .k-onb-back:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--k-ink); }
+      input::placeholder { color: rgba(20,18,15,0.35); }`}</style>
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 28px", borderBottom: "3px solid var(--k-ink)" }}>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 17 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
+        <div style={{ flex: 1, margin: "0 24px", height: 12, background: "var(--k-paper)", border: "2px solid var(--k-ink)" }}>
+          <div style={{ width: `${progress}%`, height: "100%", background: "var(--k-lime)", transition: "width 0.4s ease" }}></div>
         </div>
-        <div style={{ fontSize: 12, color: "rgba(240,237,232,0.3)" }}>{step} of 10</div>
+        <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700 }}>{step} / 10</div>
       </div>
 
       <div style={{ flex: 1, padding: "36px 28px 20px", maxWidth: 540, margin: "0 auto", width: "100%" }}>
-        <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#c8f060", fontWeight: 500, marginBottom: 14 }}>
+        <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10.5, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, padding: "3px 9px", background: "var(--k-lime)", border: "2px solid var(--k-ink)", display: "inline-block", marginBottom: 16 }}>
           {steps[step - 1].domain}
-        </div>
-        <h2 style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.8, lineHeight: 1.15, marginBottom: 8, whiteSpace: "pre-line" }}>
+        </span>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: 26, letterSpacing: -0.5, lineHeight: 1.15, marginBottom: 10, whiteSpace: "pre-line", textTransform: "uppercase" }}>
           {steps[step - 1].title}
         </h2>
-        <p style={{ fontSize: 13, color: "rgba(240,237,232,0.4)", fontWeight: 300, lineHeight: 1.6, marginBottom: 32 }}>
+        <p style={{ fontSize: 13.5, opacity: 0.6, lineHeight: 1.65, marginBottom: 32 }}>
           {steps[step - 1].sub}
         </p>
 
         {step === 1 && (
           <div>
-            <div style={{ background: "#111", border: "0.5px solid rgba(240,237,232,0.08)", borderRadius: 16, padding: "14px 16px", marginBottom: 24, fontSize: 13, color: "rgba(240,237,232,0.75)", lineHeight: 1.65 }}>
+            <div style={{ background: "var(--k-paper)", border: "3px solid var(--k-ink)", boxShadow: "4px 4px 0 var(--k-ink)", padding: "14px 16px", marginBottom: 24, fontSize: 13, lineHeight: 1.65, transform: "rotate(-0.6deg)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#c8f060", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#0a0a0a", fontSize: 10 }}>K</div>
-                <span style={{ fontSize: 13, fontWeight: 500 }}>Kiro</span>
+                <div style={{ width: 26, height: 26, background: "var(--k-lime)", border: "2px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 10 }}>K</div>
+                <span style={{ fontFamily: "var(--font-display)", fontSize: 12 }}>KYROO</span>
               </div>
               Main hoon tera AI best friend 😊 Fitness, money, mind, sleep — sab kuch handle karunga. Pehle tujhe thoda jaanna chahta hoon. Ready?
             </div>
@@ -337,10 +348,10 @@ export default function Onboarding() {
 
         {step === 10 && (
           <div>
-            <div style={{ background: "#111", border: "0.5px solid rgba(240,237,232,0.08)", borderRadius: 16, padding: "14px 16px", marginBottom: 24, fontSize: 13, color: "rgba(240,237,232,0.75)", lineHeight: 1.65 }}>
+            <div style={{ background: "var(--k-paper)", border: "3px solid var(--k-ink)", boxShadow: "4px 4px 0 var(--k-ink)", padding: "14px 16px", marginBottom: 24, fontSize: 13, lineHeight: 1.65, transform: "rotate(-0.6deg)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#c8f060", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#0a0a0a", fontSize: 10 }}>K</div>
-                <span style={{ fontWeight: 500 }}>Kiro</span>
+                <div style={{ width: 26, height: 26, background: "var(--k-lime)", border: "2px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 10 }}>K</div>
+                <span style={{ fontFamily: "var(--font-display)", fontSize: 12 }}>KYROO</span>
               </div>
               Yaar sab samajh gaya main 😊 Tera profile ready hai. Kal se sab handle karta hoon 💪
             </div>
@@ -353,10 +364,10 @@ export default function Onboarding() {
                 { icon: "🥗", label: "Nutrition", val: dietType || "Not set" },
                 { icon: "🎯", label: "Energy", val: energyPeak || "Not set" },
               ].map(item => (
-                <div key={item.label} style={{ background: "#0f0f0f", border: "0.5px solid rgba(240,237,232,0.07)", borderRadius: 16, padding: 16 }}>
+                <div key={item.label} style={{ background: "var(--k-paper)", border: "2.5px solid var(--k-ink)", padding: 14 }}>
                   <div style={{ fontSize: 18, marginBottom: 8 }}>{item.icon}</div>
-                  <div style={{ fontSize: 10, letterSpacing: 1, textTransform: "uppercase", color: "rgba(240,237,232,0.3)", marginBottom: 4 }}>{item.label}</div>
-                  <div style={{ fontSize: 13, color: "#f0ede8", fontWeight: 500 }}>{item.val}</div>
+                  <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 9.5, letterSpacing: 1, textTransform: "uppercase", opacity: 0.5, marginBottom: 4, fontWeight: 700 }}>{item.label}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{item.val}</div>
                 </div>
               ))}
             </div>
@@ -364,15 +375,16 @@ export default function Onboarding() {
         )}
       </div>
 
-      <div style={{ padding: "16px 28px", borderTop: "0.5px solid rgba(240,237,232,0.06)", display: "flex", gap: 10, maxWidth: 540, margin: "0 auto", width: "100%" }}>
+      <div style={{ padding: "16px 28px", borderTop: "3px solid var(--k-ink)", display: "flex", gap: 10, maxWidth: 540, margin: "0 auto", width: "100%" }}>
         {step > 1 && (
-          <button onClick={() => setStep(step - 1)} style={{ width: 48, height: 50, borderRadius: 14, border: "0.5px solid rgba(240,237,232,0.1)", background: "transparent", color: "rgba(240,237,232,0.4)", fontSize: 18, cursor: "pointer", flexShrink: 0 }}>←</button>
+          <button className="k-onb-back" onClick={() => setStep(step - 1)} style={{ width: 50, height: 52, fontSize: 18, flexShrink: 0 }}>←</button>
         )}
         <button
+          className="k-onb-btn"
           onClick={step < 10 ? () => setStep(step + 1) : handleFinish}
           disabled={loading}
-          style={{ flex: 1, height: 50, borderRadius: 14, background: "#c8f060", color: "#0a0a0a", border: "none", fontSize: 15, fontWeight: 500, cursor: "pointer", fontFamily: "sans-serif", opacity: loading ? 0.7 : 1 }}>
-          {loading ? "Setting up Kiro... ⏳" : step === 10 ? "Choose your plan →" : step === 1 ? "Let's go! →" : "Next →"}
+          style={{ flex: 1, height: 52, fontSize: 15, background: "var(--k-lime)", color: "var(--k-ink)" }}>
+          {loading ? "Setting up KYROO... ⏳" : step === 10 ? "Choose your plan →" : step === 1 ? "Let's go! →" : "Next →"}
         </button>
       </div>
     </div>

@@ -33,56 +33,65 @@ export default function Pricing() {
   ];
 
   return (
-    <main style={{ background: "#0a0a0a", minHeight: "100vh", color: "#f0ede8", fontFamily: "sans-serif" }}>
-      <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", borderBottom: "0.5px solid rgba(240,237,232,0.07)" }}>
-        <div style={{ fontSize: 20, fontWeight: 800 }}>KI<span style={{ color: "#c8f060" }}>R</span>O</div>
-        <button onClick={() => window.location.href = "/onboarding"} style={{ background: "#c8f060", color: "#0a0a0a", border: "none", padding: "10px 22px", borderRadius: 100, fontSize: 14, fontWeight: 500, cursor: "pointer" }}>Start free →</button>
+    <main className="k-grain" style={{ background: "var(--k-paper)", minHeight: "100vh", color: "var(--k-ink)", fontFamily: "var(--font-body)" }}>
+      <style>{`
+        .k-btn { font-family: var(--font-body); font-weight: 700; cursor: pointer; border: 3px solid var(--k-ink); background: var(--k-ink); color: var(--k-paper); padding: 12px 24px; font-size: 14px; box-shadow: 4px 4px 0 var(--k-ink); transition: transform .12s ease, box-shadow .12s ease; }
+        .k-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--k-ink); }
+        .k-btn:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--k-ink); }
+        .k-btn-lime { background: var(--k-lime); color: var(--k-ink); }
+        @media(max-width: 780px) { .plan-g { grid-template-columns: 1fr !important; } .foot-bar { flex-direction: column; align-items: stretch !important; } }
+      `}</style>
+
+      <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", borderBottom: "3px solid var(--k-ink)" }}>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
+        <button className="k-btn k-btn-lime" onClick={() => window.location.href = "/onboarding"} style={{ padding: "9px 18px", fontSize: 12 }}>Start free →</button>
       </nav>
 
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "60px 32px", textAlign: "center" }}>
-        <div style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "rgba(240,237,232,0.25)", marginBottom: 16 }}>Simple pricing</div>
-        <h1 style={{ fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 800, letterSpacing: -1.5, marginBottom: 12 }}>
-          Less than your <span style={{ color: "#c8f060" }}>morning chai</span>
+      <div style={{ maxWidth: 940, margin: "0 auto", padding: "60px 28px", textAlign: "center" }}>
+        <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, padding: "4px 10px", background: "var(--k-paper)", border: "2px solid var(--k-ink)" }}>Simple pricing</span>
+        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(30px,5vw,54px)", letterSpacing: -1.5, margin: "20px 0 12px", textTransform: "uppercase", lineHeight: 1.05 }}>
+          Less than your <span style={{ color: "var(--k-coral)" }}>morning chai</span>
         </h1>
-        <p style={{ fontSize: 15, color: "rgba(240,237,232,0.4)", fontWeight: 300, maxWidth: 400, margin: "0 auto 32px", lineHeight: 1.7 }}>
+        <p style={{ fontSize: 14, opacity: 0.6, maxWidth: 380, margin: "0 auto 32px", lineHeight: 1.7 }}>
           Replaces ₹48,000/month in professional fees.
         </p>
 
-        <div style={{ display: "inline-flex", background: "#111", border: "0.5px solid rgba(240,237,232,0.08)", borderRadius: 100, padding: 4, gap: 2, marginBottom: 48 }}>
+        <div style={{ display: "inline-flex", border: "3px solid var(--k-ink)", padding: 3, gap: 3, marginBottom: 48, background: "var(--k-paper)" }}>
           {["monthly", "yearly"].map(b => (
             <button key={b} onClick={() => setBilling(b)} style={{
-              padding: "8px 22px", borderRadius: 100, fontSize: 13,
-              cursor: "pointer", fontFamily: "sans-serif",
-              color: billing === b ? "#0a0a0a" : "rgba(240,237,232,0.4)",
-              background: billing === b ? "#c8f060" : "transparent",
-              border: "none", fontWeight: billing === b ? 500 : 400
+              padding: "9px 20px", fontSize: 12.5, fontFamily: "var(--font-mono-tag)", fontWeight: 700, textTransform: "uppercase",
+              cursor: "pointer", border: "none",
+              color: billing === b ? "var(--k-ink)" : "rgba(20,18,15,0.4)",
+              background: billing === b ? "var(--k-lime)" : "transparent",
             }}>
-              {b === "yearly" ? "Yearly (Save 33%)" : "Monthly"}
+              {b === "yearly" ? "Yearly · Save 33%" : "Monthly"}
             </button>
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 40 }}>
-          {plans.map(p => (
+        <div className="plan-g" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, marginBottom: 40 }}>
+          {plans.map((p, i) => (
             <div key={p.id} onClick={() => setSelected(p.id)} style={{
-              background: p.hot ? "#c8f060" : "#0f0f0f",
-              border: selected === p.id ? (p.hot ? "2px solid #0a0a0a" : "2px solid #c8f060") : (p.hot ? "none" : "0.5px solid rgba(240,237,232,0.08)"),
-              borderRadius: 24, padding: "32px 24px",
-              position: "relative", cursor: "pointer", transition: "all 0.2s"
+              background: p.hot ? "var(--k-lime)" : "var(--k-paper)",
+              border: "3px solid var(--k-ink)",
+              boxShadow: selected === p.id ? "8px 8px 0 var(--k-ink)" : "4px 4px 0 var(--k-ink)",
+              padding: "30px 22px", position: "relative", cursor: "pointer", textAlign: "left",
+              transform: `translate(${selected === p.id ? -3 : 0}px, ${selected === p.id ? -3 : 0}px) rotate(${p.hot ? -1 : i === 0 ? 1 : -1}deg)`,
+              transition: "all .15s ease",
             }}>
               {p.hot && (
-                <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "#f0ede8", color: "#0a0a0a", fontSize: 10, fontWeight: 600, padding: "3px 14px", borderRadius: 100, whiteSpace: "nowrap", textTransform: "uppercase" }}>Most popular</div>
+                <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%) rotate(-2deg)", background: "var(--k-ink)", color: "var(--k-lime)", fontFamily: "var(--font-mono-tag)", fontSize: 9.5, fontWeight: 700, padding: "4px 12px", border: "2px solid var(--k-ink)", whiteSpace: "nowrap", textTransform: "uppercase" }}>Most popular</div>
               )}
               {selected === p.id && (
-                <div style={{ position: "absolute", top: 16, right: 16, width: 22, height: 22, borderRadius: "50%", background: p.hot ? "#0a0a0a" : "#c8f060", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: p.hot ? "#c8f060" : "#0a0a0a", fontWeight: 700 }}>✓</div>
+                <div style={{ position: "absolute", top: 14, right: 14, width: 24, height: 24, background: "var(--k-ink)", color: p.hot ? "var(--k-lime)" : "var(--k-paper)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>✓</div>
               )}
-              <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: p.hot ? "rgba(10,10,10,0.4)" : "rgba(240,237,232,0.3)", marginBottom: 18, fontWeight: 500 }}>{p.name}</div>
-              <div style={{ fontSize: 44, fontWeight: 800, letterSpacing: -2, color: p.hot ? "#0a0a0a" : "#f0ede8", lineHeight: 1 }}>{billing === "yearly" ? p.price.yearly : p.price.monthly}</div>
-              <div style={{ fontSize: 12, color: p.hot ? "rgba(10,10,10,0.4)" : "rgba(240,237,232,0.3)", marginBottom: 24, fontWeight: 300 }}>{p.period}</div>
-              <ul style={{ listStyle: "none", marginBottom: 0 }}>
+              <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10.5, letterSpacing: 1.5, textTransform: "uppercase", opacity: 0.55, marginBottom: 16, fontWeight: 700 }}>{p.name}</div>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: 40, letterSpacing: -1.5 }}>{billing === "yearly" ? p.price.yearly : p.price.monthly}</div>
+              <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 22 }}>{p.period}</div>
+              <ul style={{ listStyle: "none", marginBottom: 0, padding: 0 }}>
                 {p.features.map(f => (
-                  <li key={f} style={{ fontSize: 13, color: p.hot ? "rgba(10,10,10,0.65)" : "rgba(240,237,232,0.6)", padding: "7px 0", borderBottom: `0.5px solid ${p.hot ? "rgba(10,10,10,0.08)" : "rgba(240,237,232,0.05)"}`, fontWeight: 300, display: "flex", gap: 8 }}>
-                    <span style={{ color: p.hot ? "#0a0a0a" : "#c8f060" }}>✓</span>{f}
+                  <li key={f} style={{ fontSize: 13, padding: "7px 0", borderBottom: "2px solid rgba(20,18,15,0.1)", fontWeight: 500, display: "flex", gap: 8 }}>
+                    <span style={{ fontWeight: 700 }}>✓</span>{f}
                   </li>
                 ))}
               </ul>
@@ -90,18 +99,19 @@ export default function Pricing() {
           ))}
         </div>
 
-        <div style={{ background: "#111", border: "0.5px solid rgba(240,237,232,0.07)", borderRadius: 20, padding: "20px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+        <div className="foot-bar" style={{ background: "var(--k-ink)", color: "var(--k-paper)", border: "3px solid var(--k-ink)", padding: "20px 26px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
           <div style={{ textAlign: "left" }}>
-            <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 4 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 16, marginBottom: 4 }}>
               {plans.find(p => p.id === selected)?.name} selected
             </div>
-            <div style={{ fontSize: 13, color: "rgba(240,237,232,0.35)", fontWeight: 300 }}>
-              Cancel anytime · No hidden charges · UPI AutoPay
+            <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, opacity: 0.6 }}>
+              CANCEL ANYTIME · NO HIDDEN CHARGES · UPI AUTOPAY
             </div>
           </div>
           <button
+            className="k-btn k-btn-lime"
             onClick={() => window.location.href = "/payment"}
-            style={{ background: "#c8f060", color: "#0a0a0a", border: "none", padding: "14px 32px", borderRadius: 100, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+            style={{ padding: "13px 28px", fontSize: 13 }}>
             Continue to payment →
           </button>
         </div>

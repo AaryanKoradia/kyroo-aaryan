@@ -71,7 +71,7 @@ export default function Payment() {
           }
         },
         prefill: { name: userName },
-        theme: { color: "#c8f060" },
+        theme: { color: "#ff4a2e" },
         modal: { ondismiss: () => setLoading(false) }
       };
       const rzp = new window.Razorpay(options);
@@ -83,41 +83,52 @@ export default function Payment() {
   };
 
   return (
-    <main style={{ background: "#0a0a0a", minHeight: "100vh", color: "#f0ede8", fontFamily: "sans-serif" }}>
-      <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", borderBottom: "0.5px solid rgba(240,237,232,0.07)" }}>
-        <div style={{ fontSize: 20, fontWeight: 800 }}>KI<span style={{ color: "#c8f060" }}>R</span>O</div>
-        <div style={{ fontSize: 13, color: "rgba(240,237,232,0.4)" }}>Step 2 of 2 — Choose plan</div>
+    <main className="k-grain" style={{ background: "var(--k-paper)", minHeight: "100vh", color: "var(--k-ink)", fontFamily: "var(--font-body)" }}>
+      <style>{`
+        .k-btn { font-family: var(--font-body); font-weight: 700; cursor: pointer; border: 3px solid var(--k-ink); background: var(--k-ink); color: var(--k-paper); padding: 12px 24px; font-size: 14px; box-shadow: 4px 4px 0 var(--k-ink); transition: transform .12s ease, box-shadow .12s ease; }
+        .k-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--k-ink); }
+        .k-btn:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--k-ink); }
+        .k-btn-lime { background: var(--k-lime); color: var(--k-ink); }
+        @media(max-width: 780px) { .plan-g { grid-template-columns: 1fr !important; } }
+      `}</style>
+
+      <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", borderBottom: "3px solid var(--k-ink)" }}>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
+        <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>Step 2 of 2 — Choose plan</span>
       </nav>
 
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "60px 32px" }}>
-        <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(200,240,96,0.08)", border: "0.5px solid rgba(200,240,96,0.25)", borderRadius: 100, padding: "6px 16px", fontSize: 11, color: "#c8f060", fontWeight: 500, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 20 }}>
+      <div style={{ maxWidth: 940, margin: "0 auto", padding: "60px 28px" }}>
+        <div style={{ textAlign: "center", marginBottom: 52 }}>
+          <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, padding: "5px 14px", background: "var(--k-lime)", border: "2px solid var(--k-ink)", display: "inline-block", transform: "rotate(-2deg)" }}>
             7-day free trial on all paid plans
-          </div>
-          <h1 style={{ fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 800, letterSpacing: -1.5, marginBottom: 12 }}>
+          </span>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(30px,5vw,54px)", letterSpacing: -1.5, margin: "22px 0 12px", textTransform: "uppercase" }}>
             {userName ? `Welcome, ${userName}! 🎉` : "Choose your plan"}
           </h1>
-          <p style={{ fontSize: 16, color: "rgba(240,237,232,0.4)", fontWeight: 300 }}>
+          <p style={{ fontSize: 15, opacity: 0.6 }}>
             Start free. Upgrade anytime. Cancel with one WhatsApp message.
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 40 }}>
-          {plans.map(p => (
+        <div className="plan-g" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, marginBottom: 40 }}>
+          {plans.map((p, i) => (
             <div key={p.id} onClick={() => setSelectedPlan(p.id)} style={{
-              background: p.hot ? "#c8f060" : "#0f0f0f",
-              border: selectedPlan === p.id ? (p.hot ? "2px solid #0a0a0a" : "2px solid #c8f060") : (p.hot ? "none" : "0.5px solid rgba(240,237,232,0.08)"),
-              borderRadius: 24, padding: "32px 24px", position: "relative", cursor: "pointer", transition: "all 0.2s"
+              background: p.hot ? "var(--k-lime)" : "var(--k-paper)",
+              border: "3px solid var(--k-ink)",
+              boxShadow: selectedPlan === p.id ? "8px 8px 0 var(--k-ink)" : "4px 4px 0 var(--k-ink)",
+              padding: "30px 22px", position: "relative", cursor: "pointer", textAlign: "left",
+              transform: `translate(${selectedPlan === p.id ? -3 : 0}px, ${selectedPlan === p.id ? -3 : 0}px) rotate(${p.hot ? -1 : i === 0 ? 1 : -1}deg)`,
+              transition: "all .15s ease",
             }}>
-              {p.hot && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "#f0ede8", color: "#0a0a0a", fontSize: 10, fontWeight: 600, padding: "3px 14px", borderRadius: 100, whiteSpace: "nowrap", textTransform: "uppercase" }}>Most popular</div>}
-              {selectedPlan === p.id && <div style={{ position: "absolute", top: 16, right: 16, width: 22, height: 22, borderRadius: "50%", background: p.hot ? "#0a0a0a" : "#c8f060", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: p.hot ? "#c8f060" : "#0a0a0a", fontWeight: 700 }}>✓</div>}
-              <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: p.hot ? "rgba(10,10,10,0.4)" : "rgba(240,237,232,0.3)", marginBottom: 18, fontWeight: 500 }}>{p.name}</div>
-              <div style={{ fontSize: 44, fontWeight: 800, letterSpacing: -2, color: p.hot ? "#0a0a0a" : "#f0ede8", lineHeight: 1 }}>{p.price}</div>
-              <div style={{ fontSize: 12, color: p.hot ? "rgba(10,10,10,0.4)" : "rgba(240,237,232,0.3)", marginBottom: 24, fontWeight: 300 }}>{p.period}</div>
-              <ul style={{ listStyle: "none", marginBottom: 0 }}>
+              {p.hot && <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%) rotate(-2deg)", background: "var(--k-ink)", color: "var(--k-lime)", fontFamily: "var(--font-mono-tag)", fontSize: 9.5, fontWeight: 700, padding: "4px 12px", border: "2px solid var(--k-ink)", whiteSpace: "nowrap", textTransform: "uppercase" }}>Most popular</div>}
+              {selectedPlan === p.id && <div style={{ position: "absolute", top: 14, right: 14, width: 24, height: 24, background: "var(--k-ink)", color: p.hot ? "var(--k-lime)" : "var(--k-paper)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>✓</div>}
+              <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10.5, letterSpacing: 1.5, textTransform: "uppercase", opacity: 0.55, marginBottom: 16, fontWeight: 700 }}>{p.name}</div>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: 40, letterSpacing: -1.5 }}>{p.price}</div>
+              <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 22 }}>{p.period}</div>
+              <ul style={{ listStyle: "none", marginBottom: 0, padding: 0 }}>
                 {p.features.map(f => (
-                  <li key={f} style={{ fontSize: 13, color: p.hot ? "rgba(10,10,10,0.65)" : "rgba(240,237,232,0.6)", padding: "7px 0", borderBottom: `0.5px solid ${p.hot ? "rgba(10,10,10,0.08)" : "rgba(240,237,232,0.05)"}`, fontWeight: 300, display: "flex", gap: 8 }}>
-                    <span style={{ color: p.hot ? "#0a0a0a" : "#c8f060" }}>✓</span>{f}
+                  <li key={f} style={{ fontSize: 13, padding: "7px 0", borderBottom: "2px solid rgba(20,18,15,0.1)", fontWeight: 500, display: "flex", gap: 8 }}>
+                    <span style={{ fontWeight: 700 }}>✓</span>{f}
                   </li>
                 ))}
               </ul>
@@ -125,17 +136,17 @@ export default function Payment() {
           ))}
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap", marginBottom: 40 }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginBottom: 40 }}>
           {["🔄 Cancel anytime via WhatsApp", "🔒 256-bit encrypted", "📅 No charge for 7 days", "🇮🇳 Data stored in India"].map(t => (
-            <div key={t} style={{ fontSize: 13, color: "rgba(240,237,232,0.35)" }}>{t}</div>
+            <span key={t} style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10.5, fontWeight: 700, padding: "5px 10px", border: "2px solid var(--k-ink)", background: "var(--k-paper)" }}>{t}</span>
           ))}
         </div>
 
         <div style={{ textAlign: "center" }}>
-          <button onClick={handlePayment} disabled={loading} style={{ background: "#c8f060", color: "#0a0a0a", border: "none", padding: "18px 48px", borderRadius: 100, fontSize: 16, fontWeight: 600, cursor: "pointer", opacity: loading ? 0.7 : 1, width: "100%", maxWidth: 400 }}>
+          <button className="k-btn k-btn-lime" onClick={handlePayment} disabled={loading} style={{ fontSize: 16, padding: "18px 0", opacity: loading ? 0.7 : 1, width: "100%", maxWidth: 420 }}>
             {loading ? "Processing... ⏳" : selectedPlan === "free" ? "Start for free →" : "Start 7-day free trial →"}
           </button>
-          <p style={{ fontSize: 12, color: "rgba(240,237,232,0.25)", marginTop: 12, fontWeight: 300 }}>
+          <p style={{ fontSize: 12, opacity: 0.55, marginTop: 14 }}>
             {selectedPlan === "free" ? "No credit card needed" : "No charge today · Cancel anytime"}
           </p>
         </div>
