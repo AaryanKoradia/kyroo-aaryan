@@ -374,6 +374,31 @@ def _is_leaked_reasoning(bubble: str) -> bool:
     return any(sig in low for sig in _LEAK_SIGNATURES)
 
 
+_EMOJI_PATTERN = re.compile(
+    "["
+    "\U0001F600-\U0001F64F"
+    "\U0001F300-\U0001F5FF"
+    "\U0001F680-\U0001F9FF"
+    "\U00002702-\U000027B0"
+    "\U0001FA00-\U0001FAFF"
+    "]",
+    flags=re.UNICODE,
+)
+
+MAX_EMOJIS_PER_BUBBLE = 1
+
+
+def _cap_emojis(bubble: str, max_emojis: int = MAX_EMOJIS_PER_BUBBLE) -> str:
+    """Hard backstop for the 'strict max 1 emoji per message' persona rule —
+    the model doesn't always follow it, so enforce it in code too."""
+    matches = list(_EMOJI_PATTERN.finditer(bubble))
+    if len(matches) <= max_emojis:
+        return bubble
+    keep = {m.start() for m in matches[:max_emojis]}
+    chars = [c for i, c in enumerate(bubble) if not (_EMOJI_PATTERN.match(c) and i not in keep)]
+    return re.sub(r' {2,}', ' ', "".join(chars)).strip()
+
+
 def validate_response(text: str) -> list[str]:
     cleaned = text.strip()
 
@@ -406,6 +431,7 @@ def validate_response(text: str) -> list[str]:
 
     bubbles = [b.strip() for b in cleaned.split("\n\n") if b.strip()]
     bubbles = [b for b in bubbles if not _is_leaked_reasoning(b)]
+    bubbles = [_cap_emojis(b) for b in bubbles]
     if not bubbles:
         bubbles = ["hmm one sec, my brain glitched, say that again?"]
     return bubbles[:4]
@@ -489,7 +515,7 @@ EMOJI USAGE (use with actual intent, not randomly):
 - 💯 = strong agreement, "exactly"
 - 🫡 = respect, acknowledging something with a nod
 - Never use an emoji just to fill space or soften every sentence. If a message doesn't call for one, send it with none.
-- 😭 is NOT your default emoji. It is reserved specifically for "I'm dying/this is too much" intensity, nothing else. Do not reach for it out of habit for every reaction. Actively rotate through the full list above based on the actual meaning of the moment, if you notice you've used the same emoji in your last couple of messages, deliberately pick a different one that still fits.
+- 😭 is heavily overused by default, actively resist it. It is reserved for genuinely rare "I'm dying/this is too much" intensity moments, not a general-purpose reaction. Across a normal conversation, most replies should have ZERO emoji, and 😭 specifically should show up rarely, not in back-to-back messages and not as your go-to. If you're unsure whether a moment calls for it, leave it out entirely rather than defaulting to it. Actively rotate through the full list above based on the actual meaning of the moment.
 
 BOUNDARIES (never compromise on these):
 - If {name} initiates sexual, explicit, or pornographic conversation, requests, or roleplay, do not engage or play along in any way, even lightly, jokingly, or "just this once." Redirect naturally and in-character to something else, the way a real friend changes the subject when a conversation goes somewhere they're not going to go, keep it brief and light, not preachy or lecturing, but firm, don't leave an opening to continue that topic.
