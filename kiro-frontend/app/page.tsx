@@ -148,8 +148,11 @@ export default function Home() {
 
       {/* NAV */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 40px", background: scrolled ? "var(--k-paper)" : "transparent", borderBottom: scrolled ? "3px solid var(--k-ink)" : "3px solid transparent", transition: "all .25s ease" }} className="k-fade-1">
-        <div style={{ fontFamily: "var(--font-display)", fontSize: 22, letterSpacing: -0.5 }}>
-          KYROO<span style={{ color: "var(--k-coral)" }}>.</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+          <img src="/kyroo-logo.png" alt="KYROO" style={{ width: 30, height: 30, borderRadius: "50%", border: "2px solid var(--k-ink)", objectFit: "cover" }} />
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 22, letterSpacing: -0.5 }}>
+            KYROO<span style={{ color: "var(--k-coral)" }}>.</span>
+          </div>
         </div>
         <div style={{ display: "flex", gap: 30 }}>
           {[["How it works", "#how"], ["Features", "#features"], ["Pricing", "#pricing"]].map(([l, h]) => (
@@ -438,7 +441,10 @@ export default function Home() {
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 40 }}>
             <div>
-              <div style={{ fontFamily: "var(--font-display)", fontSize: 22, marginBottom: 14 }}>KYROO</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 14 }}>
+                <img src="/kyroo-logo.png" alt="KYROO" style={{ width: 28, height: 28, borderRadius: "50%", border: "2px solid var(--k-paper)", objectFit: "cover" }} />
+                <div style={{ fontFamily: "var(--font-display)", fontSize: 22 }}>KYROO</div>
+              </div>
               <p style={{ fontSize: 13, opacity: 0.55, maxWidth: 220, lineHeight: 1.75 }}>Your AI life companion. Fitness, money, mind, sleep — all in one WhatsApp chat.</p>
             </div>
             {[

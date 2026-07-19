@@ -27,7 +27,7 @@ export default function Success() {
 
         <div className="k-card" style={{ border: "3px solid var(--k-ink)", boxShadow: "6px 6px 0 var(--k-ink)", padding: "22px", marginBottom: 36, textAlign: "left", background: "var(--k-paper)", transform: "rotate(-1deg)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <div style={{ width: 38, height: 38, background: "var(--k-lime)", border: "3px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 13 }}>K</div>
+            <img src="/kyroo-logo.png" alt="KYROO" style={{ width: 38, height: 38, borderRadius: "50%", border: "3px solid var(--k-ink)", objectFit: "cover" }} />
             <div>
               <div style={{ fontFamily: "var(--font-display)", fontSize: 14 }}>KYROO</div>
               <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10, color: "var(--k-coral)", fontWeight: 700 }}>● JUST NOW</div>

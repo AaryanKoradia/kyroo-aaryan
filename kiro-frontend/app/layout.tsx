@@ -23,6 +23,10 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "KYROO — your AI best friend, on WhatsApp",
   description: "Fitness. Money. Mind. Sleep. One AI. Every day. On WhatsApp.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({

@@ -155,7 +155,10 @@ export default function Onboarding() {
       input::placeholder { color: rgba(20,18,15,0.35); }`}</style>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 28px", borderBottom: "3px solid var(--k-ink)" }}>
-        <div style={{ fontFamily: "var(--font-display)", fontSize: 17 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <img src="/kyroo-logo.png" alt="KYROO" style={{ width: 22, height: 22, borderRadius: "50%", border: "2px solid var(--k-ink)", objectFit: "cover" }} />
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 17 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
+        </div>
         <div style={{ flex: 1, margin: "0 24px", height: 12, background: "var(--k-paper)", border: "2px solid var(--k-ink)" }}>
           <div style={{ width: `${progress}%`, height: "100%", background: "var(--k-lime)", transition: "width 0.4s ease" }}></div>
         </div>
@@ -177,7 +180,7 @@ export default function Onboarding() {
           <div>
             <div style={{ background: "var(--k-paper)", border: "3px solid var(--k-ink)", boxShadow: "4px 4px 0 var(--k-ink)", padding: "14px 16px", marginBottom: 24, fontSize: 13, lineHeight: 1.65, transform: "rotate(-0.6deg)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <div style={{ width: 26, height: 26, background: "var(--k-lime)", border: "2px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 10 }}>K</div>
+                <img src="/kyroo-logo.png" alt="KYROO" style={{ width: 26, height: 26, borderRadius: "50%", border: "2px solid var(--k-ink)", objectFit: "cover" }} />
                 <span style={{ fontFamily: "var(--font-display)", fontSize: 12 }}>KYROO</span>
               </div>
               Main hoon tera AI best friend 😊 Fitness, money, mind, sleep — sab kuch handle karunga. Pehle tujhe thoda jaanna chahta hoon. Ready?
@@ -350,7 +353,7 @@ export default function Onboarding() {
           <div>
             <div style={{ background: "var(--k-paper)", border: "3px solid var(--k-ink)", boxShadow: "4px 4px 0 var(--k-ink)", padding: "14px 16px", marginBottom: 24, fontSize: 13, lineHeight: 1.65, transform: "rotate(-0.6deg)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <div style={{ width: 26, height: 26, background: "var(--k-lime)", border: "2px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 10 }}>K</div>
+                <img src="/kyroo-logo.png" alt="KYROO" style={{ width: 26, height: 26, borderRadius: "50%", border: "2px solid var(--k-ink)", objectFit: "cover" }} />
                 <span style={{ fontFamily: "var(--font-display)", fontSize: 12 }}>KYROO</span>
               </div>
               Yaar sab samajh gaya main 😊 Tera profile ready hai. Kal se sab handle karta hoon 💪
