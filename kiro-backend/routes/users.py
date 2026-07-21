@@ -4,6 +4,18 @@ from database import get_db
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+
+def normalize_phone(phone: str) -> str:
+    """Store phone numbers in the exact format WhatsApp's webhook sends them in
+    (country code + number, no +, no spaces) so a user who signs up on the
+    website is recognized as the same person when they message on WhatsApp."""
+    digits = "".join(c for c in phone if c.isdigit())
+    if len(digits) == 10:
+        digits = "91" + digits
+    elif len(digits) == 11 and digits.startswith("0"):
+        digits = "91" + digits[1:]
+    return digits
+
 class UserSignup(BaseModel):
     name: str
     email: str
@@ -27,10 +39,11 @@ async def signup(user: UserSignup):
     existing = db.table("users").select("*").eq("email", user.email).execute()
     if existing.data:
         raise HTTPException(status_code=400, detail="Email already registered")
+    phone = normalize_phone(user.phone)
     new_user = db.table("users").insert({
         "name": user.name,
         "email": user.email,
-        "phone": user.phone,
+        "phone": phone,
         "city": user.city,
         "age": user.age,
         "language": user.language,
