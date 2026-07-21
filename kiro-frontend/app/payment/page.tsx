@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://kyroo-backend.onrender.com";
 const RAZORPAY_KEY = "rzp_test_Slcdo1LLMUlvul";
+const WHATSAPP_NUMBER = "917400351463";
 
 declare global {
   interface Window { Razorpay: any; }
@@ -31,7 +32,8 @@ export default function Payment() {
 
   const handlePayment = async () => {
     if (selectedPlan === "free") {
-      window.location.href = "/success";
+      const greeting = userName ? `Hi KYROO! I'm ${userName}, just signed up` : "Hi KYROO! I just signed up";
+      window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(greeting)}`;
       return;
     }
     if (!userId) {
