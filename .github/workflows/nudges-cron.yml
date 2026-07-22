@@ -1,0 +1,14 @@
+name: KYROO Nudges Scheduler
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # every 10 minutes; nudge_service.py's fire window covers the gap
+  workflow_dispatch:  # manual trigger for testing
+
+jobs:
+  check-and-send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check and send due nudges
+        run: |
+          curl -sf -X POST https://kyroo-whatsapp.onrender.com/nudges/check-and-send
