@@ -3,7 +3,7 @@ import { useState } from "react";
 
 export default function Pricing() {
   const [billing, setBilling] = useState("monthly");
-  const [selected, setSelected] = useState("pro");
+  const [selected, setSelected] = useState("free");
 
   const plans = [
     {
@@ -113,7 +113,7 @@ export default function Pricing() {
           </div>
           <button
             className="k-btn k-btn-lime"
-            onClick={() => window.location.href = "/payment"}
+            onClick={() => { localStorage.setItem("kiro_selected_plan", selected); window.location.href = "/payment"; }}
             style={{ padding: "13px 28px", fontSize: 13 }}>
             Continue to payment →
           </button>

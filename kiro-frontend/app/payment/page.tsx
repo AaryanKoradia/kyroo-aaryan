@@ -11,7 +11,7 @@ declare global {
 }
 
 export default function Payment() {
-  const [selectedPlan, setSelectedPlan] = useState("pro");
+  const [selectedPlan, setSelectedPlan] = useState("free");
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState("");
   const [userId, setUserId] = useState("");
@@ -19,6 +19,8 @@ export default function Payment() {
   useEffect(() => {
     setUserName(localStorage.getItem("kiro_user_name") || "");
     setUserId(localStorage.getItem("kiro_user_id") || "");
+    const savedPlan = localStorage.getItem("kiro_selected_plan");
+    if (savedPlan) setSelectedPlan(savedPlan);
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;

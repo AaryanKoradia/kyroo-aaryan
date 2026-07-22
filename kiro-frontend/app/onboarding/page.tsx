@@ -166,7 +166,16 @@ export default function Onboarding() {
           money_habit: moneyHabit,
           diet_type: dietType,
           energy_peak: energyPeak,
-          plan: "free"
+          plan: "free",
+          injuries,
+          fitness_workouts: fitnessWorkouts,
+          sleep_quality: sleepQuality,
+          sleep_issues: selectedSleepIssues,
+          stress_triggers: selectedStressTriggers,
+          income_range: incomeRange,
+          eat_habits: selectedEatHabits,
+          diet_restrictions: dietRestrictions,
+          job_type: selectedJobType
         })
       });
       const data = await res.json();
