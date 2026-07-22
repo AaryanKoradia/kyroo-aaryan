@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { Camera, Smile, Mic, Square } from "lucide-react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://kyroo-backend.onrender.com";
 
@@ -520,10 +521,13 @@ export default function ChatTest() {
               fontSize: 18,
               cursor: "pointer",
               flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
             type="button"
           >
-            📷
+            <Camera size={18} strokeWidth={2} />
           </button>
           <button
             onClick={() => setShowEmojiPicker((v) => !v)}
@@ -537,10 +541,13 @@ export default function ChatTest() {
               fontSize: 18,
               cursor: "pointer",
               flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
             type="button"
           >
-            😊
+            <Smile size={18} strokeWidth={2} />
           </button>
           {voiceSupported && (
             <button
@@ -555,10 +562,13 @@ export default function ChatTest() {
                 fontSize: 18,
                 cursor: "pointer",
                 flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
               type="button"
             >
-              {listening ? "⏹" : "🎙"}
+              {listening ? <Square size={16} strokeWidth={2} /> : <Mic size={18} strokeWidth={2} />}
             </button>
           )}
           <textarea

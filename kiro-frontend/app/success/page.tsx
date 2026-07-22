@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { PartyPopper } from "lucide-react";
 
 export default function Success() {
   const [name, setName] = useState("");
@@ -17,12 +18,12 @@ export default function Success() {
         .k-btn-lime { background: var(--k-lime); color: var(--k-ink); }
       `}</style>
       <div style={{ maxWidth: 520 }}>
-        <div style={{ width: 100, height: 100, background: "var(--k-lime)", border: "3px solid var(--k-ink)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 46, margin: "0 auto 28px", transform: "rotate(-4deg)" }}>🎉</div>
+        <div style={{ width: 100, height: 100, background: "var(--k-lime)", border: "3px solid var(--k-ink)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 28px", transform: "rotate(-4deg)" }}><PartyPopper size={44} strokeWidth={2} color="var(--k-ink)" /></div>
         <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(30px,5vw,48px)", letterSpacing: -1.5, marginBottom: 18, textTransform: "uppercase" }}>
           You&apos;re in{name ? `, ${name}` : ""}!
         </h1>
         <p style={{ fontSize: 16, opacity: 0.65, lineHeight: 1.75, marginBottom: 36 }}>
-          KYROO is setting up your personalised AI brain right now. Expect your first WhatsApp message tomorrow morning at 7 AM! 🌅
+          KYROO is setting up your personalised AI brain right now. Expect your first WhatsApp message tomorrow morning at 7 AM.
         </p>
 
         <div className="k-card" style={{ border: "3px solid var(--k-ink)", boxShadow: "6px 6px 0 var(--k-ink)", padding: "22px", marginBottom: 36, textAlign: "left", background: "var(--k-paper)", transform: "rotate(-1deg)" }}>
@@ -34,9 +35,9 @@ export default function Success() {
             </div>
           </div>
           <p style={{ fontSize: 14, lineHeight: 1.75, margin: 0 }}>
-            {name ? name : "Hey"}! 🔥 Welcome to KYROO!<br /><br />
+            {name ? name : "Hey"}! Welcome to KYROO!<br /><br />
             Maine tera poora profile padh liya. Kal subah 7am pe milte hain — plan ready hai. Excited hoon honestly 😊<br /><br />
-            Koi bhi baat karni ho — main hoon yahan. 24/7. 💙
+            Koi bhi baat karni ho — main hoon yahan. 24/7.
           </p>
         </div>
 

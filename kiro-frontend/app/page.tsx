@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { Sunrise, Wallet, Dumbbell, Moon, Brain, BedDouble, Target, FolderOpen, PenLine, MessageCircle, Rocket, type LucideIcon } from "lucide-react";
 
 function useInView(threshold = 0.12) {
   const ref = useRef<HTMLDivElement>(null);
@@ -44,11 +45,11 @@ function Tag({ children, bg = "var(--k-paper)" }: { children: React.ReactNode; b
   );
 }
 
-const TIMELINE = [
-  { time: "7:00 AM",  label: "Morning Brief",    icon: "🌅", color: "var(--k-lime)",  text: "Good morning! 🌅\n\nSleep: 6.8 hrs · Recovery: 72%\nToday's budget left: ₹1,240\nMood trend: 📈 up 3 days straight\n\nOne thing for today: 20 min walk before lunch." },
-  { time: "12:30 PM", label: "Spending Alert",   icon: "💸", color: "var(--k-coral)", text: "Hey — ₹340 just went to Swiggy 👀\n\nYou're at 78% of today's food budget. Dinner at home = ₹0 and you still hit your goal. Worth it?" },
-  { time: "6:30 PM",  label: "Workout Check-in", icon: "💪", color: "var(--k-blue)",  text: "You haven't moved much today 🚶\n\nJust 20 min now = 4/7 days this week. That streak is worth protecting.\n\nWant a quick home workout? Takes 18 min." },
-  { time: "10:00 PM", label: "Evening Wrap",     icon: "🌙", color: "var(--k-purple)",text: "Day wrap ✨\n\n☀️ Great energy day\n🥗 Ate well (mostly!)\n💸 Saved ₹340\n📚 Skipped workout\n\nTomorrow: let's protect that morning walk." },
+const TIMELINE: { time: string; label: string; icon: LucideIcon; color: string; text: string }[] = [
+  { time: "7:00 AM",  label: "Morning Brief",    icon: Sunrise,   color: "var(--k-lime)",  text: "Good morning!\n\nSleep: 6.8 hrs · Recovery: 72%\nToday's budget left: ₹1,240\nMood trend: up 3 days straight\n\nOne thing for today: 20 min walk before lunch." },
+  { time: "12:30 PM", label: "Spending Alert",   icon: Wallet,    color: "var(--k-coral)", text: "Hey — ₹340 just went to Swiggy.\n\nYou're at 78% of today's food budget. Dinner at home = ₹0 and you still hit your goal. Worth it?" },
+  { time: "6:30 PM",  label: "Workout Check-in", icon: Dumbbell,  color: "var(--k-blue)",  text: "You haven't moved much today.\n\nJust 20 min now = 4/7 days this week. That streak is worth protecting.\n\nWant a quick home workout? Takes 18 min." },
+  { time: "10:00 PM", label: "Evening Wrap",     icon: Moon,      color: "var(--k-purple)",text: "Day wrap.\n\nGreat energy day\nAte well (mostly!)\nSaved ₹340\nSkipped workout\n\nTomorrow: let's protect that morning walk." },
 ];
 
 const TESTIMONIALS = [
@@ -57,21 +58,21 @@ const TESTIMONIALS = [
   { quote: "I've tried every habit app. None of them talked back. KYROO gets context and responds like a friend who actually knows me.", name: "Ananya K.", role: "MBA student, Delhi", color: "var(--k-blue)" },
 ];
 
-const FEATURES = [
-  { icon: "💪", title: "Fitness",    desc: "Workouts, recovery, and nutrition tracked daily. KYROO nudges you when you slip and celebrates every win.", tags: ["Workouts", "Recovery", "Nutrition"], color: "var(--k-lime)" },
-  { icon: "💰", title: "Money",      desc: "Budget tracking, spending alerts, savings nudges. No bank access. Just smart advice when you need it.", tags: ["Budgets", "Alerts", "Savings"], color: "var(--k-coral)" },
-  { icon: "🧠", title: "Mind",       desc: "Mood tracking, CBT journaling, emotional memory. KYROO remembers how you felt last week.", tags: ["Mood", "CBT", "Memory"], color: "var(--k-purple)" },
-  { icon: "😴", title: "Sleep",      desc: "Sleep scoring, circadian nudges, energy forecasts. Wake up actually optimised every morning.", tags: [], color: "var(--k-blue)" },
-  { icon: "🎯", title: "Goals",      desc: "Set it once, KYROO tracks it daily. Gentle accountability that actually works.", tags: [], color: "var(--k-coral)" },
-  { icon: "📁", title: "File Tools", desc: "Convert PDFs, read documents, crunch spreadsheets — all inside WhatsApp.", tags: [], color: "var(--k-lime)" },
+const FEATURES: { icon: LucideIcon; title: string; desc: string; tags: string[]; color: string }[] = [
+  { icon: Dumbbell,   title: "Fitness",    desc: "Workouts, recovery, and nutrition tracked daily. KYROO nudges you when you slip and celebrates every win.", tags: ["Workouts", "Recovery", "Nutrition"], color: "var(--k-lime)" },
+  { icon: Wallet,     title: "Money",      desc: "Budget tracking, spending alerts, savings nudges. No bank access. Just smart advice when you need it.", tags: ["Budgets", "Alerts", "Savings"], color: "var(--k-coral)" },
+  { icon: Brain,      title: "Mind",       desc: "Mood tracking, CBT journaling, emotional memory. KYROO remembers how you felt last week.", tags: ["Mood", "CBT", "Memory"], color: "var(--k-purple)" },
+  { icon: BedDouble,  title: "Sleep",      desc: "Sleep scoring, circadian nudges, energy forecasts. Wake up actually optimised every morning.", tags: [], color: "var(--k-blue)" },
+  { icon: Target,     title: "Goals",      desc: "Set it once, KYROO tracks it daily. Gentle accountability that actually works.", tags: [], color: "var(--k-coral)" },
+  { icon: FolderOpen, title: "File Tools", desc: "Convert PDFs, read documents, crunch spreadsheets — all inside WhatsApp.", tags: [], color: "var(--k-lime)" },
 ];
 
 const TICKER = ["Fitness tracked", "Money managed", "Sleep scored", "Mood understood", "Daily brief delivered", "Hindi + English", "8 languages", "WhatsApp native", "50K+ active users", "No app download", "File conversion built-in", "Hinglish supported"];
 
-const STEPS = [
-  { n: "01", icon: "✍️", title: "Sign up", desc: "10 quick questions. Tell KYROO your goals, lifestyle, habits, and how you communicate.", time: "~2 min", color: "var(--k-lime)" },
-  { n: "02", icon: "💬", title: "Connect WhatsApp", desc: "KYROO slides into your WhatsApp. No download, no new app. Just your number and a quick verify.", time: "~1 min", color: "var(--k-coral)" },
-  { n: "03", icon: "🚀", title: "Let it run", desc: "Daily briefs, real-time nudges, weekly reports. KYROO learns you and gets smarter every week.", time: "Forever", color: "var(--k-blue)" },
+const STEPS: { n: string; icon: LucideIcon; title: string; desc: string; time: string; color: string }[] = [
+  { n: "01", icon: PenLine,      title: "Sign up", desc: "10 quick questions. Tell KYROO your goals, lifestyle, habits, and how you communicate.", time: "~2 min", color: "var(--k-lime)" },
+  { n: "02", icon: MessageCircle,title: "Connect WhatsApp", desc: "KYROO slides into your WhatsApp. No download, no new app. Just your number and a quick verify.", time: "~1 min", color: "var(--k-coral)" },
+  { n: "03", icon: Rocket,       title: "Let it run", desc: "Daily briefs, real-time nudges, weekly reports. KYROO learns you and gets smarter every week.", time: "Forever", color: "var(--k-blue)" },
 ];
 
 const PLANS = [
@@ -170,16 +171,16 @@ export default function Home() {
       {/* HERO */}
       <section style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "150px 24px 80px", overflow: "hidden" }}>
         <div className="k-float hero-float-tag" style={{ "--k-rot": "-8deg", position: "absolute", top: "18%", left: "6%", zIndex: 1 } as React.CSSProperties}>
-          <div style={{ transform: "rotate(-8deg)" }}><Tag bg="var(--k-lime)">💪 Fitness</Tag></div>
+          <div style={{ transform: "rotate(-8deg)" }}><Tag bg="var(--k-lime)"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Dumbbell size={12} strokeWidth={2.5} /> Fitness</span></Tag></div>
         </div>
         <div className="k-float hero-float-tag" style={{ "--k-rot": "6deg", position: "absolute", top: "26%", right: "8%", zIndex: 1, animationDelay: "1s" } as React.CSSProperties}>
-          <div style={{ transform: "rotate(6deg)" }}><Tag bg="var(--k-coral)">💰 Money</Tag></div>
+          <div style={{ transform: "rotate(6deg)" }}><Tag bg="var(--k-coral)"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Wallet size={12} strokeWidth={2.5} /> Money</span></Tag></div>
         </div>
         <div className="k-float hero-float-tag" style={{ "--k-rot": "5deg", position: "absolute", bottom: "20%", left: "10%", zIndex: 1, animationDelay: "2s" } as React.CSSProperties}>
-          <div style={{ transform: "rotate(5deg)" }}><Tag bg="#fff">😴 Sleep</Tag></div>
+          <div style={{ transform: "rotate(5deg)" }}><Tag bg="#fff"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><BedDouble size={12} strokeWidth={2.5} /> Sleep</span></Tag></div>
         </div>
         <div className="k-float hero-float-tag" style={{ "--k-rot": "-5deg", position: "absolute", bottom: "28%", right: "6%", zIndex: 1, animationDelay: "1.5s" } as React.CSSProperties}>
-          <div style={{ transform: "rotate(-5deg)" }}><Tag bg="var(--k-blue)"><span style={{ color: "#fff" }}>🧠 Mind</span></Tag></div>
+          <div style={{ transform: "rotate(-5deg)" }}><Tag bg="var(--k-blue)"><span style={{ color: "#fff", display: "inline-flex", alignItems: "center", gap: 6 }}><Brain size={12} strokeWidth={2.5} /> Mind</span></Tag></div>
         </div>
 
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--k-ink)", color: "var(--k-lime)", border: "2px solid var(--k-ink)", padding: "7px 18px", fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 32, transform: "rotate(-2deg)", position: "relative", zIndex: 2 }} className="k-fade-1">
@@ -200,7 +201,7 @@ export default function Home() {
 
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", position: "relative", zIndex: 2 }} className="k-fade-4">
           <button className="k-btn k-btn-lime" onClick={go("/onboarding")} style={{ padding: "18px 40px", fontSize: 16, display: "inline-flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 19 }}>💬</span>Start on WhatsApp
+            <MessageCircle size={19} strokeWidth={2.4} />Start on WhatsApp
           </button>
           <button className="k-btn k-btn-ghost" onClick={() => document.querySelector("#how")?.scrollIntoView({ behavior: "smooth" })}>
             See how it works →
@@ -237,7 +238,7 @@ export default function Home() {
           <div className="ft-g" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
             {FEATURES.map((f, i) => (
               <div key={f.title} className="k-card" style={{ padding: "28px 24px", transform: `rotate(${i % 2 === 0 ? -1 : 1}deg)`, opacity: featRef.inView ? 1 : 0, transition: `opacity .5s ease ${i * 0.08}s` }}>
-                <div style={{ width: 52, height: 52, background: f.color, border: "3px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, marginBottom: 18 }}>{f.icon}</div>
+                <div style={{ width: 52, height: 52, background: f.color, border: "3px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}><f.icon size={24} color="var(--k-ink)" strokeWidth={2.3} /></div>
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 19, marginBottom: 10, textTransform: "uppercase" }}>{f.title}</div>
                 <div style={{ fontSize: 13.5, lineHeight: 1.7, opacity: 0.72, marginBottom: f.tags.length ? 16 : 0 }}>{f.desc}</div>
                 {f.tags.length > 0 && (
@@ -276,7 +277,7 @@ export default function Home() {
           {TIMELINE.map((item, i) => (
             <div key={i} className="tl-item" style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: 20, marginBottom: 28, opacity: tlRef.inView ? 1 : 0, transform: tlRef.inView ? "translateX(0)" : "translateX(-16px)", transition: `all .5s ease ${i * 0.1}s` }}>
               <div style={{ textAlign: "center" }}>
-                <div style={{ width: 56, height: 56, background: item.color, border: "3px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, margin: "0 auto 8px" }}>{item.icon}</div>
+                <div style={{ width: 56, height: 56, background: item.color, border: "3px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px" }}><item.icon size={22} color="var(--k-ink)" strokeWidth={2.3} /></div>
                 <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10, fontWeight: 700 }}>{item.time}</div>
               </div>
               <div className="k-card" style={{ padding: "20px 22px" }}>
@@ -305,7 +306,7 @@ export default function Home() {
             {STEPS.map((s, i) => (
               <div key={s.n} className="k-card" style={{ padding: "30px 26px", transform: `rotate(${i === 1 ? 0 : i === 0 ? -1.5 : 1.5}deg)`, opacity: howRef.inView ? 1 : 0, transition: `opacity .5s ease ${i * 0.1}s` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
-                  <div style={{ width: 46, height: 46, background: s.color, border: "3px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>{s.icon}</div>
+                  <div style={{ width: 46, height: 46, background: s.color, border: "3px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center" }}><s.icon size={20} color="var(--k-ink)" strokeWidth={2.3} /></div>
                   <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, opacity: 0.5 }}>STEP {s.n}</span>
                 </div>
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 20, marginBottom: 10, textTransform: "uppercase" }}>{s.title}</div>
@@ -317,7 +318,7 @@ export default function Home() {
 
           <div style={{ textAlign: "center", marginTop: 52 }}>
             <button className="k-btn k-btn-coral" onClick={go("/onboarding")} style={{ padding: "16px 38px", fontSize: 15, display: "inline-flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 17 }}>💬</span> Start now — it's free
+              <MessageCircle size={17} strokeWidth={2.4} /> Start now — it's free
             </button>
           </div>
         </div>
@@ -436,7 +437,7 @@ export default function Home() {
             5 MINUTES TO SET UP. SHOWS UP EVERY MORNING. KNOWS YOUR LIFE BETTER THAN YOU DO IN 30 DAYS.
           </p>
           <button className="k-btn k-btn-lime" onClick={go("/onboarding")} style={{ padding: "19px 46px", fontSize: 16, display: "inline-flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 19 }}>💬</span> Start for free on WhatsApp
+            <MessageCircle size={19} strokeWidth={2.4} /> Start for free on WhatsApp
           </button>
         </div>
       </section>

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { RefreshCw, Lock, CalendarCheck, MapPin } from "lucide-react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://kyroo-backend.onrender.com";
 const RAZORPAY_KEY = "rzp_test_Slcdo1LLMUlvul";
@@ -108,7 +109,7 @@ export default function Payment() {
             7-day free trial on all paid plans
           </span>
           <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(30px,5vw,54px)", letterSpacing: -1.5, margin: "22px 0 12px", textTransform: "uppercase" }}>
-            {userName ? `Welcome, ${userName}! 🎉` : "Choose your plan"}
+            {userName ? `Welcome, ${userName}!` : "Choose your plan"}
           </h1>
           <p style={{ fontSize: 15, opacity: 0.6 }}>
             Start free. Upgrade anytime. Cancel with one WhatsApp message.
@@ -142,14 +143,21 @@ export default function Payment() {
         </div>
 
         <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginBottom: 40 }}>
-          {["🔄 Cancel anytime via WhatsApp", "🔒 256-bit encrypted", "📅 No charge for 7 days", "🇮🇳 Data stored in India"].map(t => (
-            <span key={t} style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10.5, fontWeight: 700, padding: "5px 10px", border: "2px solid var(--k-ink)", background: "var(--k-paper)" }}>{t}</span>
+          {[
+            { icon: RefreshCw, label: "Cancel anytime via WhatsApp" },
+            { icon: Lock, label: "256-bit encrypted" },
+            { icon: CalendarCheck, label: "No charge for 7 days" },
+            { icon: MapPin, label: "Data stored in India" },
+          ].map(t => (
+            <span key={t.label} style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10.5, fontWeight: 700, padding: "5px 10px", border: "2px solid var(--k-ink)", background: "var(--k-paper)", display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <t.icon size={12} strokeWidth={2.5} />{t.label}
+            </span>
           ))}
         </div>
 
         <div style={{ textAlign: "center" }}>
           <button className="k-btn k-btn-lime" onClick={handlePayment} disabled={loading} style={{ fontSize: 16, padding: "18px 0", opacity: loading ? 0.7 : 1, width: "100%", maxWidth: 420 }}>
-            {loading ? "Processing... ⏳" : selectedPlan === "free" ? "Start for free →" : "Start 7-day free trial →"}
+            {loading ? "Processing..." : selectedPlan === "free" ? "Start for free →" : "Start 7-day free trial →"}
           </button>
           <p style={{ fontSize: 12, opacity: 0.55, marginTop: 14 }}>
             {selectedPlan === "free" ? "No credit card needed" : "No charge today · Cancel anytime"}
