@@ -921,7 +921,10 @@ def inactivity_message(user: dict, days_inactive: int) -> str:
 # ─── TOOLS ────────────────────────────────────────────────────────────────────
 
 BRAIN_TOOLS = [
-    {"type": "web_search_20260209", "name": "web_search", "max_uses": 3},
+    # allowed_callers=["direct"] is required for this tool to work on Haiku,
+    # which doesn't support "programmatic" tool calling — without this,
+    # every request that includes this tool 400s on Haiku specifically.
+    {"type": "web_search_20260209", "name": "web_search", "max_uses": 3, "allowed_callers": ["direct"]},
     {
         "name": "lookup_slang",
         "description": "Look up the current meaning of a slang term, meme reference, or internet phrase you don't recognize, via Urban Dictionary. Only use for terms you're genuinely unsure about.",
