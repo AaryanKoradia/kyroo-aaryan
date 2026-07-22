@@ -12,10 +12,12 @@ class WhatsAppClient:
 
     BASE_URL = "https://graph.facebook.com/v22.0"
 
-    # Deliberately not instant (feels robotic), but this used to be
-    # (0.8, 2.0) — for a typical 2-3 bubble reply that alone added 2-5s.
-    # Still reads as human-paced typing at this range.
-    DEFAULT_DELAY_RANGE = (0.4, 1.0)
+    # Pre-send delay is scaled by message length (see _typing_delay) rather
+    # than a flat range — a flat delay meant a long bubble arrived just as
+    # "instantly" as a one-word one, which broke the illusion of typing.
+    MIN_DELAY = 0.5
+    MAX_DELAY = 3.0
+    SECONDS_PER_WORD = 0.12
 
     def download_media(self, media_id: str) -> tuple[str, str] | None:
         """Fetches a WhatsApp media file (image, etc.) and returns (base64_data, mime_type), or None on failure."""
@@ -67,8 +69,17 @@ class WhatsAppClient:
             # never let a typing-indicator failure block the actual reply
             print(f"[whatsapp] typing indicator error: {e}")
 
+    def _typing_delay(self, message: str) -> float:
+        """Longer messages get a longer pre-send pause, so a big bubble
+        doesn't land just as fast as a one-word one — scaled by word count
+        with a floor and ceiling, plus a little jitter so it's not
+        perfectly predictable."""
+        words = len(message.split())
+        base = self.MIN_DELAY + words * self.SECONDS_PER_WORD
+        return min(max(base, self.MIN_DELAY), self.MAX_DELAY) + random.uniform(0, 0.4)
+
     def send_one(self, phone: str, message: str, delay: float | None = None):
-        time.sleep(delay if delay is not None else random.uniform(*self.DEFAULT_DELAY_RANGE))
+        time.sleep(delay if delay is not None else self._typing_delay(message))
         self._send_single_message(phone, message)
 
     def send(self, phone: str, messages: list[str]):
