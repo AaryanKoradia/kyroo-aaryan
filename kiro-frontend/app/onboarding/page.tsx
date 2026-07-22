@@ -143,10 +143,76 @@ export default function Onboarding() {
   const [phone, setPhone] = useState("");
   const [nudgeTime, setNudgeTime] = useState("7 AM");
 
+  const [showValidation, setShowValidation] = useState(false);
+
   const progress = (step / 10) * 100;
 
   const toggleArr = (arr: string[], setArr: (a: string[]) => void, val: string) => {
     setArr(arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val]);
+  };
+
+  const validateStep = (): string | null => {
+    switch (step) {
+      case 1: {
+        const trimmedName = name.trim();
+        if (!trimmedName) return "Enter your name.";
+        if (trimmedName.length < 2 || trimmedName.length > 50) return "Name should be 2–50 characters.";
+        if (!/^[A-Za-z .'-]+$/.test(trimmedName)) return "Name should only contain letters.";
+        if (!age.trim()) return "Enter your age.";
+        const ageNum = Number(age);
+        if (!Number.isInteger(ageNum)) return "Age should be a whole number.";
+        if (ageNum < 13 || ageNum > 100) return "Age must be between 13 and 100.";
+        const trimmedCity = city.trim();
+        if (!trimmedCity) return "Enter your city.";
+        if (trimmedCity.length < 2 || trimmedCity.length > 50) return "City should be 2–50 characters.";
+        if (!/[A-Za-z]/.test(trimmedCity)) return "Enter a valid city name.";
+        if (!/^\S+@\S+\.\S+$/.test(email.trim())) return "Enter a valid email address.";
+        return null;
+      }
+      case 2:
+        if (!fitnessLevel) return "Pick your current fitness level.";
+        return null;
+      case 3:
+        if (!fitnessGoal) return "Pick a fitness goal.";
+        return null;
+      case 4:
+        if (!sleepHour) return "Pick your average sleep hours.";
+        return null;
+      case 5:
+        if (!stressLevel) return "Pick your stress level.";
+        return null;
+      case 6:
+        if (!moneyHabit) return "Pick the money habit that fits you.";
+        return null;
+      case 7:
+        if (!dietType) return "Pick your diet type.";
+        return null;
+      case 8:
+        if (!energyPeak) return "Pick your energy peak.";
+        return null;
+      case 9: {
+        const digits = phone.replace(/\D/g, "");
+        if (!digits) return "Enter your WhatsApp number.";
+        if (digits.length !== 10) return "Enter a valid 10-digit number.";
+        if (!/^[6-9]/.test(digits)) return "Enter a valid Indian mobile number.";
+        return null;
+      }
+      default:
+        return null;
+    }
+  };
+
+  const currentError = validateStep();
+
+  const handleNext = () => {
+    if (currentError) { setShowValidation(true); return; }
+    setShowValidation(false);
+    if (step < 10) setStep(step + 1); else handleFinish();
+  };
+
+  const handleBack = () => {
+    setShowValidation(false);
+    setStep(step - 1);
   };
 
   const handleFinish = async () => {
@@ -303,17 +369,17 @@ export default function Onboarding() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
               <div>
                 <label style={{ fontSize: 11, color: "rgba(20,18,15,0.5)", display: "block", marginBottom: 7 }}>Your name</label>
-                <input style={{ ...inputStyle, marginBottom: 0 }} placeholder="Raj" value={name} onChange={e => setName(e.target.value)} />
+                <input style={{ ...inputStyle, marginBottom: 0 }} placeholder="Raj" maxLength={50} value={name} onChange={e => setName(e.target.value)} />
               </div>
               <div>
                 <label style={{ fontSize: 11, color: "rgba(20,18,15,0.5)", display: "block", marginBottom: 7 }}>Age</label>
-                <input style={{ ...inputStyle, marginBottom: 0 }} placeholder="24" type="number" value={age} onChange={e => setAge(e.target.value)} />
+                <input style={{ ...inputStyle, marginBottom: 0 }} placeholder="24" type="number" min={13} max={100} value={age} onChange={e => setAge(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))} />
               </div>
             </div>
             <label style={{ fontSize: 11, color: "rgba(20,18,15,0.5)", display: "block", marginBottom: 7 }}>City</label>
-            <input style={inputStyle} placeholder="Mumbai, Delhi..." value={city} onChange={e => setCity(e.target.value)} />
+            <input style={inputStyle} placeholder="Mumbai, Delhi..." maxLength={50} value={city} onChange={e => setCity(e.target.value)} />
             <label style={{ fontSize: 11, color: "rgba(20,18,15,0.5)", display: "block", marginBottom: 7 }}>Email</label>
-            <input style={inputStyle} placeholder="you@email.com" type="email" value={email} onChange={e => setEmail(e.target.value)} />
+            <input style={inputStyle} placeholder="you@email.com" type="email" maxLength={100} value={email} onChange={e => setEmail(e.target.value)} />
           </div>
         )}
 
@@ -433,7 +499,7 @@ export default function Onboarding() {
             <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--k-paper)", border: "2.5px solid rgba(20,18,15,0.14)", borderRadius: 4, padding: "12px 16px", marginBottom: 16 }}>
               <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, border: "1.5px solid rgba(20,18,15,0.3)", borderRadius: 3, padding: "2px 5px" }}>IN</span>
               <span style={{ color: "rgba(20,18,15,0.5)", fontSize: 14 }}>+91</span>
-              <input style={{ flex: 1, background: "none", border: "none", fontSize: 15, color: "var(--k-ink)", outline: "none", fontFamily: "var(--font-body)" }} placeholder="98765 43210" type="tel" value={phone} onChange={e => setPhone(e.target.value)} />
+              <input style={{ flex: 1, background: "none", border: "none", fontSize: 15, color: "var(--k-ink)", outline: "none", fontFamily: "var(--font-body)" }} placeholder="98765 43210" type="tel" maxLength={10} value={phone} onChange={e => setPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))} />
             </div>
             <label style={{ fontSize: 11, color: "rgba(20,18,15,0.5)", display: "block", marginBottom: 10 }}>Best time for morning nudge</label>
             <div style={{ display: "flex", gap: 10 }}>
@@ -482,17 +548,24 @@ export default function Onboarding() {
         )}
       </div>
 
-      <div style={{ padding: "16px 28px", borderTop: "3px solid var(--k-ink)", display: "flex", gap: 10, maxWidth: 540, margin: "0 auto", width: "100%" }}>
-        {step > 1 && (
-          <button className="k-onb-back" onClick={() => setStep(step - 1)} style={{ width: 50, height: 52, fontSize: 18, flexShrink: 0 }}>←</button>
+      <div style={{ padding: "16px 28px", borderTop: "3px solid var(--k-ink)", maxWidth: 540, margin: "0 auto", width: "100%" }}>
+        {showValidation && currentError && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 13px", background: "rgba(255,74,46,0.1)", border: "2px solid var(--k-coral)", color: "var(--k-coral-dark)", fontSize: 12.5, fontWeight: 600, marginBottom: 10 }}>
+            {currentError}
+          </div>
         )}
-        <button
-          className="k-onb-btn"
-          onClick={step < 10 ? () => setStep(step + 1) : handleFinish}
-          disabled={loading}
-          style={{ flex: 1, height: 52, fontSize: 15, background: "var(--k-lime)", color: "var(--k-ink)" }}>
-          {loading ? "Setting up KYROO..." : step === 10 ? "Choose your plan →" : step === 1 ? "Let's go! →" : "Next →"}
-        </button>
+        <div style={{ display: "flex", gap: 10 }}>
+          {step > 1 && (
+            <button className="k-onb-back" onClick={handleBack} style={{ width: 50, height: 52, fontSize: 18, flexShrink: 0 }}>←</button>
+          )}
+          <button
+            className="k-onb-btn"
+            onClick={handleNext}
+            disabled={loading}
+            style={{ flex: 1, height: 52, fontSize: 15, background: "var(--k-lime)", color: "var(--k-ink)" }}>
+            {loading ? "Setting up KYROO..." : step === 10 ? "Choose your plan →" : step === 1 ? "Let's go! →" : "Next →"}
+          </button>
+        </div>
       </div>
     </div>
   );
