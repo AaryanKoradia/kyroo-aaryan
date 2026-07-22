@@ -12,7 +12,7 @@ from app.brain.response_validator import (
 )
 
 client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-MODEL = "claude-haiku-4-5"
+MODEL = "claude-haiku-4-5-20251001"
 MODEL_SMART = "claude-sonnet-5"
 
 

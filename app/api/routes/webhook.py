@@ -1,5 +1,6 @@
 import asyncio
 import json
+import traceback
 from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.responses import PlainTextResponse
 from app.api.dependencies.database import get_db
@@ -20,8 +21,8 @@ def _save_safely(fn, *args):
     failure here should never surface to the user."""
     try:
         fn(*args)
-    except Exception as e:
-        print(f"[webhook] Post-send save error: {e}")
+    except Exception:
+        print(f"[webhook] Post-send save error:\n{traceback.format_exc()}")
 
 
 def _background_save(fn, *args):
@@ -100,8 +101,8 @@ async def webhook(request: Request, db=Depends(get_db)):
                 _save_image_exchange, conversation_service, user,
                 caption or "(sent a photo)", result,
             )
-        except Exception as e:
-            print(f"[webhook] Image error: {e}")
+        except Exception:
+            print(f"[webhook] Image error:\n{traceback.format_exc()}")
         return {"status": "ok"}
 
     if msg_type != "text":
@@ -126,8 +127,8 @@ async def webhook(request: Request, db=Depends(get_db)):
             # chat history + style/memory writes happen after the reply is
             # already on its way to the user, not before
             _background_save(orchestrator.save_exchange, user, combined_text, result)
-        except Exception as e:
-            print(f"[webhook] Error: {e}")
+        except Exception:
+            print(f"[webhook] Error:\n{traceback.format_exc()}")
 
     # buffers rapid consecutive messages (someone splitting one thought
     # across 2-3 texts) into a single reply instead of responding to each
