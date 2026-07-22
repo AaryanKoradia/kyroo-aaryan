@@ -19,6 +19,10 @@ class WhatsAppClient:
     MAX_DELAY = 3.0
     SECONDS_PER_WORD = 0.12
 
+    # Stickers (e.g. in a sticker war) are meant to fire back rapidly, not
+    # with the same "composing a message" pause as text.
+    STICKER_DELAY_RANGE = (0.3, 0.9)
+
     def download_media(self, media_id: str) -> tuple[str, str] | None:
         """Fetches a WhatsApp media file (image, etc.) and returns (base64_data, mime_type), or None on failure."""
         try:
@@ -92,6 +96,24 @@ class WhatsAppClient:
             if bubble_plan and i < len(bubble_plan.bubbles):
                 delay = bubble_plan.bubbles[i].delay
             self.send_one(phone, bubble, delay)
+
+    def send_sticker(self, phone: str, media_id: str, delay: float | None = None):
+        time.sleep(delay if delay is not None else random.uniform(*self.STICKER_DELAY_RANGE))
+        response = requests.post(
+            f"{self.BASE_URL}/{settings.phone_number_id}/messages",
+            headers={
+                "Authorization": f"Bearer {settings.whatsapp_token}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "messaging_product": "whatsapp",
+                "to": phone,
+                "type": "sticker",
+                "sticker": {"id": media_id},
+            },
+            timeout=20,
+        )
+        response.raise_for_status()
 
     def _send_single_message(self, phone: str, message: str):
         response = requests.post(

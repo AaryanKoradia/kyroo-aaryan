@@ -9,6 +9,7 @@ from app.engine.orchestrator import Orchestrator
 from app.infrastructure.whatsapp.client import WhatsAppClient
 from app.brain.kyroo_brain import validate_response, kyroo_brain, finalize_chat_turn
 from app.brain.debounce import buffer_message
+from app.brain.stickers import is_sticker_war_trigger, pick_random_mood, pick_random_sticker, STICKER_MEDIA_IDS
 from app.services.user_service import UserService
 from app.services.conversation_service import ConversationService
 
@@ -105,6 +106,27 @@ async def webhook(request: Request, db=Depends(get_db)):
             print(f"[webhook] Image error:\n{traceback.format_exc()}")
         return {"status": "ok"}
 
+    if msg_type == "sticker":
+        # a sticker back is the whole point — no LLM call needed, this
+        # should feel instant and rapid-fire, the way a real sticker war does
+        try:
+            wa = WhatsAppClient()
+            if message_id:
+                wa.send_typing_indicator(message_id)
+
+            user = UserService(db).get_or_create_user(phone)
+            conversation_service = ConversationService(db)
+
+            wa.send_sticker(phone, pick_random_sticker())
+
+            _background_save(
+                conversation_service.add_exchange, user,
+                "[sent a sticker]", "[sent a sticker back]", "general",
+            )
+        except Exception:
+            print(f"[webhook] Sticker error:\n{traceback.format_exc()}")
+        return {"status": "ok"}
+
     if msg_type != "text":
         return {"status": "ignored"}
 
@@ -118,6 +140,20 @@ async def webhook(request: Request, db=Depends(get_db)):
                 # is actually generating, instead of the user seeing nothing
                 # happen for the next several seconds
                 wa.send_typing_indicator(latest_message_id)
+
+            if is_sticker_war_trigger(combined_text):
+                # kick it off with a couple of stickers rather than a
+                # wordy reply — no LLM needed, just start firing
+                user = UserService(db).get_or_create_user(phone)
+                conversation_service = ConversationService(db)
+                first_mood = pick_random_mood()
+                wa.send_sticker(phone, STICKER_MEDIA_IDS[first_mood])
+                wa.send_sticker(phone, STICKER_MEDIA_IDS[pick_random_mood(exclude=first_mood)])
+                _background_save(
+                    conversation_service.add_exchange, user,
+                    combined_text, "[started a sticker war]", "general",
+                )
+                return
 
             orchestrator = Orchestrator(db)
             on_bubble = lambda b: wa.send_one(phone, b)
