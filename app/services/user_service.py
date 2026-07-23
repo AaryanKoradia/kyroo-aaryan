@@ -15,7 +15,9 @@ class UserService:
         except Exception:
             pass
 
-        # Create new user
+        # Create new user. onboarding_step=-1 marks them as never having
+        # gone through the website form — the webhook uses this to gate
+        # them into a WhatsApp-native onboarding flow instead of full chat.
         try:
             res = self.db.table("users").insert({
                 "phone": phone,
@@ -25,6 +27,7 @@ class UserService:
                 "nudge_time": "7 AM",
                 "plan": "free",
                 "is_active": True,
+                "onboarding_step": -1,
             }).execute()
             return res.data[0]
         except Exception as e:

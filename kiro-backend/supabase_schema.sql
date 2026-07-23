@@ -22,8 +22,35 @@ create table if not exists users (
     energy_peak    text default '',
     plan           text default 'free',
     is_active      boolean default true,
-    created_at     timestamptz default now()
+    created_at     timestamptz default now(),
+    injuries          text default '',
+    fitness_workouts  text[] default '{}',
+    sleep_quality     text default '',
+    sleep_issues      text[] default '{}',
+    stress_triggers   text[] default '{}',
+    income_range      text default '',
+    eat_habits        text[] default '{}',
+    diet_restrictions text default '',
+    job_type          text default '',
+    onboarding_step   int default 99
 );
+
+-- Migration for an existing table (safe to run even if columns already exist):
+alter table users add column if not exists injuries          text default '';
+alter table users add column if not exists fitness_workouts  text[] default '{}';
+alter table users add column if not exists sleep_quality     text default '';
+alter table users add column if not exists sleep_issues      text[] default '{}';
+alter table users add column if not exists stress_triggers   text[] default '{}';
+alter table users add column if not exists income_range      text default '';
+alter table users add column if not exists eat_habits        text[] default '{}';
+alter table users add column if not exists diet_restrictions text default '';
+alter table users add column if not exists job_type          text default '';
+-- 99 = "already complete / not applicable" so every existing row (all of
+-- which came through the website) is treated as already onboarded by
+-- default; only get_or_create_user() explicitly sets this to -1 for a
+-- brand new WhatsApp-first contact, gating them into the WhatsApp-native
+-- onboarding flow instead of full chat.
+alter table users add column if not exists onboarding_step   int default 99;
 
 -- ─── chat_history ──────────────────────────────────────────────────────────
 create table if not exists chat_history (
