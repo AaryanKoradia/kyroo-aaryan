@@ -52,6 +52,17 @@ alter table users add column if not exists job_type          text default '';
 -- onboarding flow instead of full chat.
 alter table users add column if not exists onboarding_step   int default 99;
 
+-- ─── email_otps ────────────────────────────────────────────────────────────
+create table if not exists email_otps (
+    id           uuid primary key default gen_random_uuid(),
+    email        text not null,
+    otp_code     text not null,
+    expires_at   timestamptz not null,
+    verified     boolean default false,
+    created_at   timestamptz default now()
+);
+create index if not exists idx_email_otps_email on email_otps(email, created_at desc);
+
 -- ─── chat_history ──────────────────────────────────────────────────────────
 create table if not exists chat_history (
     id             uuid primary key default gen_random_uuid(),

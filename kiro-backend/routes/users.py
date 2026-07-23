@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from database import get_db
+from routes.otp import is_email_verified
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -48,6 +49,10 @@ async def signup(user: UserSignup):
     existing = db.table("users").select("*").eq("email", user.email).execute()
     if existing.data:
         raise HTTPException(status_code=400, detail="Email already registered")
+    if not is_email_verified(user.email):
+        # defends against calling /signup directly without ever completing
+        # /otp/send + /otp/verify — the frontend gate alone isn't enough
+        raise HTTPException(status_code=400, detail="Email not verified. Please verify your email first.")
     phone = normalize_phone(user.phone)
     new_user = db.table("users").insert({
         "name": user.name,
