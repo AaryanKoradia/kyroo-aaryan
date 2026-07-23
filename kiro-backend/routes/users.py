@@ -32,6 +32,15 @@ class UserSignup(BaseModel):
     diet_type: str = ""
     energy_peak: str = ""
     plan: str = "free"
+    injuries: str = ""
+    fitness_workouts: list[str] = []
+    sleep_quality: str = ""
+    sleep_issues: list[str] = []
+    stress_triggers: list[str] = []
+    income_range: str = ""
+    eat_habits: list[str] = []
+    diet_restrictions: str = ""
+    job_type: str = ""
 
 @router.post("/signup")
 async def signup(user: UserSignup):
@@ -56,7 +65,16 @@ async def signup(user: UserSignup):
         "diet_type": user.diet_type,
         "energy_peak": user.energy_peak,
         "plan": user.plan,
-        "is_active": True
+        "is_active": True,
+        "injuries": user.injuries,
+        "fitness_workouts": user.fitness_workouts,
+        "sleep_quality": user.sleep_quality,
+        "sleep_issues": user.sleep_issues,
+        "stress_triggers": user.stress_triggers,
+        "income_range": user.income_range,
+        "eat_habits": user.eat_habits,
+        "diet_restrictions": user.diet_restrictions,
+        "job_type": user.job_type
     }).execute()
     return {
         "message": f"Welcome to KIRO, {user.name}! 🎉",
