@@ -1,3 +1,4 @@
+import random
 import re
 
 CLICHE_PHRASES = [
@@ -40,14 +41,31 @@ _EMOJI_PATTERN = re.compile(
 
 MAX_EMOJIS_PER_BUBBLE = 1
 
+# Even the single emoji the persona is "allowed" gets stripped this often,
+# on top of the model's own restraint — the prompt alone wasn't cutting
+# actual emoji frequency down enough, so this is a second, code-level lever
+# that works regardless of what the model generates.
+EMOJI_SUPPRESS_PROBABILITY = 0.6
+
 
 def _cap_emojis(bubble: str, max_emojis: int = MAX_EMOJIS_PER_BUBBLE) -> str:
     """Hard backstop for the 'strict max 1 emoji per message' persona rule —
-    the model doesn't always follow it, so enforce it in code too."""
+    the model doesn't always follow it, so enforce it in code too. Also
+    randomly suppresses the one allowed emoji most of the time, to push
+    actual emoji frequency down further than prompting alone achieves."""
     matches = list(_EMOJI_PATTERN.finditer(bubble))
-    if len(matches) <= max_emojis:
+    if not matches:
         return bubble
-    keep = {m.start() for m in matches[:max_emojis]}
+
+    if len(matches) <= max_emojis:
+        if max_emojis > 0 and random.random() < EMOJI_SUPPRESS_PROBABILITY:
+            keep_n = 0
+        else:
+            return bubble
+    else:
+        keep_n = max_emojis
+
+    keep = {m.start() for m in matches[:keep_n]}
     chars = [c for i, c in enumerate(bubble) if not (_EMOJI_PATTERN.match(c) and i not in keep)]
     return re.sub(r' {2,}', ' ', "".join(chars)).strip()
 
