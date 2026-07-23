@@ -115,6 +115,43 @@ class WhatsAppClient:
         )
         response.raise_for_status()
 
+    def send_list_message(
+        self,
+        phone: str,
+        body_text: str,
+        options: list[tuple[str, str]],
+        button_text: str = "Choose",
+        delay: float | None = None,
+    ):
+        """Sends a WhatsApp list message — up to 10 tappable options. options
+        is a list of (value, title): value becomes the row id (what comes
+        back on tap, can be long/exact), title is the visible label (kept
+        under WhatsApp's 24-char row title limit by the caller)."""
+        time.sleep(delay if delay is not None else self._typing_delay(body_text))
+        rows = [{"id": value, "title": title[:24]} for value, title in options[:10]]
+        response = requests.post(
+            f"{self.BASE_URL}/{settings.phone_number_id}/messages",
+            headers={
+                "Authorization": f"Bearer {settings.whatsapp_token}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "messaging_product": "whatsapp",
+                "to": phone,
+                "type": "interactive",
+                "interactive": {
+                    "type": "list",
+                    "body": {"text": body_text[:1024]},
+                    "action": {
+                        "button": button_text[:20],
+                        "sections": [{"title": "Options", "rows": rows}],
+                    },
+                },
+            },
+            timeout=20,
+        )
+        response.raise_for_status()
+
     def _send_single_message(self, phone: str, message: str):
         response = requests.post(
             f"{self.BASE_URL}/{settings.phone_number_id}/messages",
