@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from routes import users, ai, payments, whatsapp, fitness, files, reminders, tracking, reports
+from routes import users, ai, payments, whatsapp, fitness, files, reminders, tracking, reports, otp
 from scheduler import start_scheduler, stop_scheduler
 import os
 
@@ -39,6 +39,7 @@ app.include_router(files.router)
 app.include_router(reminders.router)
 app.include_router(tracking.router)
 app.include_router(reports.router)
+app.include_router(otp.router)
 
 @app.get("/")
 async def root():

@@ -145,6 +145,78 @@ export default function Onboarding() {
 
   const [showValidation, setShowValidation] = useState(false);
 
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpEmailSentFor, setOtpEmailSentFor] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpError, setOtpError] = useState("");
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    if ((otpSent || otpVerified) && value.trim().toLowerCase() !== otpEmailSentFor) {
+      // editing the email after sending/verifying invalidates that code —
+      // otherwise someone could verify one address then swap in another
+      setOtpSent(false);
+      setOtpVerified(false);
+      setOtpCode("");
+      setOtpError("");
+    }
+  };
+
+  const sendOtp = async () => {
+    const trimmedEmail = email.trim();
+    if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+      setOtpError("Enter a valid email address first.");
+      return;
+    }
+    setOtpSending(true);
+    setOtpError("");
+    try {
+      const res = await fetch(`${BACKEND_URL}/otp/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOtpError(data.detail || "Couldn't send code, try again.");
+      } else {
+        setOtpSent(true);
+        setOtpEmailSentFor(trimmedEmail.toLowerCase());
+      }
+    } catch {
+      setOtpError("Couldn't send code, try again.");
+    }
+    setOtpSending(false);
+  };
+
+  const verifyOtp = async () => {
+    if (!otpCode.trim()) {
+      setOtpError("Enter the code from your email.");
+      return;
+    }
+    setOtpVerifying(true);
+    setOtpError("");
+    try {
+      const res = await fetch(`${BACKEND_URL}/otp/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: otpEmailSentFor, code: otpCode.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOtpError(data.detail || "Incorrect code.");
+      } else {
+        setOtpVerified(true);
+      }
+    } catch {
+      setOtpError("Couldn't verify, try again.");
+    }
+    setOtpVerifying(false);
+  };
+
   const progress = (step / 10) * 100;
 
   const toggleArr = (arr: string[], setArr: (a: string[]) => void, val: string) => {
@@ -167,6 +239,7 @@ export default function Onboarding() {
         if (trimmedCity.length < 2 || trimmedCity.length > 50) return "City should be 2–50 characters.";
         if (!/[A-Za-z]/.test(trimmedCity)) return "Enter a valid city name.";
         if (!/^\S+@\S+\.\S+$/.test(email.trim())) return "Enter a valid email address.";
+        if (!otpVerified) return "Please verify your email — send yourself a code and enter it.";
         return null;
       }
       case 2:
@@ -379,7 +452,40 @@ export default function Onboarding() {
             <label style={{ fontSize: 11, color: "rgba(20,18,15,0.5)", display: "block", marginBottom: 7 }}>City</label>
             <input style={inputStyle} placeholder="Mumbai, Delhi..." maxLength={50} value={city} onChange={e => setCity(e.target.value)} />
             <label style={{ fontSize: 11, color: "rgba(20,18,15,0.5)", display: "block", marginBottom: 7 }}>Email</label>
-            <input style={inputStyle} placeholder="you@email.com" type="email" maxLength={100} value={email} onChange={e => setEmail(e.target.value)} />
+            <div style={{ display: "flex", gap: 8, marginBottom: otpSent ? 10 : 12 }}>
+              <input style={{ ...inputStyle, marginBottom: 0, flex: 1 }} placeholder="you@email.com" type="email" maxLength={100} value={email} onChange={e => handleEmailChange(e.target.value)} disabled={otpVerified} />
+              {!otpVerified && (
+                <button onClick={sendOtp} disabled={otpSending} style={{ padding: "0 16px", border: "2.5px solid var(--k-ink)", background: "var(--k-lime)", color: "var(--k-ink)", fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", opacity: otpSending ? 0.6 : 1 }}>
+                  {otpSending ? "Sending..." : otpSent ? "Resend" : "Send code"}
+                </button>
+              )}
+              {otpVerified && (
+                <span style={{ display: "flex", alignItems: "center", gap: 6, padding: "0 14px", border: "2.5px solid var(--k-ink)", background: "var(--k-lime)", fontSize: 12.5, fontWeight: 700 }}>✓ Verified</span>
+              )}
+            </div>
+
+            {otpSent && !otpVerified && (
+              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                <input
+                  style={{ ...inputStyle, marginBottom: 0, flex: 1, letterSpacing: 3 }}
+                  placeholder="6-digit code"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={e => setOtpCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
+                />
+                <button onClick={verifyOtp} disabled={otpVerifying} style={{ padding: "0 16px", border: "2.5px solid var(--k-ink)", background: "var(--k-ink)", color: "var(--k-paper)", fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", opacity: otpVerifying ? 0.6 : 1 }}>
+                  {otpVerifying ? "Checking..." : "Verify"}
+                </button>
+              </div>
+            )}
+
+            {otpError && (
+              <div style={{ fontSize: 12, color: "var(--k-coral-dark)", marginBottom: 12 }}>{otpError}</div>
+            )}
+            {otpSent && !otpVerified && !otpError && (
+              <div style={{ fontSize: 11.5, opacity: 0.55, marginBottom: 12 }}>Sent a code to {otpEmailSentFor} — check your inbox.</div>
+            )}
           </div>
         )}
 
