@@ -30,10 +30,15 @@ GENERATORS = {
     "night_nudge": generate_night_nudge,
 }
 
-# How late a slot is still allowed to fire after its target time. Needs to be
-# wider than the cron interval that calls check_and_send_nudges() (currently
-# every 10 min), so a slightly-delayed cron tick doesn't skip a slot entirely.
-FIRE_WINDOW_MINUTES = 20
+# How late a slot is still allowed to fire after its target time. This is
+# nominally every 10 min (the cron interval), but GitHub Actions' free
+# scheduled workflows are unreliable in practice — observed real gaps
+# between runs of up to ~2h40m instead of 10 min, meaning a 20-min window
+# was missing almost every fixed slot entirely (this was the actual root
+# cause of nudges never arriving). Widened generously so a late-arriving
+# cron tick still catches it, trading a bit of precision for actually
+# being delivered at all.
+FIRE_WINDOW_MINUTES = 180
 
 _TIME_RE = re.compile(r'^\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*$', re.IGNORECASE)
 
@@ -126,6 +131,10 @@ def check_and_send_nudges() -> dict:
                 _send_nudge(db, user, slot)
                 sent.append({"user": user.get("name"), "slot": slot})
             except Exception as e:
+                # the cron caller (GitHub Actions) doesn't capture the
+                # response body, so this was previously invisible anywhere —
+                # print it so a failure actually shows up in Render logs
+                print(f"[nudges] failed to send {slot} to {user.get('name')} ({user.get('id')}): {e}")
                 failed.append({"user": user.get("name"), "slot": slot, "error": str(e)})
 
     return {"checked": len(users), "sent": sent, "failed": failed}
