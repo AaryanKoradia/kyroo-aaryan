@@ -264,6 +264,38 @@ async def webhook(request: Request, db=Depends(get_db)):
             print(f"[webhook] Audio error:\n{traceback.format_exc()}")
         return {"status": "ok"}
 
+    if msg_type == "video":
+        # WhatsApp delivers a gif sent from the built-in gif picker as a
+        # "video" message under the hood (short mp4), not "image" — this
+        # used to fall through to the unhandled-type catch-all below and
+        # get silently dropped, so the user got no reply at all. No real
+        # video-content understanding yet, so this just reacts through the
+        # normal chat pipeline the way a friend would react to a gif being
+        # sent, rather than actually analyzing the video frames.
+        video = message.get("video", {})
+        caption = video.get("caption", "")
+        default_message = caption or "(sent a gif/video)"
+
+        try:
+            wa = WhatsAppClient()
+            if message_id:
+                wa.send_typing_indicator(message_id)
+
+            conversation_service = ConversationService(db)
+
+            on_bubble = lambda b: wa.send_one(phone, b)
+            on_gif = lambda url: wa.send_gif(phone, url)
+            result = kyroo_brain(user, default_message, [], on_bubble=on_bubble, on_gif=on_gif)
+            _send_remaining_if_needed(phone, result)
+
+            _background_save(
+                _save_image_exchange, conversation_service, user,
+                default_message, result,
+            )
+        except Exception:
+            print(f"[webhook] Video error:\n{traceback.format_exc()}")
+        return {"status": "ok"}
+
     if msg_type == "sticker":
         # a sticker back is the whole point — no LLM call needed, this
         # should feel instant and rapid-fire, the way a real sticker war does
@@ -285,6 +317,7 @@ async def webhook(request: Request, db=Depends(get_db)):
         return {"status": "ok"}
 
     if msg_type != "text":
+        print(f"[webhook] Unhandled message type from {phone}: {msg_type}")
         return {"status": "ignored"}
 
     text = message["text"]["body"].strip()
