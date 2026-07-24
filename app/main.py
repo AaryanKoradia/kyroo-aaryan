@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from app.api.routes.user import router as user_router
 from app.api.routes.webhook import router as webhook_router
 from app.api.routes.nudges import router as nudges_router
+from app.api.routes.stories import router as stories_router
 
 app = FastAPI(
     title="Kyroo",
@@ -12,6 +13,7 @@ app = FastAPI(
 app.include_router(user_router)
 app.include_router(webhook_router)
 app.include_router(nudges_router)
+app.include_router(stories_router)
 
 
 @app.get("/")

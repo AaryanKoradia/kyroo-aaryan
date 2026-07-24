@@ -7,6 +7,8 @@ from app.core.config import settings
 from app.database.supabase_client import get_supabase
 from app.services.memory_service import MemoryService
 from app.brain.slang import lookup_slang
+from app.brain.gifs import search_gif_url
+from app.services.story_service import get_random_stories
 from app.brain.response_validator import (
     validate_response, clean_streamed_bubble, MAX_EMOJIS_PER_BUBBLE, MAX_STREAMED_BUBBLES,
 )
@@ -554,6 +556,29 @@ def _build_extended_profile_block(user: dict) -> str:
     )
 
 
+def _build_story_context(name: str, emotion: str) -> str:
+    """When the user seems bored (the existing "neutral_check" emotion
+    bucket already catches "bore"/"kuch nahi"/"bas aise" etc.), offers a
+    couple of real cached stories KYROO could tell — retold in its own
+    words, never pasted verbatim, and only after asking first."""
+    if emotion != "neutral_check":
+        return ""
+    stories = get_random_stories(3)
+    if not stories:
+        return ""
+    lines = [f"- \"{s['title']}\": {s['gist'][:200]}" for s in stories]
+    return (
+        f"{name} seems a bit bored right now. You have a few real stories you could "
+        "offer to share if they're up for it (something wild that happened to someone, "
+        "a funny mishap, some drama) — ask first, casually, like \"wanna hear something "
+        "wild\" or offering a joke/story/gossip, don't just launch into one unprompted. "
+        "If they say yes, pick ONE that fits the vibe and RETELL it casually in your own "
+        "words, the way you'd tell a friend something you heard about, never paste or "
+        "quote the text below directly, you're relaying the gist, not reading a script:\n"
+        + "\n".join(lines)
+    )
+
+
 def build_system_prompt(
     user: dict,
     module: str,
@@ -564,6 +589,7 @@ def build_system_prompt(
     is_first_contact: bool = False
 ) -> str:
     name = user.get("name", "yaar") if user else "yaar"
+    story_context = _build_story_context(name, emotion)
     age = user.get("age", "")
     city = user.get("city", "")
     plan = user.get("plan", "free")
@@ -709,7 +735,8 @@ STUDY & ACADEMICS — {name} is a student, and KYROO helping them study is a rea
 - Once they say yes and you know the topic, TEACH it properly — this is TASK MODE. Go deep, be genuinely accurate and thorough, explain it the clearest and simplest way you can, and don't be afraid of a longer message if the concept actually needs it. A half-explained concept is worse than a properly explained one, don't sacrifice correctness or completeness for brevity here. Still wrap it in your normal voice (a casual opener, maybe a small comment after), not a textbook.
 - When you explain any real concept (not a one-line answer), end it with a small hack, mnemonic, or technique that makes it easier to remember or understand — every single time, this is not optional for a proper explanation. Keep the tip itself short, one or two lines, framed casually ("btw easy way to remember this —"), not as a formal "Pro Tip:" callout.
 - In these explanations, bold the key terms and the most important words using *asterisks* (WhatsApp renders *word* as bold) so the message is easier to scan and the important parts actually stand out, don't bold everything, just the terms/ideas that matter most.
-- If it's a topic worth watching explained visually (a process, a derivation, a diagram-heavy concept, something people commonly learn from video), use web_search to find one real, currently existing YouTube video on it and drop the actual link — never invent a video or a link you haven't actually found. Only do this when a video genuinely adds value, not for every single explanation.
+- If it's a topic worth watching explained visually (a process, a derivation, a diagram-heavy concept, something people commonly learn from video), use web_search to find one real, currently existing YouTube video on it and drop the actual link, never invent a video or a link you haven't actually found. Only do this when a video genuinely adds value, not for every single explanation.
+- For a topic that's substantial enough to warrant a full course (not a quick concept, something like "learn Python" or "DBMS from scratch"), you can also drop a Udemy search link in this exact format: https://www.udemy.com/courses/search/?q=<topic, URL-encoded with + for spaces>, framed casually like "if you want to go deeper there's a bunch of courses on Udemy for this too." Don't do this for a quick single-concept explanation, only when a whole course actually makes sense.
 - Offer to quiz {name} or test their recall as an actual study method, not just an explanation dump, this is one of the most useful things you can do and it fits WhatsApp naturally: ask a question, wait for their answer, tell them if they're right and why, then ask the next one. Suggest this yourself when it fits, don't wait to be asked.
 - Proactively drop real study technique tips when relevant, casually, one at a time, never as a listicle dump: active recall (testing yourself) beats rereading notes, spaced-out revision beats last-minute cramming, explaining a concept out loud or to someone else exposes what you don't actually understand, doing past papers/previous years' questions is one of the highest-value things you can do before an exam, focused single-tasking beats studying with heavy distraction, short breaks (like 25-on-5-off) keep focus better than marathon sessions. Pick whichever tip actually fits what {name} is dealing with right now, don't recite the whole list.
 - Connect study performance to other things you already know about {name} when it's genuinely relevant, the same way you connect sleep to workouts: bad sleep before an exam, stress eating during finals week, skipping meals while cramming, these are real patterns worth noticing and gently mentioning, not lecturing about.
@@ -740,6 +767,8 @@ TOOLS:
     # messages if it's byte-identical every time, which nothing dynamic can be.
     dynamic_block = f"""{first_contact_block}
 {memory_context}
+
+{story_context}
 
 MODULE: {module} | EMOTION: {emotion}
 """
@@ -956,6 +985,17 @@ BRAIN_TOOLS = [
             },
             "required": ["term"]
         }
+    },
+    {
+        "name": "send_gif",
+        "description": "Search for and send a real gif that matches a mood or reaction. Use this occasionally when a gif genuinely lands better than words or an emoji would, not for every message and not as a default. Once you call this, the gif is already being sent, don't also describe it in your text reply.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "A short search phrase for the gif's mood/reaction, e.g. 'shocked', 'crying laughing', 'facepalm'"}
+            },
+            "required": ["query"]
+        }
     }
 ]
 
@@ -980,6 +1020,7 @@ def _run_with_tools(
     model: str = MODEL_SMART,
     max_emojis: int = MAX_EMOJIS_PER_BUBBLE,
     on_bubble=None,
+    on_gif=None,
 ) -> list[str]:
     """Streams the reply and, if on_bubble is given, calls it as soon as
     each \\n\\n-delimited chunk is ready (cleaned the same way
@@ -1041,7 +1082,7 @@ def _run_with_tools(
 
         client_tool_calls = [
             b for b in final_message.content
-            if b.type == "tool_use" and b.name == "lookup_slang"
+            if b.type == "tool_use" and b.name in ("lookup_slang", "send_gif")
         ]
 
         if not client_tool_calls:
@@ -1054,7 +1095,15 @@ def _run_with_tools(
 
         tool_results = []
         for call in client_tool_calls:
-            result = lookup_slang(call.input.get("term", ""))
+            if call.name == "lookup_slang":
+                result = lookup_slang(call.input.get("term", ""))
+            else:  # send_gif
+                gif_url = search_gif_url(call.input.get("query", ""))
+                if gif_url and on_gif:
+                    on_gif(gif_url)
+                    result = "gif sent successfully"
+                else:
+                    result = "no matching gif found, don't mention this to the user, just continue naturally without one"
             tool_results.append({
                 "type": "tool_result",
                 "tool_use_id": call.id,
@@ -1088,6 +1137,7 @@ def kyroo_brain(
     on_bubble=None,
     document_base64: str | None = None,
     document_media_type: str | None = None,
+    on_gif=None,
 ) -> dict:
     """Main brain — takes user data, builds the KYROO persona prompt, generates a reply.
 
@@ -1206,7 +1256,7 @@ def kyroo_brain(
     max_emojis = 0 if is_first_contact else MAX_EMOJIS_PER_BUBBLE
     bubbles = _run_with_tools(
         system_static, system_dynamic, full_message,
-        model=chosen_model, max_emojis=max_emojis, on_bubble=on_bubble,
+        model=chosen_model, max_emojis=max_emojis, on_bubble=on_bubble, on_gif=on_gif,
     )
     if not bubbles:
         bubbles = ["hmm one sec, my brain glitched, say that again?"]
