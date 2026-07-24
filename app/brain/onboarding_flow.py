@@ -52,31 +52,31 @@ def _validate_email(text: str) -> tuple[str | None, str | None]:
 ONBOARDING_QUESTIONS = [
     {
         "field": "name",
-        "prompt": "Hey! I'm KYROO, your AI best friend for fitness, money, mind, and sleep 😊 Let's get to know each other. What's your name?",
+        "prompt": "heyyy 😊 I'm KYROO, your new AI best friend for fitness, money, mind, and sleep, all in one WhatsApp chat. Let's get to know each other real quick. what should I call you?",
         "type": "text",
         "validate": _validate_name,
     },
     {
         "field": "age",
-        "prompt": "Nice to meet you, {name}! How old are you?",
+        "prompt": "okay {name}, love that. how old are you?",
         "type": "text",
         "validate": _validate_age,
     },
     {
         "field": "city",
-        "prompt": "Which city are you in?",
+        "prompt": "and which city are you in?",
         "type": "text",
         "validate": _validate_city,
     },
     {
         "field": "email",
-        "prompt": "What's your email?",
+        "prompt": "cool cool. drop your email too, just need it for your account",
         "type": "text",
         "validate": _validate_email,
     },
     {
         "field": "fitness_level",
-        "prompt": "What's your current fitness level?",
+        "prompt": "alright, let's talk fitness. be honest, where are you at right now?",
         "type": "list",
         "options": [
             ("Couch potato", "Couch potato"),
@@ -88,7 +88,7 @@ ONBOARDING_QUESTIONS = [
     },
     {
         "field": "fitness_goal",
-        "prompt": "What do you want your body to do? Pick your primary fitness goal.",
+        "prompt": "what do you actually want your body to do rn? pick your main goal",
         "type": "list",
         "options": [
             ("Lose weight", "Lose weight"),
@@ -101,19 +101,19 @@ ONBOARDING_QUESTIONS = [
     },
     {
         "field": "sleep_hours",
-        "prompt": "How many hours do you usually sleep?",
+        "prompt": "how much do you actually sleep most nights, no judgment",
         "type": "list",
         "options": [("4h", "4h"), ("5h", "5h"), ("6h", "6h"), ("7h", "7h"), ("8h", "8h"), ("9h+", "9h+")],
     },
     {
         "field": "stress_level",
-        "prompt": "On a scale of 1-10, what's your stress level lately?",
+        "prompt": "on a scale of 1 to 10, how stressed have you been lately?",
         "type": "list",
         "options": [(str(n), str(n)) for n in range(1, 11)],
     },
     {
         "field": "money_habit",
-        "prompt": "Which describes your money habits best?",
+        "prompt": "real talk, which one sounds most like you and your money?",
         "type": "list",
         "options": [
             ("Money disappears every month", "Money disappears fast"),
@@ -124,7 +124,7 @@ ONBOARDING_QUESTIONS = [
     },
     {
         "field": "diet_type",
-        "prompt": "What's your diet type?",
+        "prompt": "what do you eat, generally speaking?",
         "type": "list",
         "options": [
             ("Vegetarian", "Vegetarian"),
@@ -135,7 +135,7 @@ ONBOARDING_QUESTIONS = [
     },
     {
         "field": "energy_peak",
-        "prompt": "When's your energy usually highest during the day?",
+        "prompt": "when do you actually feel most alive during the day?",
         "type": "list",
         "options": [
             ("Morning person", "Morning person"),
@@ -145,7 +145,7 @@ ONBOARDING_QUESTIONS = [
     },
     {
         "field": "language",
-        "prompt": "Which language do you want me to chat with you in?",
+        "prompt": "what language should we vibe in?",
         "type": "list",
         "options": [
             ("Hinglish", "Hinglish"), ("English", "English"), ("Hindi", "Hindi"),
@@ -155,7 +155,7 @@ ONBOARDING_QUESTIONS = [
     },
     {
         "field": "nudge_time",
-        "prompt": "Last one — what time should I send your morning check-in?",
+        "prompt": "last one, promise. what time should I hit you up every morning?",
         "type": "list",
         "options": [("6 AM", "6 AM"), ("7 AM", "7 AM"), ("8 AM", "8 AM"), ("9 AM", "9 AM")],
     },
@@ -165,7 +165,7 @@ TOTAL_QUESTIONS = len(ONBOARDING_QUESTIONS)
 
 WELCOME_TEXT = ONBOARDING_QUESTIONS[0]["prompt"]
 
-COMPLETE_TEXT = "Sorted, {name}! I know you now 😊 I'll check in every morning, and I'm always here whenever you want to talk. What's on your mind?"
+COMPLETE_TEXT = "okay {name}, I know you now 😊 this is gonna be good. I'll check in every morning, and I'm always right here whenever you wanna talk. so, what's up?"
 
 
 def needs_onboarding(user: dict) -> bool:

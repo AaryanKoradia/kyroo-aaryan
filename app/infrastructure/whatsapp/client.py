@@ -23,8 +23,12 @@ class WhatsAppClient:
     # with the same "composing a message" pause as text.
     STICKER_DELAY_RANGE = (0.3, 0.9)
 
-    def download_media(self, media_id: str) -> tuple[str, str] | None:
-        """Fetches a WhatsApp media file (image, etc.) and returns (base64_data, mime_type), or None on failure."""
+    def download_media(self, media_id: str, max_bytes: int | None = None) -> tuple[str, str] | None:
+        """Fetches a WhatsApp media file (image, PDF, etc.) and returns
+        (base64_data, mime_type), or None on failure. If max_bytes is given,
+        checks the reported file size up front and skips the actual
+        download entirely for anything larger, rather than downloading a
+        large file just to discard it."""
         try:
             meta_resp = requests.get(
                 f"{self.BASE_URL}/{media_id}",
@@ -34,14 +38,21 @@ class WhatsAppClient:
             meta = meta_resp.json()
             media_url = meta.get("url")
             mime_type = meta.get("mime_type", "image/jpeg")
+            file_size = meta.get("file_size")
             if not media_url:
+                return None
+            if max_bytes and file_size and file_size > max_bytes:
+                print(f"[whatsapp] media {media_id} too large ({file_size} bytes > {max_bytes}), skipping download")
                 return None
 
             file_resp = requests.get(
                 media_url,
                 headers={"Authorization": f"Bearer {settings.whatsapp_token}"},
-                timeout=15,
+                timeout=30,
             )
+            if max_bytes and len(file_resp.content) > max_bytes:
+                print(f"[whatsapp] media {media_id} too large after download ({len(file_resp.content)} bytes), discarding")
+                return None
             return base64.b64encode(file_resp.content).decode("utf-8"), mime_type
         except Exception as e:
             print(f"[whatsapp] media download error: {e}")

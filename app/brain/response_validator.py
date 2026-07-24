@@ -71,7 +71,8 @@ def _cap_emojis(bubble: str, max_emojis: int = MAX_EMOJIS_PER_BUBBLE) -> str:
 
 
 STREAM_BUBBLE_MAX_WORDS = 50
-MAX_STREAMED_BUBBLES = 4
+STREAM_BUBBLE_MAX_WORDS_LIST = 500
+MAX_STREAMED_BUBBLES = 8
 
 
 def clean_streamed_bubble(text: str, seen_question_mark: bool, max_emojis: int = MAX_EMOJIS_PER_BUBBLE) -> tuple[str, bool]:
@@ -105,9 +106,15 @@ def clean_streamed_bubble(text: str, seen_question_mark: bool, max_emojis: int =
                     seen_question_mark = True
         cleaned = "".join(chars)
 
+    # list/structured bubbles (task-mode content — a solved problem, an
+    # explanation, extracted text) get the same much higher word budget
+    # validate_response() already gave list-type replies — this bubble-level
+    # path was missing that exception entirely, silently truncating
+    # anything long and structured to ~50 words mid-sentence.
+    word_limit = STREAM_BUBBLE_MAX_WORDS_LIST if is_list else STREAM_BUBBLE_MAX_WORDS
     words = cleaned.split()
-    if len(words) > STREAM_BUBBLE_MAX_WORDS:
-        hard_cut = " ".join(words[:STREAM_BUBBLE_MAX_WORDS])
+    if len(words) > word_limit:
+        hard_cut = " ".join(words[:word_limit])
         last_sentence_end = max(hard_cut.rfind("."), hard_cut.rfind("!"), hard_cut.rfind("?"))
         cleaned = hard_cut[:last_sentence_end + 1] if last_sentence_end > len(hard_cut) * 0.4 else hard_cut
 
