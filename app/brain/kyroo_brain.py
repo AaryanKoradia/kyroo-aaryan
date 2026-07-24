@@ -9,6 +9,7 @@ from app.services.memory_service import MemoryService
 from app.brain.slang import lookup_slang
 from app.brain.gifs import search_gif_url
 from app.services.story_service import get_random_stories
+from app.services.reminder_service import create_reminder
 from app.brain.response_validator import (
     validate_response, clean_streamed_bubble, MAX_EMOJIS_PER_BUBBLE, MAX_STREAMED_BUBBLES,
 )
@@ -579,6 +580,17 @@ def _build_story_context(name: str, emotion: str) -> str:
     )
 
 
+def _current_ist_context() -> str:
+    """Current IST date/time, needed so the set_reminder tool can resolve
+    relative times ("in 2 hours", "tomorrow at 9", "tonight") into an
+    absolute date. Recomputed per-message on purpose, so it belongs in the
+    dynamic block, never the cached static one."""
+    import pytz
+    from datetime import datetime
+    now = datetime.now(pytz.timezone("Asia/Kolkata"))
+    return f"CURRENT DATE/TIME (IST): {now.strftime('%A, %Y-%m-%d %H:%M')}"
+
+
 def build_system_prompt(
     user: dict,
     module: str,
@@ -753,9 +765,15 @@ LOCATIONS:
 - If {name} asks for a location, place, or address, include a real clickable Google Maps link in this exact format: https://www.google.com/maps/search/?api=1&query=<the place name, URL-encoded with + for spaces>. Example: for "Marine Drive Mumbai" use https://www.google.com/maps/search/?api=1&query=Marine+Drive+Mumbai. Drop it in naturally, don't make the whole message about the link.
 - If asked how to get from one real place to another, or how far/how long it takes, NEVER invent a specific travel time or distance, you don't actually know this and guessing confidently (like saying something is a "2 minute walk" when you're not sure) is a real mistake, not a harmless guess. Instead give a real directions link in this format: https://www.google.com/maps/dir/?api=1&origin=<from place>&destination=<to place>, both URL-encoded with + for spaces, and say you're not 100% sure on exact timing so they should check the link. If it's two places you happen to actually know are close or far (same neighborhood vs across the city), you can say so in general terms, but never state a specific number of minutes unless you're genuinely confident.
 
+REMINDERS:
+- If {name} asks you to remind them of something at a specific time ("remind me to call mom at 6pm", "yaad dila dena kal subah 9 baje", "remind me in 2 hours to check the oven"), use the set_reminder tool. Work out the exact date and time yourself from the CURRENT DATE/TIME given below and whatever {name} said (relative or absolute), you never need to ask them to restate it in a different format.
+- If the time they gave is genuinely ambiguous (no time of day at all, e.g. just "remind me about the meeting"), ask once, casually, rather than guessing.
+- They'll automatically get a heads-up 5 minutes before, then the actual reminder at the exact time, you don't need to mention this mechanism, just confirm casually that you've got it, like a friend would ("done, I got you" / "noted, I'll ping you").
+
 TOOLS:
 - web_search: use this when {name} brings up something current you're not confident about, this includes recent news, trending events, sports results, a movie/show that's currently out or trending, celebrity gossip, viral moments, or anything time-sensitive, not just news and politics. If a question is about something recent in ANY category (entertainment, sports, tech, memes) and you're not sure you have current info, search rather than guessing or admitting you don't know. Don't search for things you already know or for casual chat.
 - lookup_slang: use this if {name} uses a slang term, meme reference, or abbreviation you don't recognize the current meaning of. Don't use it for words you already understand.
+- set_reminder: see REMINDERS above.
 - After using a tool, fold the result into your reply casually, like you just knew it. Never say "according to my search" or "I looked that up."
 - CRITICAL: even after a tool call, your reply still follows every core personality rule above. Pick the ONE most interesting thing from the result and mention it like you're texting a friend what you heard. Never list multiple facts, never write a news summary, never exceed the normal 2-4 line length just because you searched something.
 """
@@ -770,6 +788,7 @@ TOOLS:
 
 {story_context}
 
+{_current_ist_context()}
 MODULE: {module} | EMOTION: {emotion}
 """
 
@@ -996,6 +1015,18 @@ BRAIN_TOOLS = [
             },
             "required": ["query"]
         }
+    },
+    {
+        "name": "set_reminder",
+        "description": "Set a reminder for the user at a specific date and time, worked out from the CURRENT DATE/TIME given in context plus whatever relative or absolute time they gave. They get a heads-up 5 minutes before, then the actual reminder at the exact time.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "reminder_text": {"type": "string", "description": "What to remind them about, written naturally, e.g. 'call mom' or 'submit the assignment'"},
+                "remind_at": {"type": "string", "description": "Absolute date and time in 'YYYY-MM-DD HH:MM' 24-hour format, IST"}
+            },
+            "required": ["reminder_text", "remind_at"]
+        }
     }
 ]
 
@@ -1021,6 +1052,7 @@ def _run_with_tools(
     max_emojis: int = MAX_EMOJIS_PER_BUBBLE,
     on_bubble=None,
     on_gif=None,
+    user_id: str = "",
 ) -> list[str]:
     """Streams the reply and, if on_bubble is given, calls it as soon as
     each \\n\\n-delimited chunk is ready (cleaned the same way
@@ -1082,7 +1114,7 @@ def _run_with_tools(
 
         client_tool_calls = [
             b for b in final_message.content
-            if b.type == "tool_use" and b.name in ("lookup_slang", "send_gif")
+            if b.type == "tool_use" and b.name in ("lookup_slang", "send_gif", "set_reminder")
         ]
 
         if not client_tool_calls:
@@ -1097,13 +1129,23 @@ def _run_with_tools(
         for call in client_tool_calls:
             if call.name == "lookup_slang":
                 result = lookup_slang(call.input.get("term", ""))
-            else:  # send_gif
+            elif call.name == "send_gif":
                 gif_url = search_gif_url(call.input.get("query", ""))
                 if gif_url and on_gif:
                     on_gif(gif_url)
                     result = "gif sent successfully"
                 else:
                     result = "no matching gif found, don't mention this to the user, just continue naturally without one"
+            else:  # set_reminder
+                outcome = create_reminder(
+                    user_id,
+                    call.input.get("reminder_text", ""),
+                    call.input.get("remind_at", ""),
+                )
+                if outcome["ok"]:
+                    result = "reminder set successfully"
+                else:
+                    result = f"failed to set reminder: {outcome['error']}, ask the user to clarify"
             tool_results.append({
                 "type": "tool_result",
                 "tool_use_id": call.id,
@@ -1257,6 +1299,7 @@ def kyroo_brain(
     bubbles = _run_with_tools(
         system_static, system_dynamic, full_message,
         model=chosen_model, max_emojis=max_emojis, on_bubble=on_bubble, on_gif=on_gif,
+        user_id=user_id,
     )
     if not bubbles:
         bubbles = ["hmm one sec, my brain glitched, say that again?"]

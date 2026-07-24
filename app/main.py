@@ -4,6 +4,7 @@ from app.api.routes.user import router as user_router
 from app.api.routes.webhook import router as webhook_router
 from app.api.routes.nudges import router as nudges_router
 from app.api.routes.stories import router as stories_router
+from app.api.routes.reminders import router as reminders_router
 
 app = FastAPI(
     title="Kyroo",
@@ -14,6 +15,7 @@ app.include_router(user_router)
 app.include_router(webhook_router)
 app.include_router(nudges_router)
 app.include_router(stories_router)
+app.include_router(reminders_router)
 
 
 @app.get("/")
