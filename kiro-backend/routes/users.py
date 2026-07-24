@@ -94,3 +94,36 @@ async def get_profile(user_id: str):
     if not user.data:
         raise HTTPException(status_code=404, detail="User not found")
     return user.data[0]
+
+
+class PhoneOnly(BaseModel):
+    phone: str
+
+
+def _find_user_by_phone(db, phone: str):
+    normalized = normalize_phone(phone)
+    res = db.table("users").select("id, name, is_active").eq("phone", normalized).execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail="No KYROO account found for that phone number")
+    return res.data[0]
+
+
+@router.post("/unsubscribe")
+async def unsubscribe(req: PhoneOnly):
+    """Stops all proactive/business-initiated WhatsApp messages (nudges,
+    reminders) — required so users have a real way to opt out, per
+    WhatsApp's Business Messaging Policy. Doesn't delete the account or
+    stop KYROO replying if the user messages it directly, since that's a
+    user-initiated conversation, not the thing the policy is about."""
+    db = get_db()
+    user = _find_user_by_phone(db, req.phone)
+    db.table("users").update({"is_active": False}).eq("id", user["id"]).execute()
+    return {"status": "success", "message": f"You're unsubscribed, {user.get('name', 'there')}. No more nudges or reminders from KYROO."}
+
+
+@router.post("/resubscribe")
+async def resubscribe(req: PhoneOnly):
+    db = get_db()
+    user = _find_user_by_phone(db, req.phone)
+    db.table("users").update({"is_active": True}).eq("id", user["id"]).execute()
+    return {"status": "success", "message": f"Welcome back, {user.get('name', 'there')}! Nudges and reminders are back on."}

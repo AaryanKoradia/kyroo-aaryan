@@ -4,6 +4,7 @@ import pytz
 
 from app.database.supabase_client import get_supabase
 from app.infrastructure.whatsapp.client import WhatsAppClient
+from app.services.proactive_messaging import send_proactive
 
 IST = pytz.timezone("Asia/Kolkata")
 
@@ -84,9 +85,13 @@ def check_and_send_reminders() -> dict:
         if not _is_due(r["pre_alert_at"], now):
             continue
         try:
-            user = db.table("users").select("name, phone").eq("id", r["user_id"]).single().execute()
-            if user.data:
-                wa.send_one(user.data["phone"], f"heads up, in 5 mins: {r['message']}")
+            user = db.table("users").select("id, name, phone, is_active").eq("id", r["user_id"]).single().execute()
+            if user.data and user.data.get("is_active", True):
+                send_proactive(
+                    db, user.data,
+                    lambda: wa.send_one(user.data["phone"], f"heads up, in 5 mins: {r['message']}"),
+                    "WHATSAPP_TEMPLATE_REMINDER_PRE_ALERT", [r["message"]],
+                )
             db.table("reminders").update({"pre_alert_sent": True}).eq("id", r["id"]).execute()
             sent_pre_alerts.append(r["id"])
         except Exception as e:
@@ -103,9 +108,13 @@ def check_and_send_reminders() -> dict:
         if not _is_due(r["remind_at"], now):
             continue
         try:
-            user = db.table("users").select("name, phone").eq("id", r["user_id"]).single().execute()
-            if user.data:
-                wa.send_one(user.data["phone"], f"⏰ {r['message']}")
+            user = db.table("users").select("id, name, phone, is_active").eq("id", r["user_id"]).single().execute()
+            if user.data and user.data.get("is_active", True):
+                send_proactive(
+                    db, user.data,
+                    lambda: wa.send_one(user.data["phone"], f"⏰ {r['message']}"),
+                    "WHATSAPP_TEMPLATE_REMINDER", [r["message"]],
+                )
             db.table("reminders").update({"is_sent": True}).eq("id", r["id"]).execute()
             sent_reminders.append(r["id"])
         except Exception as e:

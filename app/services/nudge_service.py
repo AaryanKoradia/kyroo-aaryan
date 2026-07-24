@@ -12,6 +12,7 @@ from app.brain.kyroo_brain import (
     validate_response,
 )
 from app.infrastructure.whatsapp.client import WhatsAppClient
+from app.services.proactive_messaging import send_proactive
 
 IST = pytz.timezone("Asia/Kolkata")
 
@@ -91,17 +92,34 @@ def _already_sent_today(db, user_id: str, slot: str) -> bool:
 
 
 def _send_nudge(db, user: dict, slot: str) -> None:
-    generator = GENERATORS[slot]
-    nudge_text = generator(user)
-    bubbles = validate_response(nudge_text)
+    """Generating the full LLM nudge is deferred into the closure below so
+    it only actually runs when we're within the 24h session window — if
+    we're outside it, send_proactive falls back to a template ping
+    instead, and there's no point paying for an LLM call whose output
+    would just get discarded."""
     phone = user.get("phone", "")
+    sent_text = {"value": None}
 
-    WhatsAppClient().send_bubbles(phone, bubbles)
+    def _generate_and_send():
+        nudge_text = GENERATORS[slot](user)
+        bubbles = validate_response(nudge_text)
+        WhatsAppClient().send_bubbles(phone, bubbles)
+        sent_text["value"] = "\n\n".join(bubbles)
+
+    outcome = send_proactive(
+        db, user, _generate_and_send,
+        "WHATSAPP_TEMPLATE_NUDGE", [user.get("name", "yaar")],
+    )
+    if outcome == "skipped_no_template":
+        # nothing was actually sent — don't log it as today's nudge, so a
+        # later attempt (once a template is configured) isn't blocked by
+        # _already_sent_today
+        return
 
     db.table("chat_history").insert({
         "user_id": user["id"],
         "user_message": slot,
-        "kiro_response": "\n\n".join(bubbles),
+        "kiro_response": sent_text["value"] or f"(sent via {outcome})",
         "module": "general",
     }).execute()
 

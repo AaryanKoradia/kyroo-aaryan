@@ -455,13 +455,16 @@ export default function Home() {
             </div>
             {[
               { label: "Product", links: ["Features", "Pricing", "How it works", "File conversion", "Top-up credits"] },
-              { label: "Company", links: ["About", "Privacy Policy", "Terms of Service", "Contact"] },
+              { label: "Company", links: ["About", "Privacy Policy", "Unsubscribe", "Contact"] },
               { label: "Social", links: ["Instagram", "Twitter / X", "LinkedIn", "WhatsApp"] },
             ].map((s) => (
               <div key={s.label}>
                 <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", opacity: 0.45, marginBottom: 16, fontWeight: 700 }}>{s.label}</div>
                 <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 11, padding: 0 }}>
-                  {s.links.map((l) => <li key={l}><a href="#" style={{ fontSize: 13, color: "var(--k-paper)", opacity: 0.65, textDecoration: "none" }}>{l}</a></li>)}
+                  {s.links.map((l) => {
+                    const hrefs: Record<string, string> = { "Privacy Policy": "/privacy", "Unsubscribe": "/unsubscribe" };
+                    return <li key={l}><a href={hrefs[l] || "#"} style={{ fontSize: 13, color: "var(--k-paper)", opacity: 0.65, textDecoration: "none" }}>{l}</a></li>;
+                  })}
                 </ul>
               </div>
             ))}
