@@ -149,6 +149,41 @@ class WhatsAppClient:
         )
         response.raise_for_status()
 
+    def send_template(
+        self,
+        phone: str,
+        template_name: str,
+        language_code: str = "en",
+        body_params: list[str] | None = None,
+    ):
+        """Sends an approved WhatsApp message template. Required for any
+        business-initiated message sent outside the 24-hour customer
+        service window — a free-form send there fails with error 131047
+        ("More than 24 hours have passed since the recipient last
+        replied"). body_params fill the template's {{1}}, {{2}}...
+        placeholders in order, if the template has any."""
+        template: dict = {"name": template_name, "language": {"code": language_code}}
+        if body_params:
+            template["components"] = [{
+                "type": "body",
+                "parameters": [{"type": "text", "text": p} for p in body_params],
+            }]
+        response = requests.post(
+            f"{self.BASE_URL}/{settings.phone_number_id}/messages",
+            headers={
+                "Authorization": f"Bearer {settings.whatsapp_token}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "messaging_product": "whatsapp",
+                "to": phone,
+                "type": "template",
+                "template": template,
+            },
+            timeout=20,
+        )
+        response.raise_for_status()
+
     def send_list_message(
         self,
         phone: str,

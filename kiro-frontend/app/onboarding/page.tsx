@@ -152,6 +152,7 @@ export default function Onboarding() {
   const [otpSending, setOtpSending] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [otpError, setOtpError] = useState("");
+  const [consentGiven, setConsentGiven] = useState(false);
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
@@ -240,6 +241,7 @@ export default function Onboarding() {
         if (!/[A-Za-z]/.test(trimmedCity)) return "Enter a valid city name.";
         if (!/^\S+@\S+\.\S+$/.test(email.trim())) return "Enter a valid email address.";
         if (!otpVerified) return "Please verify your email — send yourself a code and enter it.";
+        if (!consentGiven) return "Please agree to the Privacy Policy and WhatsApp messages to continue.";
         return null;
       }
       case 2:
@@ -486,6 +488,13 @@ export default function Onboarding() {
             {otpSent && !otpVerified && !otpError && (
               <div style={{ fontSize: 11.5, opacity: 0.55, marginBottom: 12 }}>Sent a code to {otpEmailSentFor} — check your inbox.</div>
             )}
+
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 12, opacity: 0.7, cursor: "pointer", marginTop: 4 }}>
+              <input type="checkbox" checked={consentGiven} onChange={e => setConsentGiven(e.target.checked)} style={{ marginTop: 2, flexShrink: 0 }} />
+              <span>
+                I agree to KYROO's <a href="/privacy" target="_blank" style={{ color: "var(--k-ink)", textDecoration: "underline" }}>Privacy Policy</a>, and to receive WhatsApp messages from KYROO including replies and proactive check-ins/nudges (you can turn these off any time).
+              </span>
+            </label>
           </div>
         )}
 

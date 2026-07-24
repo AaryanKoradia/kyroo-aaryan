@@ -329,6 +329,33 @@ CRISIS_RESPONSE_BUBBLES = [
 ]
 
 
+# ─── UNSUBSCRIBE DETECTOR ─────────────────────────────────────────────────────
+# Also deterministic rather than left to the LLM — WhatsApp's Business
+# Messaging Policy requires a real, reliable way to opt out, so this always
+# points to the actual opt-out flow on the website instead of hoping the
+# model remembers to mention it every time.
+
+_UNSUBSCRIBE_SIGNATURES = [
+    "unsubscribe", "opt out", "opt-out", "stop messaging me", "stop texting me",
+    "stop sending me", "don't message me", "dont message me", "don't text me",
+    "dont text me", "remove my number", "delete my number", "stop the nudges",
+    "stop nudges", "turn off notifications", "band kar do message",
+    "message mat bhejo", "mujhe message mat karo", "band kardo yeh messages",
+]
+
+
+def detect_unsubscribe_intent(message: str) -> bool:
+    msg = message.lower()
+    return any(sig in msg for sig in _UNSUBSCRIBE_SIGNATURES)
+
+
+UNSUBSCRIBE_RESPONSE_BUBBLES = [
+    "totally get it, no hard feelings.",
+    "you can turn off nudges and reminders here: https://kyroo.co.in/unsubscribe, just pop your number in.",
+    "and hey, I'll still be here if you ever wanna talk 🫂",
+]
+
+
 # ─── FIRST CONTACT ────────────────────────────────────────────────────────────
 
 def _is_first_contact(db, user_id: str) -> bool:
@@ -1206,6 +1233,10 @@ def kyroo_brain(
         memory_service.save_emotional_memory(user_id, "crisis", message[:200])
         bubbles = CRISIS_RESPONSE_BUBBLES
         return {"response": "\n\n".join(bubbles), "bubbles": bubbles, "module": "crisis", "emotion": "crisis"}
+
+    if detect_unsubscribe_intent(message):
+        bubbles = UNSUBSCRIBE_RESPONSE_BUBBLES
+        return {"response": "\n\n".join(bubbles), "bubbles": bubbles, "module": "unsubscribe", "emotion": "neutral"}
 
     module = detect_module(message)
     emotion = detect_emotion(message)
