@@ -356,6 +356,35 @@ UNSUBSCRIBE_RESPONSE_BUBBLES = [
 ]
 
 
+# ─── HUMAN ESCALATION DETECTOR ────────────────────────────────────────────────
+# Also deterministic — WhatsApp's Business Messaging Policy requires a real
+# escalation path to an actual human, not just the bot. Deliberately narrow
+# (explicit asks only), so it never fires on ordinary "I need someone to
+# talk to" emotional venting, which means something completely different
+# and should stay fully in KYROO's normal persona/EMOTIONAL INTELLIGENCE
+# handling instead.
+
+_HUMAN_ESCALATION_SIGNATURES = [
+    "talk to a human", "speak to a human", "talk to a real person",
+    "speak to a real person", "connect me to a human", "connect me with a human",
+    "is there a real person", "an actual human", "a real human", "human support",
+    "talk to your team", "contact the team", "talk to the kyroo team",
+    "customer support", "talk to support", "speak to support",
+    "insaan se baat karni hai", "asli insaan se baat", "real insaan se baat",
+]
+
+
+def detect_human_escalation_intent(message: str) -> bool:
+    msg = message.lower()
+    return any(sig in msg for sig in _HUMAN_ESCALATION_SIGNATURES)
+
+
+HUMAN_ESCALATION_RESPONSE_BUBBLES = [
+    "I'm not a real person, just KYROO 😅",
+    "but if you need the actual team behind me, you can reach them at admin.kyroo@gmail.com",
+]
+
+
 # ─── FIRST CONTACT ────────────────────────────────────────────────────────────
 
 def _is_first_contact(db, user_id: str) -> bool:
@@ -1237,6 +1266,10 @@ def kyroo_brain(
     if detect_unsubscribe_intent(message):
         bubbles = UNSUBSCRIBE_RESPONSE_BUBBLES
         return {"response": "\n\n".join(bubbles), "bubbles": bubbles, "module": "unsubscribe", "emotion": "neutral"}
+
+    if detect_human_escalation_intent(message):
+        bubbles = HUMAN_ESCALATION_RESPONSE_BUBBLES
+        return {"response": "\n\n".join(bubbles), "bubbles": bubbles, "module": "human_escalation", "emotion": "neutral"}
 
     module = detect_module(message)
     emotion = detect_emotion(message)
