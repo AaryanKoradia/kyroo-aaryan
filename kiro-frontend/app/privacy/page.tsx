@@ -39,7 +39,7 @@ export default function Privacy() {
         <p>KYROO isn't intended for anyone under 13. If you believe a child has used KYROO and shared personal data with us, contact us and we'll remove it.</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>Contact</h2>
-        <p>Questions, data deletion requests, or anything else — email <a href="mailto:support@kyroo.co.in" style={{ color: "var(--k-coral)" }}>support@kyroo.co.in</a>.</p>
+        <p>Questions, data deletion requests, or anything else — email <a href="mailto:admin.kyroo@gmail.com" style={{ color: "var(--k-coral)" }}>admin.kyroo@gmail.com</a>.</p>
       </div>
     </main>
   );
