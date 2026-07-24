@@ -1,0 +1,14 @@
+name: KYROO Story Cache Refresh
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # every 6 hours — story content doesn't need to be fresher than that
+  workflow_dispatch:  # manual trigger for testing
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refresh cached stories
+        run: |
+          curl -sf -X POST https://kyroo-whatsapp.onrender.com/stories/refresh

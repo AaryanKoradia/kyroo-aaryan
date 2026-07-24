@@ -14,6 +14,7 @@ from app.brain.onboarding_flow import (
     needs_onboarding, current_question, process_answer, format_prompt,
     ONBOARDING_QUESTIONS, COMPLETE_TEXT,
 )
+from app.brain.transcription import transcribe_audio
 from app.services.user_service import UserService
 from app.services.conversation_service import ConversationService
 
@@ -178,7 +179,8 @@ async def webhook(request: Request, db=Depends(get_db)):
             conversation_service = ConversationService(db)
 
             on_bubble = lambda b: wa.send_one(phone, b)
-            result = kyroo_brain(user, caption, [], image_base64, image_media_type, on_bubble=on_bubble)
+            on_gif = lambda url: wa.send_gif(phone, url)
+            result = kyroo_brain(user, caption, [], image_base64, image_media_type, on_bubble=on_bubble, on_gif=on_gif)
             _send_remaining_if_needed(phone, result)
 
             # history/memory writes happen after the reply is already sent
@@ -217,8 +219,9 @@ async def webhook(request: Request, db=Depends(get_db)):
             conversation_service = ConversationService(db)
 
             on_bubble = lambda b: wa.send_one(phone, b)
+            on_gif = lambda url: wa.send_gif(phone, url)
             result = kyroo_brain(
-                user, caption, [], on_bubble=on_bubble,
+                user, caption, [], on_bubble=on_bubble, on_gif=on_gif,
                 document_base64=document_base64, document_media_type=document_media_type,
             )
             _send_remaining_if_needed(phone, result)
@@ -229,6 +232,36 @@ async def webhook(request: Request, db=Depends(get_db)):
             )
         except Exception:
             print(f"[webhook] Document error:\n{traceback.format_exc()}")
+        return {"status": "ok"}
+
+    if msg_type == "audio":
+        # transcribe then hand off to the exact same pipeline as a typed
+        # text message — no separate audio-specific chat logic needed
+        audio = message.get("audio", {})
+        media_id = audio.get("id")
+        audio_mime = audio.get("mime_type", "audio/ogg")
+
+        try:
+            wa = WhatsAppClient()
+            if message_id:
+                wa.send_typing_indicator(message_id)
+
+            downloaded = wa.download_media(media_id) if media_id else None
+            transcript = transcribe_audio(downloaded[0], audio_mime) if downloaded else None
+
+            if not transcript:
+                wa.send_one(phone, "couldn't quite make that out, can you type it or send it again?")
+                return {"status": "ok"}
+
+            orchestrator = Orchestrator(db)
+            on_bubble = lambda b: wa.send_one(phone, b)
+            on_gif = lambda url: wa.send_gif(phone, url)
+            _, result = orchestrator.process(phone, transcript, on_bubble=on_bubble, on_gif=on_gif)
+            _send_remaining_if_needed(phone, result)
+
+            _background_save(orchestrator.save_exchange, user, transcript, result)
+        except Exception:
+            print(f"[webhook] Audio error:\n{traceback.format_exc()}")
         return {"status": "ok"}
 
     if msg_type == "sticker":
@@ -280,7 +313,8 @@ async def webhook(request: Request, db=Depends(get_db)):
 
             orchestrator = Orchestrator(db)
             on_bubble = lambda b: wa.send_one(phone, b)
-            _, result = orchestrator.process(phone, combined_text, on_bubble=on_bubble)
+            on_gif = lambda url: wa.send_gif(phone, url)
+            _, result = orchestrator.process(phone, combined_text, on_bubble=on_bubble, on_gif=on_gif)
             _send_remaining_if_needed(phone, result)
 
             # chat history + style/memory writes happen after the reply is

@@ -63,6 +63,20 @@ create table if not exists email_otps (
 );
 create index if not exists idx_email_otps_email on email_otps(email, created_at desc);
 
+-- ─── story_cache ───────────────────────────────────────────────────────────
+-- A rotating pool of ~10 short story gists (title + a short excerpt, not
+-- full posts) fetched periodically from Reddit, offered to users who seem
+-- bored — KYROO retells these in its own words, never pastes them verbatim.
+create table if not exists story_cache (
+    id           uuid primary key default gen_random_uuid(),
+    source       text default 'reddit',
+    subreddit    text,
+    title        text not null,
+    gist         text default '',
+    url          text default '',
+    fetched_at   timestamptz default now()
+);
+
 -- ─── chat_history ──────────────────────────────────────────────────────────
 create table if not exists chat_history (
     id             uuid primary key default gen_random_uuid(),

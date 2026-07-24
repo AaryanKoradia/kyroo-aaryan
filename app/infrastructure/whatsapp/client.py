@@ -126,6 +126,29 @@ class WhatsAppClient:
         )
         response.raise_for_status()
 
+    def send_gif(self, phone: str, video_url: str, delay: float | None = None):
+        """Sends an animated gif via WhatsApp — the Cloud API doesn't
+        animate .gif files sent as "image" messages, so this sends an mp4
+        as a "video" message instead, which does render animated. Uses the
+        video's direct link rather than pre-uploading, since Tenor's URLs
+        are already stable/public."""
+        time.sleep(delay if delay is not None else random.uniform(*self.STICKER_DELAY_RANGE))
+        response = requests.post(
+            f"{self.BASE_URL}/{settings.phone_number_id}/messages",
+            headers={
+                "Authorization": f"Bearer {settings.whatsapp_token}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "messaging_product": "whatsapp",
+                "to": phone,
+                "type": "video",
+                "video": {"link": video_url},
+            },
+            timeout=20,
+        )
+        response.raise_for_status()
+
     def send_list_message(
         self,
         phone: str,

@@ -15,6 +15,7 @@ class Orchestrator:
         phone_number: str,
         message: str,
         on_bubble=None,
+        on_gif=None,
     ) -> tuple[dict, dict]:
         """Process a user message through the full brain pipeline. Returns
         (user, result). If on_bubble is given, bubbles from the main LLM
@@ -39,6 +40,7 @@ class Orchestrator:
             message=message,
             history=history,
             on_bubble=on_bubble,
+            on_gif=on_gif,
         )
 
         return user, result
