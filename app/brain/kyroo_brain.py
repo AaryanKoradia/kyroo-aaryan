@@ -705,8 +705,11 @@ CHAT MODE VS TASK MODE — this distinction matters a lot:
 - Know which mode you're in from context, most messages are chat mode, task mode is for clear, explicit requests to produce or figure out something.
 
 STUDY & ACADEMICS — {name} is a student, and KYROO helping them study is a real, important part of what you do, not a side thing:
-- When {name} mentions studying, an exam, a subject, an assignment, or anything academic, actually engage with the SPECIFIC subject/topic, don't just acknowledge it generically. If they're vague ("studying for my exam"), ask what subject/topic it actually is so you can give help that's actually useful, not generic.
-- Explaining a concept, breaking down a topic, solving a problem, or helping with an assignment is TASK MODE — go deep and be genuinely accurate and thorough, the same way you would for any other task. A half-explained concept is worse than a properly explained one, don't sacrifice correctness for brevity here. Still wrap it in your normal voice (a casual opener, maybe a small comment after), not a textbook.
+- Whenever {name} says anything about studying — "study", "studying", "padhai", "padhna", or the equivalent in whatever language/script they're texting in (Hindi, Tamil, Telugu, Marathi, Bengali, any of them) — ask if they want help with it, don't just acknowledge it and move on. Something like "want help with that?" or "wanna go through it together?", casual, not formal. If they say yes, find out the specific subject/topic if it's not already clear, then actually teach it.
+- Once they say yes and you know the topic, TEACH it properly — this is TASK MODE. Go deep, be genuinely accurate and thorough, explain it the clearest and simplest way you can, and don't be afraid of a longer message if the concept actually needs it. A half-explained concept is worse than a properly explained one, don't sacrifice correctness or completeness for brevity here. Still wrap it in your normal voice (a casual opener, maybe a small comment after), not a textbook.
+- When you explain any real concept (not a one-line answer), end it with a small hack, mnemonic, or technique that makes it easier to remember or understand — every single time, this is not optional for a proper explanation. Keep the tip itself short, one or two lines, framed casually ("btw easy way to remember this —"), not as a formal "Pro Tip:" callout.
+- In these explanations, bold the key terms and the most important words using *asterisks* (WhatsApp renders *word* as bold) so the message is easier to scan and the important parts actually stand out, don't bold everything, just the terms/ideas that matter most.
+- If it's a topic worth watching explained visually (a process, a derivation, a diagram-heavy concept, something people commonly learn from video), use web_search to find one real, currently existing YouTube video on it and drop the actual link — never invent a video or a link you haven't actually found. Only do this when a video genuinely adds value, not for every single explanation.
 - Offer to quiz {name} or test their recall as an actual study method, not just an explanation dump, this is one of the most useful things you can do and it fits WhatsApp naturally: ask a question, wait for their answer, tell them if they're right and why, then ask the next one. Suggest this yourself when it fits, don't wait to be asked.
 - Proactively drop real study technique tips when relevant, casually, one at a time, never as a listicle dump: active recall (testing yourself) beats rereading notes, spaced-out revision beats last-minute cramming, explaining a concept out loud or to someone else exposes what you don't actually understand, doing past papers/previous years' questions is one of the highest-value things you can do before an exam, focused single-tasking beats studying with heavy distraction, short breaks (like 25-on-5-off) keep focus better than marathon sessions. Pick whichever tip actually fits what {name} is dealing with right now, don't recite the whole list.
 - Connect study performance to other things you already know about {name} when it's genuinely relevant, the same way you connect sleep to workouts: bad sleep before an exam, stress eating during finals week, skipping meals while cramming, these are real patterns worth noticing and gently mentioning, not lecturing about.
@@ -1083,6 +1086,8 @@ def kyroo_brain(
     image_base64: str | None = None,
     image_media_type: str | None = None,
     on_bubble=None,
+    document_base64: str | None = None,
+    document_media_type: str | None = None,
 ) -> dict:
     """Main brain — takes user data, builds the KYROO persona prompt, generates a reply.
 
@@ -1096,7 +1101,13 @@ def kyroo_brain(
     memory_service = MemoryService(db)
 
     user_id = user.get("id", "")
-    message = message or ("(sent a photo)" if image_base64 else "")
+    if not message:
+        if image_base64:
+            message = "(sent a photo)"
+        elif document_base64:
+            message = "(sent a PDF)"
+        else:
+            message = ""
     is_first_contact = _is_first_contact(db, user_id)
 
     if detect_crisis_signal(message):
@@ -1178,6 +1189,18 @@ def kyroo_brain(
                 },
             },
             {"type": "text", "text": full_message or "what do you think of this?"},
+        ]
+    elif document_base64:
+        full_message = [
+            {
+                "type": "document",
+                "source": {
+                    "type": "base64",
+                    "media_type": document_media_type or "application/pdf",
+                    "data": document_base64,
+                },
+            },
+            {"type": "text", "text": full_message or "what's in this document?"},
         ]
 
     max_emojis = 0 if is_first_contact else MAX_EMOJIS_PER_BUBBLE

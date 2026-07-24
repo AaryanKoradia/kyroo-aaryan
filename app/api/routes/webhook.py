@@ -19,6 +19,8 @@ from app.services.conversation_service import ConversationService
 
 router = APIRouter(tags=["WhatsApp"])
 
+MAX_PDF_BYTES = 15 * 1024 * 1024  # 15MB — big enough for a real document, small enough to stay fast
+
 
 def _save_safely(fn, *args):
     """Runs a deferred save and swallows/logs errors — these are
@@ -186,6 +188,47 @@ async def webhook(request: Request, db=Depends(get_db)):
             )
         except Exception:
             print(f"[webhook] Image error:\n{traceback.format_exc()}")
+        return {"status": "ok"}
+
+    if msg_type == "document":
+        # PDFs bypass the text debounce buffer and get a direct reply, same
+        # as images — Claude reads the document natively, no separate
+        # text-extraction step needed
+        doc = message.get("document", {})
+        mime_type = doc.get("mime_type", "")
+        caption = doc.get("caption", "")
+        media_id = doc.get("id")
+
+        try:
+            wa = WhatsAppClient()
+            if message_id:
+                wa.send_typing_indicator(message_id)
+
+            if mime_type != "application/pdf":
+                wa.send_one(phone, "I can only read PDFs right now, not that file type — send it as a PDF?")
+                return {"status": "ok"}
+
+            downloaded = wa.download_media(media_id, max_bytes=MAX_PDF_BYTES) if media_id else None
+            if not downloaded:
+                wa.send_one(phone, "That PDF's too big for me to read (or didn't come through) — try a smaller file?")
+                return {"status": "ok"}
+            document_base64, document_media_type = downloaded
+
+            conversation_service = ConversationService(db)
+
+            on_bubble = lambda b: wa.send_one(phone, b)
+            result = kyroo_brain(
+                user, caption, [], on_bubble=on_bubble,
+                document_base64=document_base64, document_media_type=document_media_type,
+            )
+            _send_remaining_if_needed(phone, result)
+
+            _background_save(
+                _save_image_exchange, conversation_service, user,
+                caption or "(sent a PDF)", result,
+            )
+        except Exception:
+            print(f"[webhook] Document error:\n{traceback.format_exc()}")
         return {"status": "ok"}
 
     if msg_type == "sticker":
