@@ -221,6 +221,7 @@ declare
 begin
     foreach t in array array['users','chat_history','user_tracking','weekly_reports','reminders','emotional_memory','user_style','memory_embeddings']
     loop
+        execute format('drop policy if exists "service_role_all_%s" on %I;', t, t);
         execute format(
             'create policy "service_role_all_%s" on %I for all to service_role using (true) with check (true);',
             t, t
