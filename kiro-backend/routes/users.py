@@ -88,12 +88,21 @@ async def signup(user: UserSignup):
     }
 
 @router.get("/profile/{user_id}")
-async def get_profile(user_id: str):
+async def get_profile(user_id: str, email: str = ""):
+    """Requires the caller to also know the account's registered email —
+    there's no real session/login system yet, so a bare user_id alone
+    (even though UUIDs aren't easily guessable) was the only thing
+    standing between anyone and a full profile: name, phone, stress
+    level, income range. This is a lightweight ownership check, not a
+    replacement for real auth if this endpoint gets more use later."""
     db = get_db()
     user = db.table("users").select("*").eq("id", user_id).execute()
     if not user.data:
         raise HTTPException(status_code=404, detail="User not found")
-    return user.data[0]
+    record = user.data[0]
+    if not email or email.strip().lower() != (record.get("email") or "").strip().lower():
+        raise HTTPException(status_code=403, detail="Email does not match this account")
+    return record
 
 
 class PhoneOnly(BaseModel):

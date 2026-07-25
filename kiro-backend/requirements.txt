@@ -79,3 +79,4 @@ PyPDF2
 python-pptx
 pytz
 pytz
+sentry-sdk[fastapi]==2.66.1

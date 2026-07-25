@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { Sunrise, Wallet, Dumbbell, Moon, Brain, BedDouble, Target, FolderOpen, PenLine, MessageCircle, Rocket, type LucideIcon } from "lucide-react";
 
@@ -135,7 +136,7 @@ export default function Home() {
       {/* NAV */}
       <nav className="k-fade-1 k-nav" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 40px", background: scrolled ? "var(--k-paper)" : "transparent", borderBottom: scrolled ? "3px solid var(--k-ink)" : "3px solid transparent", transition: "all .25s ease" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          <img src="/kyroo-logo.png" alt="KYROO" style={{ width: 30, height: 30, borderRadius: "50%", border: "2px solid var(--k-ink)", objectFit: "cover" }} />
+          <Image src="/kyroo-logo.png" alt="KYROO" width={30} height={30} style={{ borderRadius: "50%", border: "2px solid var(--k-ink)", objectFit: "cover" }} />
           <div style={{ fontFamily: "var(--font-display)", fontSize: 22, letterSpacing: -0.5 }}>
             KYROO<span style={{ color: "var(--k-coral)" }}>.</span>
           </div>
@@ -385,13 +386,13 @@ export default function Home() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 40 }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 14 }}>
-                <img src="/kyroo-logo.png" alt="KYROO" style={{ width: 28, height: 28, borderRadius: "50%", border: "2px solid var(--k-paper)", objectFit: "cover" }} />
+                <Image src="/kyroo-logo.png" alt="KYROO" width={28} height={28} style={{ borderRadius: "50%", border: "2px solid var(--k-paper)", objectFit: "cover" }} />
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 22 }}>KYROO</div>
               </div>
               <p style={{ fontSize: 13, opacity: 0.55, maxWidth: 220, lineHeight: 1.75 }}>Your AI life companion. Fitness, money, mind, sleep — all in one WhatsApp chat.</p>
             </div>
             {[
-              { label: "Product", links: ["Features", "Pricing", "How it works", "File conversion", "Top-up credits"] },
+              { label: "Product", links: ["Features", "Pricing", "How it works"] },
               { label: "Company", links: ["About", "Privacy Policy", "Unsubscribe", "Contact"] },
               { label: "Social", links: ["Instagram", "Twitter / X", "LinkedIn", "WhatsApp"] },
             ].map((s) => (
@@ -399,7 +400,12 @@ export default function Home() {
                 <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", opacity: 0.45, marginBottom: 16, fontWeight: 700 }}>{s.label}</div>
                 <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 11, padding: 0 }}>
                   {s.links.map((l) => {
-                    const hrefs: Record<string, string> = { "Privacy Policy": "/privacy", "Unsubscribe": "/unsubscribe" };
+                    const hrefs: Record<string, string> = {
+                      "Privacy Policy": "/privacy", "Unsubscribe": "/unsubscribe",
+                      "About": "/about", "Terms of Service": "/terms", "Contact": "/contact",
+                      "Pricing": "/pricing", "Features": "/#features", "How it works": "/#how",
+                      "WhatsApp": "https://wa.me/917400351463",
+                    };
                     return <li key={l}><a href={hrefs[l] || "#"} style={{ fontSize: 13, color: "var(--k-paper)", opacity: 0.65, textDecoration: "none" }}>{l}</a></li>;
                   })}
                 </ul>

@@ -22,7 +22,7 @@ ENTRY_CHOICE_OPTIONS = [
     ("entry_whatsapp", "Answer here instead"),
 ]
 
-WEBSITE_SIGNUP_URL = "https://kyroo.co.in/onboarding"
+WEBSITE_SIGNUP_URL = "https://www.kyroo.co.in/onboarding"
 
 ENTRY_WEBSITE_REPLY = (
     f"here you go: {WEBSITE_SIGNUP_URL}\n\n"
@@ -85,7 +85,7 @@ def _validate_email(text: str) -> tuple[str | None, str | None]:
 ONBOARDING_QUESTIONS = [
     {
         "field": "name",
-        "prompt": "heyyy 😊 I'm KYROO, your new AI best friend for fitness, money, mind, and sleep, all in one WhatsApp chat. Let's get to know each other real quick. what should I call you?\n\n(quick note: by chatting with me you're good with getting WhatsApp messages from KYROO, including daily check-ins you can turn off any time, privacy policy's at kyroo.co.in/privacy if you wanna peek)",
+        "prompt": "heyyy 😊 I'm KYROO, your new AI best friend for fitness, money, mind, and sleep, all in one WhatsApp chat. Let's get to know each other real quick. what should I call you?\n\n(quick note: by chatting with me you're good with getting WhatsApp messages from KYROO, including daily check-ins you can turn off any time, privacy policy's at www.kyroo.co.in/privacy if you wanna peek)",
         "type": "text",
         "validate": _validate_name,
     },

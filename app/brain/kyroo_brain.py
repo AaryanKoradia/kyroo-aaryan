@@ -351,7 +351,7 @@ def detect_unsubscribe_intent(message: str) -> bool:
 
 UNSUBSCRIBE_RESPONSE_BUBBLES = [
     "totally get it, no hard feelings.",
-    "you can turn off nudges and reminders here: https://kyroo.co.in/unsubscribe, just pop your number in.",
+    "you can turn off nudges and reminders here: https://www.kyroo.co.in/unsubscribe, just pop your number in.",
     "and hey, I'll still be here if you ever wanna talk 🫂",
 ]
 
