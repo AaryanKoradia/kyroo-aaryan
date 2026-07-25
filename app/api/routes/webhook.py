@@ -271,7 +271,7 @@ async def webhook(request: Request, db=Depends(get_db)):
                 wa.send_typing_indicator(message_id)
 
             downloaded = wa.download_media(media_id) if media_id else None
-            transcript = transcribe_audio(downloaded[0], audio_mime) if downloaded else None
+            transcript = transcribe_audio(downloaded[0], audio_mime, user.get("language", "Hinglish")) if downloaded else None
 
             if not transcript:
                 wa.send_one(phone, "couldn't quite make that out, can you type it or send it again?")
