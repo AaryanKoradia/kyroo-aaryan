@@ -70,6 +70,18 @@ def _cap_emojis(bubble: str, max_emojis: int = MAX_EMOJIS_PER_BUBBLE) -> str:
     return re.sub(r' {2,}', ' ', "".join(chars)).strip()
 
 
+def _strip_em_dashes(text: str) -> str:
+    """Hard backstop for the 'no em dashes' persona rule, same rationale as
+    _cap_emojis — the model doesn't always follow prompted instructions, so
+    enforce it in code too. Replaces with a comma (the prompt's own
+    suggested alternative), cleaning up the whitespace left dangling
+    around it."""
+    if "—" not in text:
+        return text
+    text = re.sub(r'\s*—\s*', ', ', text)
+    return re.sub(r',\s*,', ',', text)
+
+
 STREAM_BUBBLE_MAX_WORDS = 50
 STREAM_BUBBLE_MAX_WORDS_LIST = 500
 MAX_STREAMED_BUBBLES = 8
@@ -91,6 +103,7 @@ def clean_streamed_bubble(text: str, seen_question_mark: bool, max_emojis: int =
 
     for phrase in CLICHE_PHRASES:
         cleaned = re.sub(re.escape(phrase), "", cleaned, flags=re.IGNORECASE)
+    cleaned = _strip_em_dashes(cleaned)
     cleaned = re.sub(r' {2,}', ' ', cleaned).strip()
     if not cleaned or _is_leaked_reasoning(cleaned):
         return "", seen_question_mark
@@ -129,6 +142,7 @@ def validate_response(text: str, max_emojis: int = MAX_EMOJIS_PER_BUBBLE) -> lis
     for phrase in CLICHE_PHRASES:
         cleaned = re.sub(re.escape(phrase), "", cleaned, flags=re.IGNORECASE)
 
+    cleaned = _strip_em_dashes(cleaned)
     cleaned = re.sub(r' {2,}', ' ', cleaned)
     cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
 

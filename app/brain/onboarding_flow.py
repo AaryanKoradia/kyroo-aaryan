@@ -13,7 +13,7 @@ AWAITING_ENTRY_CHOICE = -2
 ENTRY_CHOICE_PROMPT = (
     "heyyy 😊 I'm KYROO, your new AI best friend for fitness, money, mind, and sleep, "
     "all in one WhatsApp chat. quickest way to get set up properly is on the website "
-    "(2 min, full experience) — or if you'd rather, you can just answer a few quick "
+    "(2 min, full experience), or if you'd rather, you can just answer a few quick "
     "questions right here instead. up to you!"
 )
 
@@ -26,7 +26,7 @@ WEBSITE_SIGNUP_URL = "https://kyroo.co.in/onboarding"
 
 ENTRY_WEBSITE_REPLY = (
     f"here you go: {WEBSITE_SIGNUP_URL}\n\n"
-    "takes like 2 minutes. once you're done just message me here and we're good to go — "
+    "takes like 2 minutes. once you're done just message me here and we're good to go, "
     "or if you change your mind, just start typing and I'll ask you the questions right here instead 😊"
 )
 
@@ -85,7 +85,7 @@ def _validate_email(text: str) -> tuple[str | None, str | None]:
 ONBOARDING_QUESTIONS = [
     {
         "field": "name",
-        "prompt": "heyyy 😊 I'm KYROO, your new AI best friend for fitness, money, mind, and sleep, all in one WhatsApp chat. Let's get to know each other real quick. what should I call you?\n\n(quick note: by chatting with me you're good with getting WhatsApp messages from KYROO, including daily check-ins you can turn off any time — privacy policy's at kyroo.co.in/privacy if you wanna peek)",
+        "prompt": "heyyy 😊 I'm KYROO, your new AI best friend for fitness, money, mind, and sleep, all in one WhatsApp chat. Let's get to know each other real quick. what should I call you?\n\n(quick note: by chatting with me you're good with getting WhatsApp messages from KYROO, including daily check-ins you can turn off any time, privacy policy's at kyroo.co.in/privacy if you wanna peek)",
         "type": "text",
         "validate": _validate_name,
     },
