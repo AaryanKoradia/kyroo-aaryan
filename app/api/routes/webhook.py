@@ -125,7 +125,7 @@ def _handle_onboarding_turn(db, user: dict, message: dict, msg_type: str, messag
     else:
         # image/sticker/audio etc mid-onboarding — steer back to the
         # question rather than silently ignoring or treating it as an answer
-        wa.send_one(phone, "Let's finish setting you up first — " + format_prompt(question, user))
+        wa.send_one(phone, "Let's finish setting you up first, " + format_prompt(question, user))
         return
 
     update, error = process_answer(user, text, interactive_id)
@@ -231,12 +231,12 @@ async def webhook(request: Request, db=Depends(get_db)):
                 wa.send_typing_indicator(message_id)
 
             if mime_type != "application/pdf":
-                wa.send_one(phone, "I can only read PDFs right now, not that file type — send it as a PDF?")
+                wa.send_one(phone, "I can only read PDFs right now, not that file type, send it as a PDF?")
                 return {"status": "ok"}
 
             downloaded = wa.download_media(media_id, max_bytes=MAX_PDF_BYTES) if media_id else None
             if not downloaded:
-                wa.send_one(phone, "That PDF's too big for me to read (or didn't come through) — try a smaller file?")
+                wa.send_one(phone, "That PDF's too big for me to read (or didn't come through), try a smaller file?")
                 return {"status": "ok"}
             document_base64, document_media_type = downloaded
 
