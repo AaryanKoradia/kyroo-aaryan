@@ -613,12 +613,33 @@ def _build_extended_profile_block(user: dict) -> str:
     )
 
 
-def _build_story_context(name: str, emotion: str) -> str:
+_STORY_OFFER_SIGNATURES = [
+    "wanna hear", "want to hear", "hear something", "hear about",
+    "tell you a story", "spill", "gossip", "gonna tell you", "story time",
+    "hear a story", "hear a joke", "sunau", "sunaun", "kahani",
+]
+
+
+def _last_reply_offered_a_story(last_kyroo_reply: str) -> bool:
+    low = (last_kyroo_reply or "").lower()
+    return any(sig in low for sig in _STORY_OFFER_SIGNATURES)
+
+
+def _build_story_context(name: str, emotion: str, last_kyroo_reply: str = "") -> str:
     """When the user seems bored (the existing "neutral_check" emotion
     bucket already catches "bore"/"kuch nahi"/"bas aise" etc.), offers a
     couple of real cached stories KYROO could tell — retold in its own
-    words, never pasted verbatim, and only after asking first."""
-    if emotion != "neutral_check":
+    words, never pasted verbatim, and only after asking first.
+
+    Also re-triggers if KYROO's OWN last reply already made that offer —
+    without this, the very next turn (the user saying "yeah go on") gets
+    classified with a completely different emotion, the story facts drop
+    out of context entirely, and the model has nothing left to draw from
+    except its own vague offer, so it ends up inventing a story from
+    scratch instead of retelling a real one. This was a real, confirmed
+    bug: the facts were only ever present on the offer turn, never on the
+    turn where the story actually needs to get told."""
+    if emotion != "neutral_check" and not _last_reply_offered_a_story(last_kyroo_reply):
         return ""
     stories = get_random_stories(3)
     if not stories:
@@ -654,10 +675,11 @@ def build_system_prompt(
     style_instructions: str,
     memory_context: str,
     lang_style: str,
-    is_first_contact: bool = False
+    is_first_contact: bool = False,
+    last_kyroo_reply: str = "",
 ) -> str:
     name = user.get("name", "yaar") if user else "yaar"
-    story_context = _build_story_context(name, emotion)
+    story_context = _build_story_context(name, emotion, last_kyroo_reply)
     age = user.get("age", "")
     city = user.get("city", "")
     plan = user.get("plan", "free")
@@ -699,6 +721,7 @@ CORE PERSONALITY RULES (never break these):
 - Stay on whatever topic the user is actually asking about right now, even if it's unrelated to fitness/money/mind/sleep. You're a friend first, a coach second.
 - NEVER swear at, insult, or use abusive language towards {name}, under any circumstance, even if they're rude to you, joking, or explicitly asking you to. You can be blunt, sarcastic, or playfully roast them, but actual profanity directed at them or genuinely hostile language is never okay.
 - Never tell {name} to switch languages or ask them to type in a different language/style. Whatever language or mix they text in, you match and respond in kind, you never ask them to change how they talk to you.
+- Never invent specifics you don't actually have, a detail of a story you told, a fact, a number, something {name} supposedly said earlier. If {name} cross-questions you about something specific and you genuinely don't know or don't remember the detail, say so honestly and naturally ("ngl I don't remember the exact detail" / "I might be mixing it up, remind me?"), never paper over the gap by making something up. This matters more than keeping the conversation smooth, a believable-sounding invented detail is worse than admitting you're unsure.
 
 CONVERSATION RHYTHM (do not turn every reply into an interview):
 - Don't end every single message with a question. Mix it up: sometimes a question, sometimes just a reaction or observation, sometimes a statement that invites a reply without directly asking one.
@@ -1307,7 +1330,15 @@ def kyroo_brain(
 
     tracking_summary = _build_tracking_summary(tracking_logs)
 
-    system_static, system_dynamic = build_system_prompt(user, module, emotion, style_instructions, memory_context, lang_style, is_first_contact)
+    # history is ordered newest-first (see get_history_raw), so [0] is
+    # KYROO's actual last reply — needed so _build_story_context can tell
+    # whether it just offered a story that this message might be answering
+    last_kyroo_reply = (history[0].get("kiro_response", "") if history else "")
+
+    system_static, system_dynamic = build_system_prompt(
+        user, module, emotion, style_instructions, memory_context, lang_style, is_first_contact,
+        last_kyroo_reply=last_kyroo_reply,
+    )
 
     history_lines = []
     if history:
