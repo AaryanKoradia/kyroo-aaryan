@@ -8,6 +8,39 @@ import re
 # row title limit even where the underlying value is longer.
 
 NOT_STARTED = -1
+AWAITING_ENTRY_CHOICE = -2
+
+ENTRY_CHOICE_PROMPT = (
+    "heyyy 😊 I'm KYROO, your new AI best friend for fitness, money, mind, and sleep, "
+    "all in one WhatsApp chat. quickest way to get set up properly is on the website "
+    "(2 min, full experience) — or if you'd rather, you can just answer a few quick "
+    "questions right here instead. up to you!"
+)
+
+ENTRY_CHOICE_OPTIONS = [
+    ("entry_website", "Sign up on website"),
+    ("entry_whatsapp", "Answer here instead"),
+]
+
+WEBSITE_SIGNUP_URL = "https://kyroo.co.in/onboarding"
+
+ENTRY_WEBSITE_REPLY = (
+    f"here you go: {WEBSITE_SIGNUP_URL}\n\n"
+    "takes like 2 minutes. once you're done just message me here and we're good to go — "
+    "or if you change your mind, just start typing and I'll ask you the questions right here instead 😊"
+)
+
+
+def resolve_entry_choice(text: str | None, interactive_id: str | None) -> str:
+    """"website" if they explicitly picked that option, "whatsapp" for
+    everything else (the whatsapp button, or just typing something
+    directly) — typing anything at all is treated as opting into the
+    WhatsApp-native flow, never blocked or left unhandled."""
+    if interactive_id == "entry_website":
+        return "website"
+    if text and text.strip().lower() in ("website", "sign up on website", "1"):
+        return "website"
+    return "whatsapp"
 
 
 def _validate_name(text: str) -> tuple[str | None, str | None]:
@@ -177,7 +210,7 @@ def needs_onboarding(user: dict) -> bool:
 
 def current_question(user: dict) -> dict | None:
     step = user.get("onboarding_step", NOT_STARTED)
-    if step == NOT_STARTED or step >= TOTAL_QUESTIONS:
+    if step < 0 or step >= TOTAL_QUESTIONS:
         return None
     return ONBOARDING_QUESTIONS[step]
 

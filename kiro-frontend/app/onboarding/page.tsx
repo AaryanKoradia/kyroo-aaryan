@@ -323,6 +323,7 @@ export default function Onboarding() {
       if (data.user_id) {
         localStorage.setItem("kiro_user_id", data.user_id);
         localStorage.setItem("kiro_user_name", name);
+        localStorage.setItem("kiro_nudge_time", nudgeTime);
       }
     } catch (err) {
       console.error(err);

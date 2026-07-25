@@ -12,7 +12,8 @@ from app.brain.debounce import buffer_message
 from app.brain.stickers import is_sticker_war_trigger, pick_random_mood, pick_random_sticker, STICKER_MEDIA_IDS
 from app.brain.onboarding_flow import (
     needs_onboarding, current_question, process_answer, format_prompt,
-    ONBOARDING_QUESTIONS, COMPLETE_TEXT,
+    ONBOARDING_QUESTIONS, COMPLETE_TEXT, NOT_STARTED, AWAITING_ENTRY_CHOICE,
+    ENTRY_CHOICE_PROMPT, ENTRY_CHOICE_OPTIONS, ENTRY_WEBSITE_REPLY, resolve_entry_choice,
 )
 from app.brain.transcription import transcribe_audio
 from app.services.user_service import UserService
@@ -83,11 +84,34 @@ def _handle_onboarding_turn(db, user: dict, message: dict, msg_type: str, messag
 
     phone = user["phone"]
     user_service = UserService(db)
+    step = user.get("onboarding_step", NOT_STARTED)
+
+    if step == NOT_STARTED:
+        # brand new contact — offer the website as the primary path and
+        # WhatsApp-native questions as the fallback, rather than diving
+        # straight into the 13-question flow
+        wa.send_list_message(phone, ENTRY_CHOICE_PROMPT, ENTRY_CHOICE_OPTIONS, button_text="Choose")
+        user_service.update_user(user["id"], {"onboarding_step": AWAITING_ENTRY_CHOICE})
+        return
+
+    if step == AWAITING_ENTRY_CHOICE:
+        text = message.get("text", {}).get("body") if msg_type == "text" else None
+        interactive_id = _extract_interactive_id(message) if msg_type == "interactive" else None
+        choice = resolve_entry_choice(text, interactive_id)
+        if choice == "website":
+            wa.send_one(phone, ENTRY_WEBSITE_REPLY)
+            # stays at AWAITING_ENTRY_CHOICE — if they come back without
+            # finishing on the website, typing anything at all still falls
+            # through to the WhatsApp flow below next time
+            return
+        _send_onboarding_question(wa, phone, ONBOARDING_QUESTIONS[0], user)
+        user_service.update_user(user["id"], {"onboarding_step": 0})
+        return
 
     question = current_question(user)
     if question is None:
-        # onboarding_step is still NOT_STARTED — nothing has been asked yet,
-        # this inbound message (whatever it is) is just their opener
+        # shouldn't normally happen (covered by the states above), but
+        # guard rather than crash on an unexpected onboarding_step value
         _send_onboarding_question(wa, phone, ONBOARDING_QUESTIONS[0], user)
         user_service.update_user(user["id"], {"onboarding_step": 0})
         return

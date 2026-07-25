@@ -2,34 +2,33 @@
 import { useState } from "react";
 
 export default function Pricing() {
-  const [billing, setBilling] = useState("monthly");
   const [selected, setSelected] = useState("free");
 
   const plans = [
     {
       id: "free",
       name: "FREE",
-      price: { monthly: "₹0", yearly: "₹0" },
+      price: "₹0",
       period: "forever",
-      features: ["1 AI module", "5 messages/day", "Hindi + English", "Daily nudge"],
-      hot: false
+      features: ["All 4 modules", "Unlimited messages", "8 languages", "Voice, photos & PDFs", "Daily nudges"],
+      locked: false,
     },
     {
       id: "pro",
       name: "PRO",
-      price: { monthly: "₹999", yearly: "₹666" },
-      period: billing === "yearly" ? "/month (₹7,999/yr)" : "/month",
-      features: ["All 4 modules", "50 messages/day", "Voice + images", "All 8 languages", "Personal RL brain", "Weekly life report"],
-      hot: true
+      price: "Coming soon",
+      period: "",
+      features: ["Everything in Free", "Priority responses", "Deeper weekly reports"],
+      locked: true,
     },
     {
       id: "pro_plus",
       name: "PRO PLUS",
-      price: { monthly: "₹1,999", yearly: "₹1,333" },
-      period: billing === "yearly" ? "/month (₹15,999/yr)" : "/month",
-      features: ["Everything in PRO", "Unlimited messages", "Emotion detection", "Monthly audit PDF", "Human support"],
-      hot: false
-    }
+      price: "Coming soon",
+      period: "",
+      features: ["Everything in Pro", "Monthly audit PDF", "Priority support"],
+      locked: true,
+    },
   ];
 
   return (
@@ -53,43 +52,31 @@ export default function Pricing() {
       <div style={{ maxWidth: 940, margin: "0 auto", padding: "60px 28px", textAlign: "center" }}>
         <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, padding: "4px 10px", background: "var(--k-paper)", border: "2px solid var(--k-ink)" }}>Simple pricing</span>
         <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(30px,5vw,54px)", letterSpacing: -1.5, margin: "20px 0 12px", textTransform: "uppercase", lineHeight: 1.05 }}>
-          Less than your <span style={{ color: "var(--k-coral)" }}>morning chai</span>
+          Free to start. <span style={{ color: "var(--k-coral)" }}>Always.</span>
         </h1>
         <p style={{ fontSize: 14, opacity: 0.6, maxWidth: 380, margin: "0 auto 32px", lineHeight: 1.7 }}>
-          Replaces ₹48,000/month in professional fees.
+          No credit card needed. Cancel anytime.
         </p>
-
-        <div style={{ display: "inline-flex", border: "3px solid var(--k-ink)", padding: 3, gap: 3, marginBottom: 48, background: "var(--k-paper)" }}>
-          {["monthly", "yearly"].map(b => (
-            <button key={b} onClick={() => setBilling(b)} style={{
-              padding: "9px 20px", fontSize: 12.5, fontFamily: "var(--font-mono-tag)", fontWeight: 700, textTransform: "uppercase",
-              cursor: "pointer", border: "none",
-              color: billing === b ? "var(--k-ink)" : "rgba(20,18,15,0.4)",
-              background: billing === b ? "var(--k-lime)" : "transparent",
-            }}>
-              {b === "yearly" ? "Yearly · Save 33%" : "Monthly"}
-            </button>
-          ))}
-        </div>
 
         <div className="plan-g" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, marginBottom: 40 }}>
           {plans.map((p, i) => (
-            <div key={p.id} onClick={() => setSelected(p.id)} style={{
-              background: p.hot ? "var(--k-lime)" : "var(--k-paper)",
+            <div key={p.id} onClick={() => !p.locked && setSelected(p.id)} style={{
+              background: p.locked ? "var(--k-paper-2)" : "var(--k-paper)",
+              opacity: p.locked ? 0.6 : 1,
               border: "3px solid var(--k-ink)",
               boxShadow: selected === p.id ? "8px 8px 0 var(--k-ink)" : "4px 4px 0 var(--k-ink)",
-              padding: "30px 22px", position: "relative", cursor: "pointer", textAlign: "left",
-              transform: `translate(${selected === p.id ? -3 : 0}px, ${selected === p.id ? -3 : 0}px) rotate(${p.hot ? -1 : i === 0 ? 1 : -1}deg)`,
+              padding: "30px 22px", position: "relative", cursor: p.locked ? "not-allowed" : "pointer", textAlign: "left",
+              transform: `translate(${selected === p.id ? -3 : 0}px, ${selected === p.id ? -3 : 0}px) rotate(${i === 1 ? 0 : i === 0 ? 1 : -1}deg)`,
               transition: "all .15s ease",
             }}>
-              {p.hot && (
-                <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%) rotate(-2deg)", background: "var(--k-ink)", color: "var(--k-lime)", fontFamily: "var(--font-mono-tag)", fontSize: 9.5, fontWeight: 700, padding: "4px 12px", border: "2px solid var(--k-ink)", whiteSpace: "nowrap", textTransform: "uppercase" }}>Most popular</div>
+              {p.locked && (
+                <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%) rotate(-2deg)", background: "var(--k-ink)", color: "var(--k-paper)", fontFamily: "var(--font-mono-tag)", fontSize: 9.5, fontWeight: 700, padding: "4px 12px", border: "2px solid var(--k-ink)", whiteSpace: "nowrap", textTransform: "uppercase" }}>🔒 Coming soon</div>
               )}
-              {selected === p.id && (
-                <div style={{ position: "absolute", top: 14, right: 14, width: 24, height: 24, background: "var(--k-ink)", color: p.hot ? "var(--k-lime)" : "var(--k-paper)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>✓</div>
+              {!p.locked && selected === p.id && (
+                <div style={{ position: "absolute", top: 14, right: 14, width: 24, height: 24, background: "var(--k-ink)", color: "var(--k-paper)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>✓</div>
               )}
               <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10.5, letterSpacing: 1.5, textTransform: "uppercase", opacity: 0.55, marginBottom: 16, fontWeight: 700 }}>{p.name}</div>
-              <div style={{ fontFamily: "var(--font-display)", fontSize: 40, letterSpacing: -1.5 }}>{billing === "yearly" ? p.price.yearly : p.price.monthly}</div>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: p.locked ? 26 : 40, letterSpacing: -1.5 }}>{p.price}</div>
               <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 22 }}>{p.period}</div>
               <ul style={{ listStyle: "none", marginBottom: 0, padding: 0 }}>
                 {p.features.map(f => (
@@ -108,14 +95,14 @@ export default function Pricing() {
               {plans.find(p => p.id === selected)?.name} selected
             </div>
             <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, opacity: 0.6 }}>
-              CANCEL ANYTIME · NO HIDDEN CHARGES · UPI AUTOPAY
+              CANCEL ANYTIME · NO HIDDEN CHARGES
             </div>
           </div>
           <button
             className="k-btn k-btn-lime"
             onClick={() => { localStorage.setItem("kiro_selected_plan", selected); window.location.href = "/payment"; }}
             style={{ padding: "13px 28px", fontSize: 13 }}>
-            Continue to payment →
+            Continue →
           </button>
         </div>
       </div>
