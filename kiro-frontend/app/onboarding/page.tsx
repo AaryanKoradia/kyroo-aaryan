@@ -21,7 +21,7 @@ const steps: { id: number; icon: LucideIcon | null; domain: string; title: strin
   { id: 3, icon: Flag, domain: "Fitness Goal", title: "What do you want your body to do?", sub: "Pick your primary fitness goal." },
   { id: 4, icon: BedDouble, domain: "Sleep", title: "How's your sleep honestly?", sub: "Sleep affects everything — fitness, money decisions, mood." },
   { id: 5, icon: Brain, domain: "Mind", title: "How's your mental state these days?", sub: "No judgment. This stays completely private." },
-  { id: 6, icon: Wallet, domain: "Money", title: "Let's talk about your money habits", sub: "Kiro reads your spending SMS automatically. No bank login ever." },
+  { id: 6, icon: Wallet, domain: "Money", title: "Let's talk about your money habits", sub: "Just tell Kiro what you spend, no bank login ever needed." },
   { id: 7, icon: Salad, domain: "Nutrition", title: "What does your eating look like?", sub: "Kiro plans meals around Indian food — dal, roti, sabzi." },
   { id: 8, icon: Target, domain: "Productivity", title: "How productive are you really?", sub: "Kiro optimises your day around your actual energy levels." },
   { id: 9, icon: MessageCircle, domain: "Communication", title: "How should Kiro talk to you?", sub: "Pick language. Kiro handles Hinglish too." },

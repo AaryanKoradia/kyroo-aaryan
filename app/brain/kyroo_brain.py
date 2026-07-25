@@ -1400,36 +1400,61 @@ def finalize_chat_turn(user: dict, message: str, result: dict, db=None) -> None:
 
 # ─── MORNING NUDGE ───────────────────────────────────────────────────────────
 
+_NUDGE_FACTS_RULE = (
+    "FORMAT (matches KYROO's WhatsApp brief style exactly): a short one-line "
+    "greeting/opener, then a blank line, then ONE fact per line (no bullets, "
+    "just the line itself), then a blank line, then ONE closing action or "
+    "question. Plain and scannable, not chatty. No emoji unless genuinely "
+    "fitting (max 1 total). No dragged-out words. No em dashes. This is a "
+    "single WhatsApp message, never multiple.\n"
+    "CRITICAL: Only state facts/numbers given to you explicitly below. Never "
+    "invent, estimate, or round a number that wasn't given. If a fact isn't "
+    "given, skip that line entirely rather than guessing."
+)
+
+
+def _mood_trend_line(tracking_logs: list[dict]) -> str:
+    """Real trend from actual logged mood_score values (oldest to newest
+    among what's available) — never fabricated, and omitted entirely if
+    there isn't enough real data to say anything honest."""
+    scores = [(t["date"], t["mood_score"]) for t in tracking_logs if t.get("mood_score") is not None]
+    if len(scores) < 2:
+        return ""
+    scores.sort(key=lambda x: x[0])
+    recent = [s for _, s in scores[-3:]]
+    if all(recent[i] <= recent[i + 1] for i in range(len(recent) - 1)) and recent[-1] > recent[0]:
+        return f"Mood trend: up over your last {len(recent)} logged days"
+    if all(recent[i] >= recent[i + 1] for i in range(len(recent) - 1)) and recent[-1] < recent[0]:
+        return f"Mood trend: dipped over your last {len(recent)} logged days"
+    return ""
+
+
 def generate_morning_nudge(user: dict) -> str:
     db = get_supabase()
     user_id = user.get("id", "")
     name = user.get("name", "yaar") if user else "yaar"
     fitness_goal = user.get("fitness_goal", "")
 
-    try:
-        tracking_res = (
-            db.table("user_tracking")
-            .select("*")
-            .eq("user_id", user_id)
-            .order("date", desc=True)
-            .limit(1)
-            .execute()
-        )
-        latest = (tracking_res.data or [None])[0]
-    except Exception:
-        latest = None
+    tracking_logs = _fetch_tracking_logs(db, user_id, limit=7)
+    latest = tracking_logs[0] if tracking_logs else None
 
-    context = ""
-    if latest:
-        if latest.get("workout_done"):
-            context = f"Last workout: {latest.get('workout_name', '')} on {latest.get('date', '')}"
-        elif latest.get("sleep_hours") and latest["sleep_hours"] < 6:
-            context = "Slept less than 6 hours recently, be gentle."
+    facts = []
+    if latest and latest.get("sleep_hours") is not None:
+        q = latest.get("sleep_quality", "")
+        line = f"Sleep: {latest['sleep_hours']} hrs"
+        if q:
+            line += f" ({q.lower()})"
+        facts.append(line)
+    mood_line = _mood_trend_line(tracking_logs)
+    if mood_line:
+        facts.append(mood_line)
+
+    facts_block = "\n".join(facts) if facts else "No tracking data logged yet — that's fine, keep it general."
 
     response = client.messages.create(
         model=MODEL,
         max_tokens=120,
-        system=f"You are KYROO, {name}'s AI best friend. Morning WhatsApp nudge. Gen Z Hinglish. Warm but sarcastic sometimes. Max 3 lines. Dragged words. Goal: {fitness_goal}. {context}. End with ONE action or question. 1-2 emojis. No em dashes. No dashes of any kind. No motivation quotes.",
+        system=f"You are KYROO, {name}'s AI best friend. Morning WhatsApp brief. Goal: {fitness_goal}.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\nOpener must be exactly 'Good morning!' or 'Good morning {name}!'. Closing line: ONE specific, actionable suggestion for today tied to their goal, not a generic platitude.",
         messages=[{"role": "user", "content": f"Morning nudge for {name}"}]
     )
     return response.content[0].text
@@ -1463,15 +1488,18 @@ def generate_afternoon_nudge(user: dict) -> str:
     money_habit = user.get("money_habit", "")
     today = _todays_tracking_row(db, user_id)
 
-    context = "No spending logged yet today."
     if today and today.get("spent_today") is not None:
         cat = today.get("spent_category", "")
-        context = f"Spent ₹{today['spent_today']} today so far" + (f" on {cat}" if cat else "") + "."
+        facts_block = f"Spent today: ₹{today['spent_today']}" + (f" ({cat})" if cat else "")
+        instruction = "React briefly to the real spend above, then close with one short, non-preachy observation or question. Never invent a budget, a percentage, or any figure beyond the one given above."
+    else:
+        facts_block = "Nothing logged yet today."
+        instruction = "No real data to react to — just casually ask what they've spent on today, one line, don't lecture or invent a number."
 
     response = client.messages.create(
         model=MODEL,
         max_tokens=110,
-        system=f"You are KYROO, {name}'s AI best friend. Midday WhatsApp check-in about money. Gen Z Hinglish, casual, never preachy or like a budgeting app. Max 3 lines. Money habit: {money_habit}. {context}. If there's nothing specific to react to, just casually ask what they've spent on today, don't lecture. 1 emoji max. No em dashes. No motivation quotes.",
+        system=f"You are KYROO, {name}'s AI best friend. Midday WhatsApp money check-in. Money habit: {money_habit}.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n{instruction}",
         messages=[{"role": "user", "content": f"Afternoon money check-in for {name}"}]
     )
     return response.content[0].text
@@ -1484,17 +1512,31 @@ def generate_evening_nudge(user: dict) -> str:
     user_id = user.get("id", "")
     name = user.get("name", "yaar") if user else "yaar"
     fitness_goal = user.get("fitness_goal", "")
+    tracking_logs = _fetch_tracking_logs(db, user_id, limit=7)
     today = _todays_tracking_row(db, user_id)
 
+    workout_days = sum(1 for t in tracking_logs if t.get("workout_done"))
+    streak_line = f"This week: {workout_days}/{len(tracking_logs)} days moved" if tracking_logs else ""
+
+    facts = []
     if today and today.get("workout_done"):
-        context = f"Already worked out today ({today.get('workout_name', '')}) — celebrate it, don't ask again."
+        line = "Workout done today"
+        if today.get("workout_name"):
+            line += f": {today['workout_name']}"
+        facts.append(line)
+        instruction = "Celebrate the real workout above, don't ask again about moving today."
     else:
-        context = "No workout logged yet today. Nudge them gently, don't guilt-trip."
+        facts.append("No workout logged yet today")
+        instruction = "Gently nudge them to move today, no guilt-tripping. Never invent a specific duration (like '18 min') unless it was actually given to you."
+    if streak_line:
+        facts.append(streak_line)
+
+    facts_block = "\n".join(facts)
 
     response = client.messages.create(
         model=MODEL,
         max_tokens=110,
-        system=f"You are KYROO, {name}'s AI best friend. Evening WhatsApp check-in about movement/fitness. Gen Z Hinglish, warm, a little teasing if they skipped, never harsh. Max 3 lines. Goal: {fitness_goal}. {context}. 1 emoji max. No em dashes. No motivation quotes.",
+        system=f"You are KYROO, {name}'s AI best friend. Evening WhatsApp movement check-in. Goal: {fitness_goal}.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n{instruction}",
         messages=[{"role": "user", "content": f"Evening fitness check-in for {name}"}]
     )
     return response.content[0].text
@@ -1508,15 +1550,12 @@ def generate_night_nudge(user: dict) -> str:
     name = user.get("name", "yaar") if user else "yaar"
     today = _todays_tracking_row(db, user_id)
 
-    if today:
-        context = _build_tracking_summary([today])
-    else:
-        context = "No tracking data logged today, that's fine, just wrap the day warmly."
+    facts_block = _build_tracking_summary([today]) if today else "No tracking data logged today — that's fine, keep it general."
 
     response = client.messages.create(
         model=MODEL,
         max_tokens=130,
-        system=f"You are KYROO, {name}'s AI best friend. Late-night WhatsApp day wrap. Gen Z Hinglish, warm, reflective, not corporate. Max 4 short bubbles (separate with \\n\\n). Today's data: {context}. End with one small, specific thing to focus on tomorrow, not generic advice. No em dashes. No motivation quotes.",
+        system=f"You are KYROO, {name}'s AI best friend. Late-night WhatsApp day wrap.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\nOpener: 'Day wrap.'. Turn each real fact above into a short qualitative phrase (e.g. a real mood_score of 8/10 becomes 'Great energy day', a real logged workout becomes its own line) — one phrase per line, only for facts actually given. Closing line: one small, specific thing to focus on tomorrow based on the real data, not generic advice.",
         messages=[{"role": "user", "content": f"Night wrap for {name}"}]
     )
     return response.content[0].text

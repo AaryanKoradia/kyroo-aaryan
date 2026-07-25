@@ -9,7 +9,6 @@ from app.brain.kyroo_brain import (
     generate_afternoon_nudge,
     generate_evening_nudge,
     generate_night_nudge,
-    validate_response,
 )
 from app.infrastructure.whatsapp.client import WhatsAppClient
 from app.services.proactive_messaging import send_proactive
@@ -40,6 +39,15 @@ GENERATORS = {
 # cron tick still catches it, trading a bit of precision for actually
 # being delivered at all.
 FIRE_WINDOW_MINUTES = 180
+
+# Below this rolling engagement score (see detect_reaction_signal /
+# analyze_user_style in kyroo_brain.py — already tracked from every chat
+# turn), a user seems consistently checked out rather than just having one
+# flat reply, so non-essential nudge slots get skipped instead of piling
+# on. The morning slot is exempt — it's the one daily check-in, not the
+# thing users described as irritating.
+DISENGAGEMENT_THRESHOLD = -0.4
+MIN_MESSAGES_FOR_DISENGAGEMENT_CHECK = 5
 
 _TIME_RE = re.compile(r'^\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*$', re.IGNORECASE)
 
@@ -77,6 +85,21 @@ def _is_due(now_ist: datetime, target: dtime) -> bool:
     return 0 <= delta <= FIRE_WINDOW_MINUTES
 
 
+def _is_disengaged(db, user_id: str) -> bool:
+    """True if this user's rolling chat engagement score suggests extra
+    proactive nudges would land as spam rather than being welcome. Reuses
+    the engagement_score already tracked per-message in kyroo_brain.py
+    (analyze_user_style/detect_reaction_signal), no new tracking needed."""
+    try:
+        res = db.table("user_style").select("engagement_score, message_count").eq("user_id", user_id).single().execute()
+        style = res.data
+    except Exception:
+        return False
+    if not style or (style.get("message_count") or 0) < MIN_MESSAGES_FOR_DISENGAGEMENT_CHECK:
+        return False
+    return (style.get("engagement_score") or 0) < DISENGAGEMENT_THRESHOLD
+
+
 def _already_sent_today(db, user_id: str, slot: str) -> bool:
     today_start = datetime.now(IST).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
     res = (
@@ -101,10 +124,14 @@ def _send_nudge(db, user: dict, slot: str) -> None:
     sent_text = {"value": None}
 
     def _generate_and_send():
+        # sent as ONE WhatsApp message, not split into multiple bubbles —
+        # a nudge arriving as a burst of 3-4 separate texts in a row was
+        # part of what made nudges feel spammy. The internal blank lines
+        # in the structured brief format are just visual spacing within
+        # that one message, not separate sends.
         nudge_text = GENERATORS[slot](user)
-        bubbles = validate_response(nudge_text)
-        WhatsAppClient().send_bubbles(phone, bubbles)
-        sent_text["value"] = "\n\n".join(bubbles)
+        WhatsAppClient().send_one(phone, nudge_text)
+        sent_text["value"] = nudge_text
 
     outcome = send_proactive(
         db, user, _generate_and_send,
@@ -133,6 +160,7 @@ def check_and_send_nudges() -> dict:
 
     sent = []
     failed = []
+    suppressed = []
 
     for user in users:
         slots_to_check = dict(FIXED_SLOTS)
@@ -140,10 +168,17 @@ def check_and_send_nudges() -> dict:
         if morning_time:
             slots_to_check["morning_nudge"] = morning_time
 
+        # computed once per user, not per slot — same verdict applies to
+        # every non-morning slot checked below
+        disengaged = _is_disengaged(db, user["id"])
+
         for slot, target in slots_to_check.items():
             if not _is_due(now_ist, target):
                 continue
             if _already_sent_today(db, user["id"], slot):
+                continue
+            if slot != "morning_nudge" and disengaged:
+                suppressed.append({"user": user.get("name"), "slot": slot})
                 continue
             try:
                 _send_nudge(db, user, slot)
@@ -155,4 +190,4 @@ def check_and_send_nudges() -> dict:
                 print(f"[nudges] failed to send {slot} to {user.get('name')} ({user.get('id')}): {e}")
                 failed.append({"user": user.get("name"), "slot": slot, "error": str(e)})
 
-    return {"checked": len(users), "sent": sent, "failed": failed}
+    return {"checked": len(users), "sent": sent, "failed": failed, "suppressed": suppressed}
