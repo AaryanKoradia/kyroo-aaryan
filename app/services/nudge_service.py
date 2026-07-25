@@ -101,6 +101,34 @@ def _is_disengaged(db, user_id: str) -> bool:
     return (style.get("engagement_score") or 0) < DISENGAGEMENT_THRESHOLD
 
 
+_NUDGE_SLOT_NAMES = set(GENERATORS.keys())
+
+
+def _has_unanswered_nudge(db, user_id: str) -> bool:
+    """True if the most recent chat_history row for this user IS a nudge
+    (user_message equals one of the slot-name placeholders _send_nudge
+    writes, never a real inbound message) — meaning the user hasn't
+    actually replied to anything since. Piling another nudge on top of an
+    already-unanswered one is exactly what got reported as spammy, so
+    every slot (including morning) is gated on this, not just the
+    engagement-score check below."""
+    try:
+        res = (
+            db.table("chat_history")
+            .select("user_message")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+        rows = res.data or []
+    except Exception:
+        return False
+    if not rows:
+        return False
+    return rows[0].get("user_message") in _NUDGE_SLOT_NAMES
+
+
 def _already_sent_today(db, user_id: str, slot: str) -> bool:
     today_start = datetime.now(IST).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
     res = (
@@ -170,16 +198,20 @@ def check_and_send_nudges() -> dict:
             slots_to_check["morning_nudge"] = morning_time
 
         # computed once per user, not per slot — same verdict applies to
-        # every non-morning slot checked below
+        # every slot checked below
         disengaged = _is_disengaged(db, user["id"])
+        unanswered = _has_unanswered_nudge(db, user["id"])
 
         for slot, target in slots_to_check.items():
             if not _is_due(now_ist, target):
                 continue
             if _already_sent_today(db, user["id"], slot):
                 continue
+            if unanswered:
+                suppressed.append({"user": user.get("name"), "slot": slot, "reason": "unanswered_nudge"})
+                continue
             if slot != "morning_nudge" and disengaged:
-                suppressed.append({"user": user.get("name"), "slot": slot})
+                suppressed.append({"user": user.get("name"), "slot": slot, "reason": "disengaged"})
                 continue
             try:
                 _send_nudge(db, user, slot)

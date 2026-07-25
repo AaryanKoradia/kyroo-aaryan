@@ -1485,7 +1485,14 @@ def generate_morning_nudge(user: dict) -> str:
     response = client.messages.create(
         model=MODEL,
         max_tokens=120,
-        system=f"You are KYROO, {name}'s AI best friend. Morning WhatsApp brief. Goal: {fitness_goal}.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\nOpener must be exactly 'Good morning!' or 'Good morning {name}!'. Closing line: ONE specific, actionable suggestion for today tied to their goal, not a generic platitude.",
+        system=(
+            f"You are KYROO, {name}'s AI best friend. Morning WhatsApp brief. Goal: {fitness_goal}.\n\n"
+            f"FACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n"
+            "EXACT SHAPE to follow:\n"
+            "Good morning!\n\n"
+            "[one fact line]\n[another fact line, only if given]\n\n"
+            "One thing for today: [one specific, actionable suggestion tied to their goal, not a platitude]"
+        ),
         messages=[{"role": "user", "content": f"Morning nudge for {name}"}]
     )
     return response.content[0].text
@@ -1522,15 +1529,21 @@ def generate_afternoon_nudge(user: dict) -> str:
     if today and today.get("spent_today") is not None:
         cat = today.get("spent_category", "")
         facts_block = f"Spent today: ₹{today['spent_today']}" + (f" ({cat})" if cat else "")
-        instruction = "React briefly to the real spend above, then close with one short, non-preachy observation or question. Never invent a budget, a percentage, or any figure beyond the one given above."
+        shape = (
+            "EXACT SHAPE to follow:\n"
+            "Hey, ₹[amount] just went to [category, or 'somewhere' if no category given].\n\n"
+            "[one short, non-preachy reaction or question]"
+        )
+        instruction = "Never invent a budget, a percentage, or any figure beyond the real spend given above."
     else:
         facts_block = "Nothing logged yet today."
-        instruction = "No real data to react to — just casually ask what they've spent on today, one line, don't lecture or invent a number."
+        shape = "EXACT SHAPE to follow: one casual line asking what they've spent on today, no blank-line block needed since there's nothing to react to yet."
+        instruction = "Don't lecture or invent a number, this is just a casual check-in."
 
     response = client.messages.create(
         model=MODEL,
         max_tokens=110,
-        system=f"You are KYROO, {name}'s AI best friend. Midday WhatsApp money check-in. Money habit: {money_habit}.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n{instruction}",
+        system=f"You are KYROO, {name}'s AI best friend. Midday WhatsApp money check-in. Money habit: {money_habit}.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n{shape}\n{instruction}",
         messages=[{"role": "user", "content": f"Afternoon money check-in for {name}"}]
     )
     return response.content[0].text
@@ -1556,9 +1569,16 @@ def generate_evening_nudge(user: dict) -> str:
             line += f": {today['workout_name']}"
         facts.append(line)
         instruction = "Celebrate the real workout above, don't ask again about moving today."
+        shape = "EXACT SHAPE to follow: one line celebrating today's real workout, blank line, one warm closing line. No invented numbers."
     else:
         facts.append("No workout logged yet today")
-        instruction = "Gently nudge them to move today, no guilt-tripping. Never invent a specific duration (like '18 min') unless it was actually given to you."
+        instruction = "Gently nudge them to move today, no guilt-tripping. Never invent a specific workout duration (like '18 min') unless it was actually given to you."
+        shape = (
+            "EXACT SHAPE to follow:\n"
+            "[one line noting they haven't moved much today]\n\n"
+            "[if a real weekly streak fact is given: state it plainly, e.g. 'X/Y days this week', then one line on why the streak's worth protecting]\n\n"
+            "[one closing question inviting a quick workout, no invented duration]"
+        )
     if streak_line:
         facts.append(streak_line)
 
@@ -1567,7 +1587,7 @@ def generate_evening_nudge(user: dict) -> str:
     response = client.messages.create(
         model=MODEL,
         max_tokens=110,
-        system=f"You are KYROO, {name}'s AI best friend. Evening WhatsApp movement check-in. Goal: {fitness_goal}.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n{instruction}",
+        system=f"You are KYROO, {name}'s AI best friend. Evening WhatsApp movement check-in. Goal: {fitness_goal}.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n{shape}\n{instruction}",
         messages=[{"role": "user", "content": f"Evening fitness check-in for {name}"}]
     )
     return response.content[0].text
@@ -1586,7 +1606,15 @@ def generate_night_nudge(user: dict) -> str:
     response = client.messages.create(
         model=MODEL,
         max_tokens=130,
-        system=f"You are KYROO, {name}'s AI best friend. Late-night WhatsApp day wrap.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\nOpener: 'Day wrap.'. Turn each real fact above into a short qualitative phrase (e.g. a real mood_score of 8/10 becomes 'Great energy day', a real logged workout becomes its own line) — one phrase per line, only for facts actually given. Closing line: one small, specific thing to focus on tomorrow based on the real data, not generic advice.",
+        system=(
+            f"You are KYROO, {name}'s AI best friend. Late-night WhatsApp day wrap.\n\n"
+            f"FACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n"
+            "EXACT SHAPE to follow:\n"
+            "Day wrap.\n\n"
+            "[short phrase for fact 1]\n[short phrase for fact 2]\n[etc, one phrase per line, only for facts actually given]\n\n"
+            "Tomorrow: [one small, specific thing to focus on, based on the real data, not generic advice]\n\n"
+            "Turn each real fact into a short qualitative phrase (e.g. a real mood_score of 8/10 becomes 'Great energy day', a real logged workout becomes its own line, plain phrases, no 'Label:' prefixes)."
+        ),
         messages=[{"role": "user", "content": f"Night wrap for {name}"}]
     )
     return response.content[0].text
