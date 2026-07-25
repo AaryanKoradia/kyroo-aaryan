@@ -30,13 +30,6 @@ function AnimCounter({ target, suffix = "", decimals = 0 }: { target: number; su
   return <span ref={ref}>{val.toFixed(decimals)}{suffix}</span>;
 }
 
-// A sticker-tape accent — a small rotated rectangle, like a strip of washi tape pinning a card down.
-function Tape({ color = "var(--k-lime)", rot = -6, top = -14, left = "50%" }: { color?: string; rot?: number; top?: number; left?: string | number }) {
-  return (
-    <div style={{ position: "absolute", top, left, transform: `translateX(-50%) rotate(${rot}deg)`, width: 64, height: 22, background: color, border: "2px solid var(--k-ink)", opacity: 0.92, zIndex: 3 }} />
-  );
-}
-
 function Tag({ children, bg = "var(--k-paper)" }: { children: React.ReactNode; bg?: string }) {
   return (
     <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, padding: "4px 10px", background: bg, border: "2px solid var(--k-ink)", color: "var(--k-ink)", display: "inline-block" }}>
@@ -52,22 +45,16 @@ const TIMELINE: { time: string; label: string; icon: LucideIcon; color: string; 
   { time: "10:00 PM", label: "Evening Wrap",     icon: Moon,      color: "var(--k-purple)",text: "Day wrap.\n\nGreat energy day\nAte well (mostly!)\nSaved ₹340\nSkipped workout\n\nTomorrow: let's protect that morning walk." },
 ];
 
-const TESTIMONIALS = [
-  { quote: "It's like having a personal trainer, financial advisor, and therapist in one WhatsApp chat. Genuinely changed how I start my mornings.", name: "Priya M.", role: "Product Designer, Bengaluru", color: "var(--k-lime)" },
-  { quote: "The spending alerts alone saved me ₹8,000 last month. That's my Netflix + Spotify + rent contribution right there.", name: "Arjun S.", role: "Software Engineer, Mumbai", color: "var(--k-coral)" },
-  { quote: "I've tried every habit app. None of them talked back. KYROO gets context and responds like a friend who actually knows me.", name: "Ananya K.", role: "MBA student, Delhi", color: "var(--k-blue)" },
-];
-
 const FEATURES: { icon: LucideIcon; title: string; desc: string; tags: string[]; color: string }[] = [
   { icon: Dumbbell,   title: "Fitness",    desc: "Workouts, recovery, and nutrition tracked daily. KYROO nudges you when you slip and celebrates every win.", tags: ["Workouts", "Recovery", "Nutrition"], color: "var(--k-lime)" },
   { icon: Wallet,     title: "Money",      desc: "Budget tracking, spending alerts, savings nudges. No bank access. Just smart advice when you need it.", tags: ["Budgets", "Alerts", "Savings"], color: "var(--k-coral)" },
-  { icon: Brain,      title: "Mind",       desc: "Mood tracking, CBT journaling, emotional memory. KYROO remembers how you felt last week.", tags: ["Mood", "CBT", "Memory"], color: "var(--k-purple)" },
+  { icon: Brain,      title: "Mind",       desc: "Mood tracking, judgment-free venting, emotional memory. KYROO remembers how you felt last week.", tags: ["Mood", "Memory"], color: "var(--k-purple)" },
   { icon: BedDouble,  title: "Sleep",      desc: "Sleep scoring, circadian nudges, energy forecasts. Wake up actually optimised every morning.", tags: [], color: "var(--k-blue)" },
   { icon: Target,     title: "Goals",      desc: "Set it once, KYROO tracks it daily. Gentle accountability that actually works.", tags: [], color: "var(--k-coral)" },
-  { icon: FolderOpen, title: "File Tools", desc: "Convert PDFs, read documents, crunch spreadsheets — all inside WhatsApp.", tags: [], color: "var(--k-lime)" },
+  { icon: FolderOpen, title: "File Tools", desc: "Reads PDFs, photos, and voice notes — all inside WhatsApp.", tags: [], color: "var(--k-lime)" },
 ];
 
-const TICKER = ["Fitness tracked", "Money managed", "Sleep scored", "Mood understood", "Daily brief delivered", "Hindi + English", "8 languages", "WhatsApp native", "50K+ active users", "No app download", "File conversion built-in", "Hinglish supported"];
+const TICKER = ["Fitness tracked", "Money managed", "Sleep scored", "Mood understood", "Daily brief delivered", "Hindi + English", "8 languages", "WhatsApp native", "No app download", "Hinglish supported"];
 
 const STEPS: { n: string; icon: LucideIcon; title: string; desc: string; time: string; color: string }[] = [
   { n: "01", icon: PenLine,      title: "Sign up", desc: "10 quick questions. Tell KYROO your goals, lifestyle, habits, and how you communicate.", time: "~2 min", color: "var(--k-lime)" },
@@ -76,15 +63,9 @@ const STEPS: { n: string; icon: LucideIcon; title: string; desc: string; time: s
 ];
 
 const PLANS = [
-  { name: "FREE", price: "₹0", period: "forever", features: ["1 AI module", "5 messages/day", "Hindi + English", "Daily nudge"], hot: false },
-  { name: "PRO", price: "₹999", period: "/month", features: ["All 4 modules", "50 messages/day", "Voice + images", "All 8 languages", "Emotion detection", "File conversion"], hot: true },
-  { name: "PRO PLUS", price: "₹1,999", period: "/month", features: ["Everything in PRO", "150 messages/day", "Monthly audit PDF", "Top-up credits", "Human support"], hot: false },
-];
-
-const TOPUPS = [
-  { msgs: "50 messages", price: "₹49", saving: "", tag: null },
-  { msgs: "200 messages", price: "₹149", saving: "Save 10%", tag: "Popular" },
-  { msgs: "500 messages", price: "₹299", saving: "Save 25%", tag: null },
+  { name: "FREE", price: "₹0", period: "forever", features: ["All 4 modules", "Unlimited messages", "8 languages", "Voice, photos & PDFs", "Daily nudges"], hot: false, locked: false },
+  { name: "PRO", price: "Coming soon", period: "", features: ["Everything in Free", "Priority responses", "Deeper weekly reports"], hot: false, locked: true },
+  { name: "PRO PLUS", price: "Coming soon", period: "", features: ["Everything in Pro", "Monthly audit PDF", "Priority support"], hot: false, locked: true },
 ];
 
 export default function Home() {
@@ -95,7 +76,6 @@ export default function Home() {
   const tlRef = useInView();
   const howRef = useInView();
   const statsRef = useInView();
-  const testRef = useInView();
   const pricRef = useInView();
 
   useEffect(() => {
@@ -328,10 +308,10 @@ export default function Home() {
       <div ref={statsRef.ref} style={{ padding: "56px 24px", background: "var(--k-ink)" }}>
         <div className="st-g" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 24, maxWidth: 900, margin: "0 auto" }}>
           {[
-            { target: 50, suffix: "K+", label: "Active users", dec: 0, color: "var(--k-lime)" },
-            { target: 4.9, suffix: "★", label: "User rating", dec: 1, color: "var(--k-coral)" },
-            { target: 8, suffix: "", label: "Languages", dec: 0, color: "#fff" },
-            { target: 3, suffix: "%", label: "90-day churn", dec: 0, color: "var(--k-lime)" },
+            { target: 4, suffix: "", label: "Life domains", dec: 0, color: "var(--k-lime)" },
+            { target: 8, suffix: "", label: "Languages", dec: 0, color: "var(--k-coral)" },
+            { target: 24, suffix: "/7", label: "Always on", dec: 0, color: "#fff" },
+            { target: 100, suffix: "%", label: "WhatsApp native", dec: 0, color: "var(--k-lime)" },
           ].map((s, i) => (
             <div key={s.label} style={{ textAlign: "center", opacity: statsRef.inView ? 1 : 0, transition: `opacity .5s ease ${i * 0.08}s` }}>
               <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,4vw,44px)", color: s.color }}>
@@ -343,48 +323,25 @@ export default function Home() {
         </div>
       </div>
 
-      {/* TESTIMONIALS */}
-      <section ref={testRef.ref} className="pad" style={{ padding: "110px 48px" }}>
-        <div style={{ maxWidth: 1180, margin: "0 auto" }}>
-          <div style={{ marginBottom: 56, opacity: testRef.inView ? 1 : 0, transform: testRef.inView ? "translateY(0)" : "translateY(20px)", transition: "all .5s ease" }}>
-            <Tag bg="var(--k-blue)"><span style={{ color: "#fff" }}>Real people</span></Tag>
-            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,4.5vw,50px)", letterSpacing: -1.5, marginTop: 18, textTransform: "uppercase" }}>
-              What they say after 30 days.
-            </h2>
-          </div>
-          <div className="test-g" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
-            {TESTIMONIALS.map((t, i) => (
-              <div key={i} className="k-card" style={{ padding: "28px 24px", position: "relative", transform: `rotate(${i === 1 ? 1.5 : -1.5}deg)`, opacity: testRef.inView ? 1 : 0, transition: `opacity .5s ease ${i * 0.1}s` }}>
-                <Tape color={t.color} rot={i === 1 ? -8 : 8} />
-                <div style={{ fontFamily: "var(--font-display)", fontSize: 40, lineHeight: 0.7, marginBottom: 12, color: t.color, WebkitTextStroke: "1.5px var(--k-ink)" }}>&ldquo;</div>
-                <div style={{ fontSize: 14, lineHeight: 1.75, marginBottom: 18 }}>{t.quote}</div>
-                <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11.5, fontWeight: 700 }}>{t.name}</div>
-                <div style={{ fontSize: 11, opacity: 0.55, marginTop: 2 }}>{t.role}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* PRICING */}
       <section id="pricing" ref={pricRef.ref} className="pad" style={{ padding: "100px 48px", background: "var(--k-paper-2)", borderTop: "3px solid var(--k-ink)" }}>
         <div style={{ maxWidth: 1040, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 56, opacity: pricRef.inView ? 1 : 0, transform: pricRef.inView ? "translateY(0)" : "translateY(20px)", transition: "all .5s ease" }}>
             <Tag>Simple pricing</Tag>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,4.5vw,50px)", letterSpacing: -1.5, marginTop: 18, textTransform: "uppercase" }}>
-              Less than your <span style={{ color: "var(--k-coral)" }}>morning chai.</span>
+              Free to start. <span style={{ color: "var(--k-coral)" }}>Always.</span>
             </h2>
-            <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 12, opacity: 0.6, marginTop: 12 }}>REPLACES ₹48,000/MONTH IN PROFESSIONAL FEES</p>
+            <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 12, opacity: 0.6, marginTop: 12 }}>NO CREDIT CARD NEEDED · CANCEL ANYTIME</p>
           </div>
 
           <div className="pri-g" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
             {PLANS.map((p, i) => (
-              <div key={p.name} className="k-card" style={{ padding: "30px 24px", position: "relative", background: p.hot ? "var(--k-lime)" : "var(--k-paper)", transform: p.hot ? "scale(1.04) rotate(-1deg)" : `rotate(${i === 0 ? 1 : -1}deg)`, opacity: pricRef.inView ? 1 : 0, transition: `opacity .5s ease ${i * 0.1}s` }}>
-                {p.hot && (
-                  <div style={{ position: "absolute", top: -16, left: "50%", transform: "translateX(-50%) rotate(-2deg)", background: "var(--k-ink)", color: "var(--k-lime)", fontFamily: "var(--font-mono-tag)", fontSize: 10, fontWeight: 700, padding: "5px 14px", border: "2px solid var(--k-ink)", whiteSpace: "nowrap", textTransform: "uppercase" }}>Most popular</div>
+              <div key={p.name} className="k-card" style={{ padding: "30px 24px", position: "relative", background: p.locked ? "var(--k-paper-2)" : "var(--k-paper)", opacity: p.locked ? (pricRef.inView ? 0.6 : 0) : (pricRef.inView ? 1 : 0), transform: `rotate(${i === 0 ? 1 : -1}deg)`, transition: `opacity .5s ease ${i * 0.1}s` }}>
+                {p.locked && (
+                  <div style={{ position: "absolute", top: -16, left: "50%", transform: "translateX(-50%) rotate(-2deg)", background: "var(--k-ink)", color: "var(--k-paper)", fontFamily: "var(--font-mono-tag)", fontSize: 10, fontWeight: 700, padding: "5px 14px", border: "2px solid var(--k-ink)", whiteSpace: "nowrap", textTransform: "uppercase" }}>🔒 Coming soon</div>
                 )}
-                <Tag bg={p.hot ? "var(--k-ink)" : "var(--k-paper-2)"}><span style={{ color: p.hot ? "var(--k-lime)" : "var(--k-ink)" }}>{p.name}</span></Tag>
-                <div style={{ fontFamily: "var(--font-display)", fontSize: 46, letterSpacing: -2, marginTop: 18 }}>{p.price}</div>
+                <Tag bg="var(--k-paper-2)"><span style={{ color: "var(--k-ink)" }}>{p.name}</span></Tag>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: p.locked ? 26 : 46, letterSpacing: -2, marginTop: 18 }}>{p.price}</div>
                 <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, opacity: 0.6, marginBottom: 22 }}>{p.period}</div>
                 <ul style={{ listStyle: "none", marginBottom: 24, padding: 0 }}>
                   {p.features.map((f) => (
@@ -393,35 +350,15 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                <button className="k-btn" onClick={go("/onboarding")} style={{ width: "100%", padding: "12px", fontSize: 13, background: p.hot ? "var(--k-ink)" : "var(--k-paper)", color: p.hot ? "var(--k-lime)" : "var(--k-ink)", boxShadow: "4px 4px 0 var(--k-ink)" }}>
-                  {p.name === "FREE" ? "Start free" : "Start 7-day trial"}
+                <button
+                  className="k-btn"
+                  disabled={p.locked}
+                  onClick={p.locked ? undefined : go("/onboarding")}
+                  style={{ width: "100%", padding: "12px", fontSize: 13, background: p.locked ? "rgba(20,18,15,0.15)" : "var(--k-paper)", color: "var(--k-ink)", boxShadow: p.locked ? "none" : "4px 4px 0 var(--k-ink)", cursor: p.locked ? "not-allowed" : "pointer" }}>
+                  {p.locked ? "Not available yet" : "Start free"}
                 </button>
               </div>
             ))}
-          </div>
-          <p style={{ textAlign: "center", fontFamily: "var(--font-mono-tag)", fontSize: 10.5, opacity: 0.5, marginTop: 26 }}>NO CREDIT CARD FOR FREE PLAN · CANCEL ANYTIME · TOP-UP CREDITS AVAILABLE</p>
-
-          {/* TOP-UP CREDITS */}
-          <div style={{ marginTop: 72, borderTop: "3px solid var(--k-ink)", paddingTop: 56 }}>
-            <div style={{ textAlign: "center", marginBottom: 36 }}>
-              <Tag bg="var(--k-coral)">Need more?</Tag>
-              <h3 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(22px,3vw,36px)", letterSpacing: -1, marginTop: 14, textTransform: "uppercase" }}>
-                Top-up <span style={{ color: "var(--k-coral)" }}>credits</span>
-              </h3>
-              <p style={{ fontSize: 13, opacity: 0.6, marginTop: 8 }}>One-time packs. Never expire. Use anytime.</p>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, maxWidth: 640, margin: "0 auto" }}>
-              {TOPUPS.map((t, i) => (
-                <div key={i} className="k-card" style={{ padding: "22px 16px", textAlign: "center", position: "relative", background: t.tag ? "var(--k-lime)" : "var(--k-paper)" }}>
-                  {t.tag && <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", background: "var(--k-ink)", color: "var(--k-lime)", fontFamily: "var(--font-mono-tag)", fontSize: 9, fontWeight: 700, padding: "3px 10px", border: "2px solid var(--k-ink)", textTransform: "uppercase" }}>{t.tag}</div>}
-                  <div style={{ fontFamily: "var(--font-display)", fontSize: 26, marginBottom: 4 }}>{t.price}</div>
-                  <div style={{ fontSize: 12, opacity: 0.65, marginBottom: t.saving ? 6 : 14 }}>{t.msgs}</div>
-                  {t.saving && <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10, fontWeight: 700, marginBottom: 14 }}>{t.saving}</div>}
-                  <button className="k-btn" onClick={go("/onboarding")} style={{ width: "100%", padding: "8px", fontSize: 11, boxShadow: "3px 3px 0 var(--k-ink)" }}>Buy pack</button>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>
@@ -434,7 +371,7 @@ export default function Home() {
             Your AI best friend<br />is one message away.
           </h2>
           <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 13, color: "var(--k-paper)", opacity: 0.6, lineHeight: 1.8, margin: "36px auto 40px", maxWidth: 400 }}>
-            5 MINUTES TO SET UP. SHOWS UP EVERY MORNING. KNOWS YOUR LIFE BETTER THAN YOU DO IN 30 DAYS.
+            3 MINUTES TO SET UP. SHOWS UP EVERY MORNING. GETS TO KNOW YOU BETTER EVERY DAY.
           </p>
           <button className="k-btn k-btn-lime" onClick={go("/onboarding")} style={{ padding: "19px 46px", fontSize: 16, display: "inline-flex", alignItems: "center", gap: 12 }}>
             <MessageCircle size={19} strokeWidth={2.4} /> Start for free on WhatsApp

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { RefreshCw, Lock, CalendarCheck, MapPin } from "lucide-react";
+import { RefreshCw, Lock } from "lucide-react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://kyroo-backend.onrender.com";
 const RAZORPAY_KEY = "rzp_test_Slcdo1LLMUlvul";
@@ -20,7 +20,10 @@ export default function Payment() {
     setUserName(localStorage.getItem("kiro_user_name") || "");
     setUserId(localStorage.getItem("kiro_user_id") || "");
     const savedPlan = localStorage.getItem("kiro_selected_plan");
-    if (savedPlan) setSelectedPlan(savedPlan);
+    // pro/pro_plus aren't sellable yet — if a stale value from before that
+    // was locked down is sitting in localStorage, fall back to free rather
+    // than letting someone land here mid-checkout for a plan that isn't real
+    if (savedPlan === "free") setSelectedPlan(savedPlan);
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
@@ -28,9 +31,9 @@ export default function Payment() {
   }, []);
 
   const plans = [
-    { id: "free", name: "FREE", price: "₹0", period: "forever", features: ["1 AI module", "5 messages/day", "Hindi + English", "Daily nudge"], hot: false },
-    { id: "pro", name: "PRO", price: "₹999", period: "/month", features: ["All 4 modules", "50 messages/day", "Voice + images", "All 8 languages", "Personal RL brain"], hot: true },
-    { id: "pro_plus", name: "PRO PLUS", price: "₹1,999", period: "/month", features: ["Everything in PRO", "Unlimited messages", "Emotion detection", "Monthly audit PDF", "Human support"], hot: false }
+    { id: "free", name: "FREE", price: "₹0", period: "forever", features: ["All 4 modules", "Unlimited messages", "8 languages", "Voice, photos & PDFs", "Daily nudges"], locked: false },
+    { id: "pro", name: "PRO", price: "Coming soon", period: "", features: ["Everything in Free", "Priority responses", "Deeper weekly reports"], locked: true },
+    { id: "pro_plus", name: "PRO PLUS", price: "Coming soon", period: "", features: ["Everything in Pro", "Monthly audit PDF", "Priority support"], locked: true },
   ];
 
   const handlePayment = async () => {
@@ -108,30 +111,31 @@ export default function Payment() {
       <div style={{ maxWidth: 940, margin: "0 auto", padding: "60px 28px" }}>
         <div style={{ textAlign: "center", marginBottom: 52 }}>
           <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, padding: "5px 14px", background: "var(--k-lime)", border: "2px solid var(--k-ink)", display: "inline-block", transform: "rotate(-2deg)" }}>
-            7-day free trial on all paid plans
+            Free to start
           </span>
           <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(30px,5vw,54px)", letterSpacing: -1.5, margin: "22px 0 12px", textTransform: "uppercase" }}>
             {userName ? `Welcome, ${userName}!` : "Choose your plan"}
           </h1>
           <p style={{ fontSize: 15, opacity: 0.6 }}>
-            Start free. Upgrade anytime. Cancel with one WhatsApp message.
+            Start free. Cancel with one WhatsApp message.
           </p>
         </div>
 
         <div className="plan-g" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, marginBottom: 40 }}>
           {plans.map((p, i) => (
-            <div key={p.id} onClick={() => setSelectedPlan(p.id)} style={{
-              background: p.hot ? "var(--k-lime)" : "var(--k-paper)",
+            <div key={p.id} onClick={() => !p.locked && setSelectedPlan(p.id)} style={{
+              background: p.locked ? "var(--k-paper-2)" : "var(--k-paper)",
+              opacity: p.locked ? 0.6 : 1,
               border: "3px solid var(--k-ink)",
               boxShadow: selectedPlan === p.id ? "8px 8px 0 var(--k-ink)" : "4px 4px 0 var(--k-ink)",
-              padding: "30px 22px", position: "relative", cursor: "pointer", textAlign: "left",
-              transform: `translate(${selectedPlan === p.id ? -3 : 0}px, ${selectedPlan === p.id ? -3 : 0}px) rotate(${p.hot ? -1 : i === 0 ? 1 : -1}deg)`,
+              padding: "30px 22px", position: "relative", cursor: p.locked ? "not-allowed" : "pointer", textAlign: "left",
+              transform: `translate(${selectedPlan === p.id ? -3 : 0}px, ${selectedPlan === p.id ? -3 : 0}px) rotate(${i === 1 ? 0 : i === 0 ? 1 : -1}deg)`,
               transition: "all .15s ease",
             }}>
-              {p.hot && <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%) rotate(-2deg)", background: "var(--k-ink)", color: "var(--k-lime)", fontFamily: "var(--font-mono-tag)", fontSize: 9.5, fontWeight: 700, padding: "4px 12px", border: "2px solid var(--k-ink)", whiteSpace: "nowrap", textTransform: "uppercase" }}>Most popular</div>}
-              {selectedPlan === p.id && <div style={{ position: "absolute", top: 14, right: 14, width: 24, height: 24, background: "var(--k-ink)", color: p.hot ? "var(--k-lime)" : "var(--k-paper)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>✓</div>}
+              {p.locked && <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%) rotate(-2deg)", background: "var(--k-ink)", color: "var(--k-paper)", fontFamily: "var(--font-mono-tag)", fontSize: 9.5, fontWeight: 700, padding: "4px 12px", border: "2px solid var(--k-ink)", whiteSpace: "nowrap", textTransform: "uppercase" }}>🔒 Coming soon</div>}
+              {!p.locked && selectedPlan === p.id && <div style={{ position: "absolute", top: 14, right: 14, width: 24, height: 24, background: "var(--k-ink)", color: "var(--k-paper)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>✓</div>}
               <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10.5, letterSpacing: 1.5, textTransform: "uppercase", opacity: 0.55, marginBottom: 16, fontWeight: 700 }}>{p.name}</div>
-              <div style={{ fontFamily: "var(--font-display)", fontSize: 40, letterSpacing: -1.5 }}>{p.price}</div>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: p.locked ? 26 : 40, letterSpacing: -1.5 }}>{p.price}</div>
               <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 22 }}>{p.period}</div>
               <ul style={{ listStyle: "none", marginBottom: 0, padding: 0 }}>
                 {p.features.map(f => (
@@ -147,9 +151,7 @@ export default function Payment() {
         <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginBottom: 40 }}>
           {[
             { icon: RefreshCw, label: "Cancel anytime via WhatsApp" },
-            { icon: Lock, label: "256-bit encrypted" },
-            { icon: CalendarCheck, label: "No charge for 7 days" },
-            { icon: MapPin, label: "Data stored in India" },
+            { icon: Lock, label: "Secure connection" },
           ].map(t => (
             <span key={t.label} style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10.5, fontWeight: 700, padding: "5px 10px", border: "2px solid var(--k-ink)", background: "var(--k-paper)", display: "inline-flex", alignItems: "center", gap: 6 }}>
               <t.icon size={12} strokeWidth={2.5} />{t.label}
@@ -159,10 +161,10 @@ export default function Payment() {
 
         <div style={{ textAlign: "center" }}>
           <button className="k-btn k-btn-lime" onClick={handlePayment} disabled={loading} style={{ fontSize: 16, padding: "18px 0", opacity: loading ? 0.7 : 1, width: "100%", maxWidth: 420 }}>
-            {loading ? "Processing..." : selectedPlan === "free" ? "Start for free →" : "Start 7-day free trial →"}
+            {loading ? "Processing..." : "Start for free →"}
           </button>
           <p style={{ fontSize: 12, opacity: 0.55, marginTop: 14 }}>
-            {selectedPlan === "free" ? "No credit card needed" : "No charge today · Cancel anytime"}
+            No credit card needed
           </p>
         </div>
       </div>
