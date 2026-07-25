@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Archivo_Black, JetBrains_Mono } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -20,12 +21,32 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["400", "500", "700"],
 });
 
+const SITE_URL = "https://www.kyroo.co.in";
+const SITE_TITLE = "KYROO, your AI best friend, on WhatsApp";
+const SITE_DESCRIPTION = "Fitness. Money. Mind. Sleep. One AI. Every day. On WhatsApp.";
+
 export const metadata: Metadata = {
-  title: "KYROO — your AI best friend, on WhatsApp",
-  description: "Fitness. Money. Mind. Sleep. One AI. Every day. On WhatsApp.",
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",
+  },
+  openGraph: {
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: "KYROO",
+    images: [{ url: "/kyroo-logo.png", width: 972, height: 972, alt: "KYROO" }],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/kyroo-logo.png"],
   },
 };
 
@@ -40,6 +61,9 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${archivoBlack.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
+      {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+      )}
     </html>
   );
 }

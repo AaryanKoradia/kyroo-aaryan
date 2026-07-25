@@ -1,3 +1,4 @@
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -6,6 +7,10 @@ from scheduler import start_scheduler, stop_scheduler
 import os
 
 load_dotenv()
+
+SENTRY_DSN = os.getenv("SENTRY_DSN", "")
+if SENTRY_DSN:
+    sentry_sdk.init(dsn=SENTRY_DSN, environment=os.getenv("ENVIRONMENT", "production"), traces_sample_rate=0.1)
 
 app = FastAPI(title="KYROO API", version="1.0.0")
 

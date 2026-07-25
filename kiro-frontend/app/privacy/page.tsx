@@ -1,9 +1,10 @@
+import Image from "next/image";
 export default function Privacy() {
   return (
     <main className="k-grain" style={{ background: "var(--k-paper)", minHeight: "100vh", color: "var(--k-ink)", fontFamily: "var(--font-body)" }}>
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", borderBottom: "3px solid var(--k-ink)" }}>
         <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: "var(--k-ink)" }}>
-          <img src="/kyroo-logo.png" alt="KYROO" style={{ width: 26, height: 26, borderRadius: "50%", border: "2px solid var(--k-ink)", objectFit: "cover" }} />
+          <Image src="/kyroo-logo.png" alt="KYROO" width={26} height={26} style={{ borderRadius: "50%", border: "2px solid var(--k-ink)", objectFit: "cover" }} />
           <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
         </a>
       </nav>
@@ -27,7 +28,7 @@ export default function Privacy() {
         </ul>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>WhatsApp messages from us</h2>
-        <p>By signing up, you agree to receive WhatsApp messages from KYROO, including replies to what you send and proactive check-ins/nudges/reminders at times you choose during onboarding. You can turn off proactive messages any time at <a href="/unsubscribe" style={{ color: "var(--k-coral)" }}>kyroo.co.in/unsubscribe</a> — you can still message KYROO directly afterward, you just won't get unprompted check-ins.</p>
+        <p>By signing up, you agree to receive WhatsApp messages from KYROO, including replies to what you send and proactive check-ins/nudges/reminders at times you choose during onboarding. You can turn off proactive messages any time at <a href="/unsubscribe" style={{ color: "var(--k-coral)" }}>www.kyroo.co.in/unsubscribe</a>, you can still message KYROO directly afterward, you just won't get unprompted check-ins.</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>If you're going through something heavy</h2>
         <p>If a conversation suggests you might be in real distress, KYROO is designed to point you to real crisis helplines rather than try to handle it alone. We keep a private note that this happened (not the full message) so future check-ins can be more thoughtful — this is never shared outside KYROO.</p>

@@ -221,7 +221,7 @@ async def whatsapp_webhook(request: Request):
 
                     if not user_data.data:
                         # user not found — send signup link
-                        send_whatsapp(phone, "Hey! 👋 I'm KYROO, your AI best friend.\n\nSign up here to get started:\nhttps://kyroo.co.in\n\nMain hoon yahan 24/7! 💚")
+                        send_whatsapp(phone, "Hey! 👋 I'm KYROO, your AI best friend.\n\nSign up here to get started:\nhttps://www.kyroo.co.in\n\nMain hoon yahan 24/7! 💚")
                         continue
 
                     user = user_data.data[0]

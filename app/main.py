@@ -1,3 +1,6 @@
+import os
+
+import sentry_sdk
 from fastapi import FastAPI
 
 from app.api.routes.user import router as user_router
@@ -5,6 +8,10 @@ from app.api.routes.webhook import router as webhook_router
 from app.api.routes.nudges import router as nudges_router
 from app.api.routes.stories import router as stories_router
 from app.api.routes.reminders import router as reminders_router
+
+SENTRY_DSN = os.getenv("SENTRY_DSN", "")
+if SENTRY_DSN:
+    sentry_sdk.init(dsn=SENTRY_DSN, environment=os.getenv("ENVIRONMENT", "production"), traces_sample_rate=0.1)
 
 app = FastAPI(
     title="Kyroo",
