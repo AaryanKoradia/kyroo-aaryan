@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { Sunrise, Wallet, Dumbbell, Moon, Brain, BedDouble, Target, FolderOpen, PenLine, MessageCircle, Rocket, type LucideIcon } from "lucide-react";
+import { Sunrise, Wallet, Dumbbell, Moon, Brain, BedDouble, Target, FolderOpen, PenLine, MessageCircle, Rocket, GraduationCap, AlarmClock, Mic, Camera, Link2, FileText, Sparkles, Puzzle, type LucideIcon } from "lucide-react";
 
 function useInView(threshold = 0.12) {
   const ref = useRef<HTMLDivElement>(null);
@@ -39,34 +39,49 @@ function Tag({ children, bg = "var(--k-paper)" }: { children: React.ReactNode; b
   );
 }
 
-const TIMELINE: { time: string; label: string; icon: LucideIcon; color: string; text: string }[] = [
-  { time: "7:00 AM",  label: "Morning Brief",    icon: Sunrise,   color: "var(--k-lime)",  text: "Good morning!\n\nSleep: 6.8 hrs · Recovery: 72%\nToday's budget left: ₹1,240\nMood trend: up 3 days straight\n\nOne thing for today: 20 min walk before lunch." },
-  { time: "12:30 PM", label: "Spending Alert",   icon: Wallet,    color: "var(--k-coral)", text: "Hey — ₹340 just went to Swiggy.\n\nYou're at 78% of today's food budget. Dinner at home = ₹0 and you still hit your goal. Worth it?" },
-  { time: "6:30 PM",  label: "Workout Check-in", icon: Dumbbell,  color: "var(--k-blue)",  text: "You haven't moved much today.\n\nJust 20 min now = 4/7 days this week. That streak is worth protecting.\n\nWant a quick home workout? Takes 18 min." },
-  { time: "10:00 PM", label: "Evening Wrap",     icon: Moon,      color: "var(--k-purple)",text: "Day wrap.\n\nGreat energy day\nAte well (mostly!)\nSaved ₹340\nSkipped workout\n\nTomorrow: let's protect that morning walk." },
+const TIMELINE: { time: string; label: string; icon: LucideIcon; color: string; iconColor?: string; text: string }[] = [
+  { time: "7:00 AM",  label: "Morning Brief",    icon: Sunrise,      color: "var(--k-lime)",   text: "Good morning.\n\nSleep: 6.8 hrs\nMood trend: up 3 days straight\n\nOne thing today: that 20-min walk before lunch. You said you would, let's do it." },
+  { time: "9:15 AM",  label: "Learning",         icon: GraduationCap,color: "var(--k-purple)", text: "You asked her to explain compound interest.\n\nShe broke it down in plain language, sent a quick example, and dropped a YouTube link.\n\nThen asked if you got it. You did." },
+  { time: "12:30 PM", label: "Spending Alert",   icon: Wallet,       color: "var(--k-coral)",  text: "Hey, ₹340 just went to Swiggy.\n\nThat's today's food spend so far. Cooking dinner tonight keeps it right there.\n\nWorth it?" },
+  { time: "2:45 PM",  label: "Reminder",         icon: AlarmClock,   color: "#FFC939",         text: "You: remind me about my 3 PM presentation today\nKYROO: got it, I'll check in at 2:45\n\n[ at 2:45 PM ]\nyour presentation is in 15. you've been prepping for this, you know your stuff. go get it." },
+  { time: "6:30 PM",  label: "Workout Check-in", icon: Dumbbell,     color: "var(--k-blue)",   text: "You haven't moved much today.\n\nJust 20 min now = 4/7 days this week. That streak is worth protecting.\n\nWant a quick home workout? No equipment needed, I'll send it." },
+  { time: "9:00 PM",  label: "Voice Note",       icon: Mic,          color: "var(--k-purple)", text: "You sent a voice note, venting about a rough day.\n\nShe listened to the whole thing, said exactly the right thing back, then sent a gif.\n\nTomorrow is a new one." },
+  { time: "10:00 PM", label: "Evening Wrap",     icon: Moon,         color: "var(--k-ink)", iconColor: "var(--k-paper)", text: "Day wrap.\n\nGreat energy day\nAte well (mostly!)\nSaved ₹340\nNailed the presentation\nSkipped the workout\n\nTomorrow: that walk happens first, deal?" },
 ];
 
 const FEATURES: { icon: LucideIcon; title: string; desc: string; tags: string[]; color: string }[] = [
-  { icon: Dumbbell,   title: "Fitness",    desc: "Workouts, recovery, and nutrition tracked daily. KYROO nudges you when you slip and celebrates every win.", tags: ["Workouts", "Recovery", "Nutrition"], color: "var(--k-lime)" },
-  { icon: Wallet,     title: "Money",      desc: "Budget tracking, spending alerts, savings nudges. No bank access. Just smart advice when you need it.", tags: ["Budgets", "Alerts", "Savings"], color: "var(--k-coral)" },
-  { icon: Brain,      title: "Mind",       desc: "Mood tracking, judgment-free venting, emotional memory. KYROO remembers how you felt last week.", tags: ["Mood", "Memory"], color: "var(--k-purple)" },
-  { icon: BedDouble,  title: "Sleep",      desc: "Sleep scoring, circadian nudges, energy forecasts. Wake up actually optimised every morning.", tags: [], color: "var(--k-blue)" },
-  { icon: Target,     title: "Goals",      desc: "Set it once, KYROO tracks it daily. Gentle accountability that actually works.", tags: [], color: "var(--k-coral)" },
-  { icon: FolderOpen, title: "File Tools", desc: "Reads PDFs, photos, and voice notes — all inside WhatsApp.", tags: [], color: "var(--k-lime)" },
+  { icon: Dumbbell,   title: "Fitness",    desc: "Tracks your workouts, diet, and recovery. Nudges you when you go quiet. Goes absolutely crazy when you show up.", tags: ["Workouts", "Recovery", "Nutrition"], color: "var(--k-lime)" },
+  { icon: Wallet,     title: "Money",      desc: "Knows when you overspent on Swiggy. Keeps your budget alive without making you feel bad about it. No bank access, ever.", tags: ["Budgets", "Alerts", "Savings"], color: "var(--k-coral)" },
+  { icon: Brain,      title: "Mind",       desc: "The one place you can vent without being judged. Remembers how you felt last Tuesday. Shows up when things get heavy.", tags: ["Mood", "Memory"], color: "var(--k-purple)" },
+  { icon: BedDouble,  title: "Sleep",      desc: "Tracks your sleep, reminds you to wind down, and notices when you've been running on 5 hours all week, then actually says something about it.", tags: [], color: "var(--k-blue)" },
+  { icon: Target,     title: "Goals",      desc: "Tell her once. She will not let you forget. Gentle enough to not stress you out, persistent enough to actually work.", tags: [], color: "var(--k-coral)" },
+  { icon: FolderOpen, title: "File Tools", desc: "Send a PDF, a photo, a voice note, or a screenshot. She reads it, understands it, and responds to it, right there in WhatsApp.", tags: ["Photos", "PDFs", "Voice"], color: "var(--k-lime)" },
 ];
 
 const TICKER = ["Fitness tracked", "Money managed", "Sleep scored", "Mood understood", "Daily brief delivered", "Hindi + English", "8 languages", "WhatsApp native", "No app download", "Hinglish supported"];
 
-const STEPS: { n: string; icon: LucideIcon; title: string; desc: string; time: string; color: string }[] = [
-  { n: "01", icon: PenLine,      title: "Sign up", desc: "10 quick questions. Tell KYROO your goals, lifestyle, habits, and how you communicate.", time: "~2 min", color: "var(--k-lime)" },
-  { n: "02", icon: MessageCircle,title: "Connect WhatsApp", desc: "KYROO slides into your WhatsApp. No download, no new app. Just your number and a quick verify.", time: "~1 min", color: "var(--k-coral)" },
-  { n: "03", icon: Rocket,       title: "Let it run", desc: "Daily briefs, real-time nudges, weekly reports. KYROO learns you and gets smarter every week.", time: "Forever", color: "var(--k-blue)" },
+const WHAT_ELSE: { icon: LucideIcon; title: string; desc: string; color: string }[] = [
+  { icon: Mic, title: "Send a voice note", desc: "Can't type? Just talk. Hindi, Hinglish, English, whatever feels natural. She listens to the whole thing and actually gets it.", color: "var(--k-lime)" },
+  { icon: Camera, title: "Send a photo", desc: "Gym selfie, food photo, a screenshot, a bill. Whatever you send, she sees it and responds like she was right there with you.", color: "var(--k-coral)" },
+  { icon: AlarmClock, title: "Reminders that actually work", desc: "Ask her once, casually, however you'd tell a friend, for a meeting, a deadline, a call. She'll remind you before it happens and right when it does. No setup, no separate app.", color: "var(--k-blue)" },
+  { icon: GraduationCap, title: "Learn literally anything", desc: "Ask her to explain anything, compound interest, organic chemistry, how to file your ITR. She teaches it, breaks it down, and sends you a real YouTube video or course to go deeper.", color: "var(--k-purple)" },
+  { icon: Link2, title: "Real links, not just advice", desc: "She doesn't just tell you what to do, she sends you where to go. YouTube videos, course links, Google Maps locations, whatever you need, linked, not typed.", color: "var(--k-coral)" },
+  { icon: FileText, title: "PDFs that actually get read", desc: "Send her your study notes, a contract, a lab report, a menu. She reads the whole thing and tells you what matters.", color: "var(--k-lime)" },
+  { icon: Sparkles, title: "GIFs, emojis, the whole vibe", desc: "She celebrates with you, hypes you up when you need it, sits with you when things are heavy. And she does it with GIFs and emojis, because that's just how friends talk.", color: "var(--k-blue)" },
+  { icon: Puzzle, title: "Connects all the dots", desc: "She knows your sleep affected your mood. Your mood affected your spending. Your spending is affecting your goals. She puts all of it together, every single day.", color: "var(--k-purple)" },
 ];
 
-const PLANS = [
-  { name: "FREE", price: "₹0", period: "forever", features: ["All 4 modules", "Unlimited messages", "8 languages", "Voice, photos & PDFs", "Daily nudges"], hot: false, locked: false },
-  { name: "PRO", price: "Coming soon", period: "", features: ["Everything in Free", "Priority responses", "Deeper weekly reports"], hot: false, locked: true },
-  { name: "PRO PLUS", price: "Coming soon", period: "", features: ["Everything in Pro", "Monthly audit PDF", "Priority support"], hot: false, locked: true },
+const STEPS: { n: string; icon: LucideIcon; title: string; desc: string; time: string; color: string }[] = [
+  { n: "01", icon: PenLine,      title: "Sign up", desc: "10 quick questions. Tell KYROO your goals, lifestyle, habits, and how you like to be spoken to.", time: "~2 min", color: "var(--k-lime)" },
+  { n: "02", icon: MessageCircle,title: "Connect WhatsApp", desc: "She shows up in WhatsApp. No download, no new app. Just your number and one quick verify.", time: "~1 min", color: "var(--k-coral)" },
+  { n: "03", icon: Rocket,       title: "Let her run", desc: "Morning briefs, real-time nudges, study sessions, reminders, GIFs. She learns who you are every day and gets sharper every week.", time: "Forever", color: "var(--k-blue)" },
+];
+
+const FREE_PLAN_FEATURES = [
+  "All 4 life domains", "Unlimited messages", "8 languages", "Voice notes & photos",
+  "PDF reading", "Smart reminders", "Study anything", "Real links sent to you",
+  "GIFs + emoji throughout", "Daily briefs & nudges", "Weekly reports",
+  "Memory that grows", "Connects all the dots",
 ];
 
 export default function Home() {
@@ -74,6 +89,7 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false);
 
   const featRef = useInView();
+  const elseRef = useInView();
   const tlRef = useInView();
   const howRef = useInView();
   const statsRef = useInView();
@@ -116,8 +132,6 @@ export default function Home() {
           .hero-h1 { font-size: clamp(40px,11vw,64px) !important; }
           .ft-g { grid-template-columns: 1fr 1fr !important; }
           .st-g { grid-template-columns: repeat(3,1fr) !important; }
-          .test-g { grid-template-columns: 1fr !important; }
-          .pri-g { grid-template-columns: 1fr !important; }
           .step-g { grid-template-columns: 1fr !important; }
           .pad { padding-left: 20px !important; padding-right: 20px !important; }
           .tl-item { grid-template-columns: 1fr !important; }
@@ -166,26 +180,26 @@ export default function Home() {
 
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--k-ink)", color: "var(--k-lime)", border: "2px solid var(--k-ink)", padding: "7px 18px", fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 32, transform: "rotate(-2deg)", position: "relative", zIndex: 2 }} className="k-fade-1">
           <span className="k-blink" style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--k-lime)", display: "inline-block" }} />
-          Now live on WhatsApp
+          ✦ Free on WhatsApp, no app needed
         </div>
 
         <h1 className="hero-h1 k-fade-2" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(48px,9vw,128px)", lineHeight: 0.94, letterSpacing: -2, marginBottom: 22, maxWidth: 1100, position: "relative", zIndex: 2, textTransform: "uppercase" }}>
-          Your AI best friend<br />
+          Your best friend<br />
           <span style={{ background: "var(--k-coral)", padding: "0 14px", display: "inline-block", transform: "rotate(-1.5deg)", boxShadow: "6px 6px 0 var(--k-ink)", border: "3px solid var(--k-ink)", marginTop: 10 }}>
             who runs your life.
           </span>
         </h1>
 
         <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 15, color: "rgba(20,18,15,0.72)", maxWidth: 420, lineHeight: 1.8, margin: "0 auto 30px", position: "relative", zIndex: 2 }} className="k-fade-3">
-          FITNESS · MONEY · MIND · SLEEP<br />ONE AI. EVERY DAY. ON WHATSAPP.
+          FITNESS · MONEY · MIND · SLEEP<br />ONE FRIEND. EVERY DAY. ON WHATSAPP.
         </p>
 
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", position: "relative", zIndex: 2 }} className="k-fade-4">
           <button className="k-btn k-btn-lime" onClick={go("/onboarding")} style={{ padding: "18px 40px", fontSize: 16, display: "inline-flex", alignItems: "center", gap: 10 }}>
-            <MessageCircle size={19} strokeWidth={2.4} />Start on WhatsApp
+            <MessageCircle size={19} strokeWidth={2.4} />Start on WhatsApp, it's free
           </button>
-          <button className="k-btn k-btn-ghost" onClick={() => document.querySelector("#how")?.scrollIntoView({ behavior: "smooth" })}>
-            See how it works →
+          <button className="k-btn k-btn-ghost" onClick={() => document.querySelector("#features")?.scrollIntoView({ behavior: "smooth" })}>
+            See what she does →
           </button>
         </div>
       </section>
@@ -210,9 +224,9 @@ export default function Home() {
       <section id="features" ref={featRef.ref} className="pad" style={{ padding: "110px 48px" }}>
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
           <div style={{ marginBottom: 60, opacity: featRef.inView ? 1 : 0, transform: featRef.inView ? "translateY(0)" : "translateY(20px)", transition: "all .5s ease" }}>
-            <Tag>What KYROO handles</Tag>
+            <Tag>What KYROO takes care of</Tag>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(34px,5.5vw,68px)", lineHeight: 0.98, letterSpacing: -1.5, marginTop: 18, textTransform: "uppercase" }}>
-              Your whole life.<br /><span style={{ color: "var(--k-coral)" }}>One AI.</span>
+              Your whole life.<br />One friend who<br /><span style={{ color: "var(--k-coral)" }}>actually pays attention.</span>
             </h2>
           </div>
 
@@ -233,13 +247,38 @@ export default function Home() {
         </div>
       </section>
 
+      {/* WHAT ELSE SHE CAN DO */}
+      <section ref={elseRef.ref} className="pad" style={{ padding: "110px 48px", background: "var(--k-paper-2)", borderTop: "3px solid var(--k-ink)", borderBottom: "3px solid var(--k-ink)" }}>
+        <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+          <div style={{ marginBottom: 60, opacity: elseRef.inView ? 1 : 0, transform: elseRef.inView ? "translateY(0)" : "translateY(20px)", transition: "all .5s ease" }}>
+            <Tag bg="var(--k-blue)"><span style={{ color: "#fff" }}>Not just a chat</span></Tag>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(34px,5.5vw,68px)", lineHeight: 0.98, letterSpacing: -1.5, marginTop: 18, textTransform: "uppercase" }}>
+              She hears you.<br />Sees you.<br /><span style={{ color: "var(--k-coral)" }}>Remembers everything.</span>
+            </h2>
+          </div>
+
+          <div className="ft-g" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 18 }}>
+            {WHAT_ELSE.map((f, i) => (
+              <div key={f.title} className="k-card" style={{ padding: "24px 20px", background: "var(--k-paper)", transform: `rotate(${i % 2 === 0 ? -1 : 1}deg)`, opacity: elseRef.inView ? 1 : 0, transition: `opacity .5s ease ${i * 0.06}s` }}>
+                <div style={{ width: 44, height: 44, background: f.color, border: "3px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}><f.icon size={20} color="var(--k-ink)" strokeWidth={2.3} /></div>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: 15, marginBottom: 8, textTransform: "uppercase", lineHeight: 1.15 }}>{f.title}</div>
+                <div style={{ fontSize: 12.5, lineHeight: 1.65, opacity: 0.72 }}>{f.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* STAMP BANNER */}
       <section style={{ padding: "70px 24px", background: "var(--k-ink)", textAlign: "center", overflow: "hidden", position: "relative" }}>
-        <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(56px,11vw,150px)", lineHeight: 0.85, letterSpacing: -4, color: "transparent", WebkitTextStroke: "2px var(--k-paper)", textTransform: "uppercase", marginBottom: 20 }}>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(56px,11vw,150px)", lineHeight: 0.85, letterSpacing: -4, color: "transparent", WebkitTextStroke: "2px var(--k-paper)", textTransform: "uppercase", marginBottom: 12 }}>
           KYROO
         </div>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(16px,2.6vw,28px)", letterSpacing: -0.5, color: "var(--k-paper)", textTransform: "uppercase", marginBottom: 22 }}>
+          The friend who never forgets.
+        </div>
         <div style={{ display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap" }}>
-          {["YOUR AI", "LIFE COMPANION", "ALWAYS ONLINE"].map((w) => (
+          {["YOUR LIFE", "YOUR FRIEND", "YOUR WHATSAPP"].map((w) => (
             <span key={w} style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, letterSpacing: 3, color: "var(--k-lime)", textTransform: "uppercase" }}>{w}</span>
           ))}
         </div>
@@ -253,12 +292,13 @@ export default function Home() {
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(32px,5vw,58px)", letterSpacing: -1.5, marginTop: 18, textTransform: "uppercase" }}>
               Every day has a shape.
             </h2>
+            <p style={{ fontSize: 14, opacity: 0.65, marginTop: 14, lineHeight: 1.7 }}>Here&apos;s what a day actually looks like when someone&apos;s paying attention.</p>
           </div>
 
           {TIMELINE.map((item, i) => (
             <div key={i} className="tl-item" style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: 20, marginBottom: 28, opacity: tlRef.inView ? 1 : 0, transform: tlRef.inView ? "translateX(0)" : "translateX(-16px)", transition: `all .5s ease ${i * 0.1}s` }}>
               <div style={{ textAlign: "center" }}>
-                <div style={{ width: 56, height: 56, background: item.color, border: "3px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px" }}><item.icon size={22} color="var(--k-ink)" strokeWidth={2.3} /></div>
+                <div style={{ width: 56, height: 56, background: item.color, border: "3px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px" }}><item.icon size={22} color={item.iconColor || "var(--k-ink)"} strokeWidth={2.3} /></div>
                 <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10, fontWeight: 700 }}>{item.time}</div>
               </div>
               <div className="k-card" style={{ padding: "20px 22px" }}>
@@ -326,41 +366,34 @@ export default function Home() {
 
       {/* PRICING */}
       <section id="pricing" ref={pricRef.ref} className="pad" style={{ padding: "100px 48px", background: "var(--k-paper-2)", borderTop: "3px solid var(--k-ink)" }}>
-        <div style={{ maxWidth: 1040, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 56, opacity: pricRef.inView ? 1 : 0, transform: pricRef.inView ? "translateY(0)" : "translateY(20px)", transition: "all .5s ease" }}>
+        <div style={{ maxWidth: 560, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 48, opacity: pricRef.inView ? 1 : 0, transform: pricRef.inView ? "translateY(0)" : "translateY(20px)", transition: "all .5s ease" }}>
             <Tag>Simple pricing</Tag>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,4.5vw,50px)", letterSpacing: -1.5, marginTop: 18, textTransform: "uppercase" }}>
-              Free to start. <span style={{ color: "var(--k-coral)" }}>Always.</span>
+              Free. For everyone.<br /><span style={{ color: "var(--k-coral)" }}>Right now.</span>
             </h2>
-            <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 12, opacity: 0.6, marginTop: 12 }}>NO CREDIT CARD NEEDED · CANCEL ANYTIME</p>
+            <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 12, opacity: 0.6, marginTop: 12 }}>NO CREDIT CARD · NO CATCH · NO EXPIRY DATE</p>
           </div>
 
-          <div className="pri-g" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
-            {PLANS.map((p, i) => (
-              <div key={p.name} className="k-card" style={{ padding: "30px 24px", position: "relative", background: p.locked ? "var(--k-paper-2)" : "var(--k-paper)", opacity: p.locked ? (pricRef.inView ? 0.6 : 0) : (pricRef.inView ? 1 : 0), transform: `rotate(${i === 0 ? 1 : -1}deg)`, transition: `opacity .5s ease ${i * 0.1}s` }}>
-                {p.locked && (
-                  <div style={{ position: "absolute", top: -16, left: "50%", transform: "translateX(-50%) rotate(-2deg)", background: "var(--k-ink)", color: "var(--k-paper)", fontFamily: "var(--font-mono-tag)", fontSize: 10, fontWeight: 700, padding: "5px 14px", border: "2px solid var(--k-ink)", whiteSpace: "nowrap", textTransform: "uppercase" }}>🔒 Coming soon</div>
-                )}
-                <Tag bg="var(--k-paper-2)"><span style={{ color: "var(--k-ink)" }}>{p.name}</span></Tag>
-                <div style={{ fontFamily: "var(--font-display)", fontSize: p.locked ? 26 : 46, letterSpacing: -2, marginTop: 18 }}>{p.price}</div>
-                <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, opacity: 0.6, marginBottom: 22 }}>{p.period}</div>
-                <ul style={{ listStyle: "none", marginBottom: 24, padding: 0 }}>
-                  {p.features.map((f) => (
-                    <li key={f} style={{ fontSize: 13, padding: "8px 0", borderBottom: "2px solid rgba(20,18,15,0.1)", display: "flex", gap: 10, alignItems: "center" }}>
-                      <span style={{ fontWeight: 700 }}>✓</span>{f}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  className="k-btn"
-                  disabled={p.locked}
-                  onClick={p.locked ? undefined : go("/onboarding")}
-                  style={{ width: "100%", padding: "12px", fontSize: 13, background: p.locked ? "rgba(20,18,15,0.15)" : "var(--k-paper)", color: "var(--k-ink)", boxShadow: p.locked ? "none" : "4px 4px 0 var(--k-ink)", cursor: p.locked ? "not-allowed" : "pointer" }}>
-                  {p.locked ? "Not available yet" : "Start free"}
-                </button>
-              </div>
-            ))}
+          <div className="k-card" style={{ padding: "36px 30px", background: "var(--k-lime)", opacity: pricRef.inView ? 1 : 0, transform: "rotate(-1deg)", transition: "opacity .5s ease" }}>
+            <Tag bg="var(--k-ink)"><span style={{ color: "var(--k-lime)" }}>Free</span></Tag>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 52, letterSpacing: -2, marginTop: 18 }}>₹0</div>
+            <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, opacity: 0.65, marginBottom: 24 }}>forever, for real</div>
+            <ul style={{ listStyle: "none", marginBottom: 28, padding: 0, display: "grid", gap: 2 }}>
+              {FREE_PLAN_FEATURES.map((f) => (
+                <li key={f} style={{ fontSize: 13.5, padding: "7px 0", borderBottom: "2px solid rgba(20,18,15,0.12)", display: "flex", gap: 10, alignItems: "center" }}>
+                  <span style={{ fontWeight: 700 }}>✓</span>{f}
+                </li>
+              ))}
+            </ul>
+            <button
+              className="k-btn"
+              onClick={go("/onboarding")}
+              style={{ width: "100%", padding: "14px", fontSize: 14, background: "var(--k-ink)", color: "var(--k-lime)", boxShadow: "4px 4px 0 var(--k-ink)" }}>
+              Start on WhatsApp →
+            </button>
           </div>
+          <p style={{ textAlign: "center", fontSize: 12.5, opacity: 0.55, marginTop: 20, lineHeight: 1.7 }}>No subscription. No hidden tiers.<br />Just start and see what she does.</p>
         </div>
       </section>
 
@@ -369,14 +402,15 @@ export default function Home() {
         <div style={{ maxWidth: 700, margin: "0 auto", position: "relative", zIndex: 2 }}>
           <Tag bg="var(--k-lime)">Ready?</Tag>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(32px,6vw,72px)", letterSpacing: -2, lineHeight: 1.02, margin: "20px 0", color: "var(--k-paper)", textTransform: "uppercase" }}>
-            Your AI best friend<br />is one message away.
+            Your best friend<br />is one message away.
           </h2>
           <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 13, color: "var(--k-paper)", opacity: 0.6, lineHeight: 1.8, margin: "36px auto 40px", maxWidth: 400 }}>
-            3 MINUTES TO SET UP. SHOWS UP EVERY MORNING. GETS TO KNOW YOU BETTER EVERY DAY.
+            3 MINUTES TO SET UP. SHOWS UP EVERY MORNING. REMEMBERS EVERYTHING. GETS BETTER EVERY DAY.
           </p>
           <button className="k-btn k-btn-lime" onClick={go("/onboarding")} style={{ padding: "19px 46px", fontSize: 16, display: "inline-flex", alignItems: "center", gap: 12 }}>
             <MessageCircle size={19} strokeWidth={2.4} /> Start for free on WhatsApp
           </button>
+          <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, color: "var(--k-paper)", opacity: 0.45, marginTop: 18, letterSpacing: 0.5 }}>NO APP. NO CARD. NO CATCH.</p>
         </div>
       </section>
 
@@ -389,7 +423,7 @@ export default function Home() {
                 <Image src="/kyroo-logo.png" alt="KYROO" width={28} height={28} style={{ borderRadius: "50%", border: "2px solid var(--k-paper)", objectFit: "cover" }} />
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 22 }}>KYROO</div>
               </div>
-              <p style={{ fontSize: 13, opacity: 0.55, maxWidth: 220, lineHeight: 1.75 }}>Your AI life companion. Fitness, money, mind, sleep — all in one WhatsApp chat.</p>
+              <p style={{ fontSize: 13, opacity: 0.55, maxWidth: 220, lineHeight: 1.75 }}>The friend who never forgets. Fitness, money, mind, sleep, all in one WhatsApp chat.</p>
             </div>
             {[
               { label: "Product", links: ["Features", "Pricing", "How it works"] },
