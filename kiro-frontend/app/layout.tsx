@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     siteName: "KYROO",
-    images: [{ url: "/kyroo-logo.png", width: 972, height: 972, alt: "KYROO" }],
+    images: [{ url: "/kyroo-logo.png", width: 1254, height: 1254, alt: "KYROO" }],
     locale: "en_IN",
     type: "website",
   },
