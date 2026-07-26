@@ -2,16 +2,14 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import os
 import random
-import smtplib
-import socket
-from email.mime.text import MIMEText
+import httpx
 from datetime import datetime, timedelta, timezone
 from database import get_db
 
 router = APIRouter(prefix="/otp", tags=["otp"])
 
-GMAIL_ADDRESS = os.getenv("GMAIL_ADDRESS")
-GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+RESEND_FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "KYROO <onboarding@resend.dev>")
 
 OTP_EXPIRY_MINUTES = 10
 OTP_RESEND_COOLDOWN_SECONDS = 30
@@ -30,48 +28,25 @@ def _generate_code() -> str:
     return f"{random.randint(0, 999999):06d}"
 
 
-# Captured once, here, before anything ever patches socket.getaddrinfo —
-# this is the one true unpatched reference. _ipv4_only_getaddrinfo below
-# MUST call this captured name, never "socket.getaddrinfo" directly: by
-# the time it runs, socket.getaddrinfo has already been reassigned to
-# _ipv4_only_getaddrinfo itself, so calling "socket.getaddrinfo" from
-# inside it would call itself forever ("maximum recursion depth
-# exceeded" — a real bug from the first version of this fix).
-_real_getaddrinfo = socket.getaddrinfo
-
-
-def _ipv4_only_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
-    """Some hosts (Render's containers among them) have no IPv6 route, but
-    smtp.gmail.com resolves to both an IPv4 and an IPv6 address — if the
-    default resolver hands back the IPv6 one first, the connection fails
-    immediately with '[Errno 101] Network is unreachable'. Restricting to
-    AF_INET here forces an IPv4-only lookup for this one connection,
-    without changing what hostname smtplib itself thinks it's talking to
-    (so TLS hostname verification during starttls() still checks against
-    the real "smtp.gmail.com", not a bare IP)."""
-    return _real_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
-
-
 def _send_email(to_email: str, code: str):
-    if not GMAIL_ADDRESS or not GMAIL_APP_PASSWORD:
-        raise RuntimeError("GMAIL_ADDRESS / GMAIL_APP_PASSWORD not configured on the server")
+    if not RESEND_API_KEY:
+        raise RuntimeError("RESEND_API_KEY not configured on the server")
 
-    msg = MIMEText(
-        f"Your KYROO verification code is {code}. It expires in {OTP_EXPIRY_MINUTES} minutes.\n\n"
-        "If you didn't request this, you can safely ignore this email."
+    resp = httpx.post(
+        "https://api.resend.com/emails",
+        headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
+        json={
+            "from": RESEND_FROM_EMAIL,
+            "to": [to_email],
+            "subject": f"{code} is your KYROO verification code",
+            "text": (
+                f"Your KYROO verification code is {code}. It expires in {OTP_EXPIRY_MINUTES} minutes.\n\n"
+                "If you didn't request this, you can safely ignore this email."
+            ),
+        },
+        timeout=10,
     )
-    msg["Subject"] = f"{code} is your KYROO verification code"
-    msg["From"] = GMAIL_ADDRESS
-    msg["To"] = to_email
-
-    socket.getaddrinfo = _ipv4_only_getaddrinfo
-    try:
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
-            server.starttls()
-            server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
-            server.sendmail(GMAIL_ADDRESS, [to_email], msg.as_string())
-    finally:
-        socket.getaddrinfo = _real_getaddrinfo
+    resp.raise_for_status()
 
 
 @router.post("/send")
