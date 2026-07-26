@@ -82,6 +82,21 @@ def _strip_em_dashes(text: str) -> str:
     return re.sub(r',\s*,', ',', text)
 
 
+# 😊 reads as forced-cute/customer-service-bot, exactly the "cringe" the
+# persona is told never to be — flagged twice by the user, so this is a
+# hard code-level strip (like _strip_em_dashes), not left to the prompt
+# alone. Unconditional removal rather than a probability, since sincere
+# use is the failure mode and genuine ironic use is rare enough that
+# losing it is the safer tradeoff.
+_CRINGE_EMOJI = "😊"
+
+
+def _strip_cringe_emoji(text: str) -> str:
+    if _CRINGE_EMOJI not in text:
+        return text
+    return re.sub(r' ?' + _CRINGE_EMOJI, '', text).strip()
+
+
 STREAM_BUBBLE_MAX_WORDS = 50
 STREAM_BUBBLE_MAX_WORDS_LIST = 500
 MAX_STREAMED_BUBBLES = 8
@@ -104,6 +119,7 @@ def clean_streamed_bubble(text: str, seen_question_mark: bool, max_emojis: int =
     for phrase in CLICHE_PHRASES:
         cleaned = re.sub(re.escape(phrase), "", cleaned, flags=re.IGNORECASE)
     cleaned = _strip_em_dashes(cleaned)
+    cleaned = _strip_cringe_emoji(cleaned)
     cleaned = re.sub(r' {2,}', ' ', cleaned).strip()
     if not cleaned or _is_leaked_reasoning(cleaned):
         return "", seen_question_mark
@@ -143,6 +159,7 @@ def validate_response(text: str, max_emojis: int = MAX_EMOJIS_PER_BUBBLE) -> lis
         cleaned = re.sub(re.escape(phrase), "", cleaned, flags=re.IGNORECASE)
 
     cleaned = _strip_em_dashes(cleaned)
+    cleaned = _strip_cringe_emoji(cleaned)
     cleaned = re.sub(r' {2,}', ' ', cleaned)
     cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
 
