@@ -13,7 +13,8 @@ from app.brain.stickers import is_sticker_war_trigger, pick_random_mood, pick_ra
 from app.brain.onboarding_flow import (
     needs_onboarding, current_question, process_answer, format_prompt,
     ONBOARDING_QUESTIONS, COMPLETE_TEXT, NOT_STARTED, AWAITING_ENTRY_CHOICE,
-    ENTRY_CHOICE_PROMPT, ENTRY_CHOICE_OPTIONS, ENTRY_WEBSITE_REPLY, resolve_entry_choice,
+    AWAITING_CONSENT, ENTRY_CHOICE_PROMPT, ENTRY_CHOICE_OPTIONS, ENTRY_WEBSITE_REPLY,
+    CONSENT_PROMPT, CONSENT_RETRY_PROMPT, resolve_entry_choice, is_consent_accepted,
 )
 from app.brain.transcription import transcribe_audio
 from app.services.user_service import UserService
@@ -103,6 +104,15 @@ def _handle_onboarding_turn(db, user: dict, message: dict, msg_type: str, messag
             # stays at AWAITING_ENTRY_CHOICE — if they come back without
             # finishing on the website, typing anything at all still falls
             # through to the WhatsApp flow below next time
+            return
+        wa.send_one(phone, CONSENT_PROMPT)
+        user_service.update_user(user["id"], {"onboarding_step": AWAITING_CONSENT})
+        return
+
+    if step == AWAITING_CONSENT:
+        text = message.get("text", {}).get("body") if msg_type == "text" else None
+        if not is_consent_accepted(text):
+            wa.send_one(phone, CONSENT_RETRY_PROMPT)
             return
         _send_onboarding_question(wa, phone, ONBOARDING_QUESTIONS[0], user)
         user_service.update_user(user["id"], {"onboarding_step": 0})
