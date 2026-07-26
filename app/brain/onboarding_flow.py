@@ -9,12 +9,18 @@ import re
 
 NOT_STARTED = -1
 AWAITING_ENTRY_CHOICE = -2
+AWAITING_CONSENT = -3
+
+# Rule: KYROO never reads as cringe — no forced-cute emoji (😊 and its
+# relatives), no exclamation-heavy filler. A single 👋 in a genuine
+# greeting is fine, an emoji tacked onto a random sentence is not.
 
 ENTRY_CHOICE_PROMPT = (
-    "heyyy 😊 I'm KYROO, your new AI best friend for fitness, money, mind, and sleep, "
-    "all in one WhatsApp chat. quickest way to get set up properly is on the website "
-    "(2 min, full experience), or if you'd rather, you can just answer a few quick "
-    "questions right here instead. up to you!"
+    "Hi, I'm KYROO 👋 I'm your AI best friend for fitness, money, mind, and sleep, "
+    "all in one WhatsApp chat. The quickest way to get set up properly is on our "
+    "website, it only takes about two minutes and gives you the full experience. "
+    "If you'd rather, you can also just answer a few quick questions right here on "
+    "WhatsApp instead. It's completely up to you."
 )
 
 ENTRY_CHOICE_OPTIONS = [
@@ -23,12 +29,27 @@ ENTRY_CHOICE_OPTIONS = [
 ]
 
 WEBSITE_SIGNUP_URL = "https://www.kyroo.co.in/onboarding"
+PRIVACY_POLICY_URL = "https://www.kyroo.co.in/privacy"
+TERMS_URL = "https://www.kyroo.co.in/terms"
 
 ENTRY_WEBSITE_REPLY = (
-    f"here you go: {WEBSITE_SIGNUP_URL}\n\n"
-    "takes like 2 minutes. once you're done just message me here and we're good to go, "
-    "or if you change your mind, just start typing and I'll ask you the questions right here instead 😊"
+    f"Here you go: {WEBSITE_SIGNUP_URL}\n\n"
+    "It takes about two minutes. Once you're done, just message me here and we're "
+    "good to go, or if you change your mind, just start typing and I'll ask you the "
+    "questions right here instead."
 )
+
+CONSENT_PROMPT = (
+    f"Before we start, take a look at KYROO's Privacy Policy ({PRIVACY_POLICY_URL}) and "
+    f"Terms of Service ({TERMS_URL}). Continuing means you're agreeing to both, "
+    "including getting WhatsApp messages from KYROO like replies and daily check-ins, "
+    "which you can turn off any time.\n\n"
+    "Reply \"Accept\" to continue."
+)
+
+CONSENT_RETRY_PROMPT = "No rush, just reply \"Accept\" whenever you're ready to continue."
+
+_ACCEPT_REPLIES = {"accept", "accepted", "i accept", "yes i accept", "yes, i accept"}
 
 
 def resolve_entry_choice(text: str | None, interactive_id: str | None) -> str:
@@ -41,6 +62,10 @@ def resolve_entry_choice(text: str | None, interactive_id: str | None) -> str:
     if text and text.strip().lower() in ("website", "sign up on website", "1"):
         return "website"
     return "whatsapp"
+
+
+def is_consent_accepted(text: str | None) -> bool:
+    return bool(text) and text.strip().lower() in _ACCEPT_REPLIES
 
 
 def _validate_name(text: str) -> tuple[str | None, str | None]:
@@ -85,7 +110,7 @@ def _validate_email(text: str) -> tuple[str | None, str | None]:
 ONBOARDING_QUESTIONS = [
     {
         "field": "name",
-        "prompt": "heyyy 😊 I'm KYROO, your new AI best friend for fitness, money, mind, and sleep, all in one WhatsApp chat. Let's get to know each other real quick. what should I call you?\n\n(quick note: by chatting with me you're good with getting WhatsApp messages from KYROO, including daily check-ins you can turn off any time, privacy policy's at www.kyroo.co.in/privacy if you wanna peek)",
+        "prompt": "Perfect, let's get to know each other real quick. what should I call you?",
         "type": "text",
         "validate": _validate_name,
     },
@@ -198,7 +223,7 @@ TOTAL_QUESTIONS = len(ONBOARDING_QUESTIONS)
 
 WELCOME_TEXT = ONBOARDING_QUESTIONS[0]["prompt"]
 
-COMPLETE_TEXT = "okay {name}, I know you now 😊 this is gonna be good. I'll check in every morning, and I'm always right here whenever you wanna talk. so, what's up?"
+COMPLETE_TEXT = "okay {name}, I know you now. this is gonna be good. I'll check in every morning, and I'm always right here whenever you wanna talk. so, what's up?"
 
 
 def needs_onboarding(user: dict) -> bool:
