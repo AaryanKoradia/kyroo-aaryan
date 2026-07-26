@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import os
 import random
 import smtplib
+import socket
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta, timezone
 from database import get_db
@@ -29,6 +30,18 @@ def _generate_code() -> str:
     return f"{random.randint(0, 999999):06d}"
 
 
+def _ipv4_only_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    """Some hosts (Render's containers among them) have no IPv6 route, but
+    smtp.gmail.com resolves to both an IPv4 and an IPv6 address — if the
+    default resolver hands back the IPv6 one first, the connection fails
+    immediately with '[Errno 101] Network is unreachable'. Restricting to
+    AF_INET here forces an IPv4-only lookup for this one connection,
+    without changing what hostname smtplib itself thinks it's talking to
+    (so TLS hostname verification during starttls() still checks against
+    the real "smtp.gmail.com", not a bare IP)."""
+    return socket.getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+
+
 def _send_email(to_email: str, code: str):
     if not GMAIL_ADDRESS or not GMAIL_APP_PASSWORD:
         raise RuntimeError("GMAIL_ADDRESS / GMAIL_APP_PASSWORD not configured on the server")
@@ -41,10 +54,15 @@ def _send_email(to_email: str, code: str):
     msg["From"] = GMAIL_ADDRESS
     msg["To"] = to_email
 
-    with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
-        server.starttls()
-        server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
-        server.sendmail(GMAIL_ADDRESS, [to_email], msg.as_string())
+    original_getaddrinfo = socket.getaddrinfo
+    socket.getaddrinfo = _ipv4_only_getaddrinfo
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
+            server.starttls()
+            server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+            server.sendmail(GMAIL_ADDRESS, [to_email], msg.as_string())
+    finally:
+        socket.getaddrinfo = original_getaddrinfo
 
 
 @router.post("/send")

@@ -10,7 +10,7 @@ from app.brain.kyroo_brain import (
     generate_evening_nudge,
     generate_night_nudge,
 )
-from app.brain.response_validator import _strip_em_dashes
+from app.brain.response_validator import _strip_em_dashes, _strip_cringe_emoji
 from app.infrastructure.whatsapp.client import WhatsAppClient
 from app.services.proactive_messaging import send_proactive
 
@@ -158,7 +158,7 @@ def _send_nudge(db, user: dict, slot: str) -> None:
         # part of what made nudges feel spammy. The internal blank lines
         # in the structured brief format are just visual spacing within
         # that one message, not separate sends.
-        nudge_text = _strip_em_dashes(GENERATORS[slot](user))
+        nudge_text = _strip_cringe_emoji(_strip_em_dashes(GENERATORS[slot](user)))
         WhatsAppClient().send_one(phone, nudge_text)
         sent_text["value"] = nudge_text
 
