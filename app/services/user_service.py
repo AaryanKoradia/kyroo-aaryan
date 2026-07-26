@@ -7,9 +7,24 @@ class UserService:
         self.db = db or get_supabase()
 
     def get_or_create_user(self, phone: str) -> dict:
-        """Get user by phone or create new one."""
+        """Get user by phone or create new one.
+
+        Ordered by onboarding_step (then created_at) descending so that if
+        more than one row ever exists for the same phone — e.g. a stale
+        WhatsApp-first row stuck at AWAITING_ENTRY_CHOICE alongside a
+        complete row from a later website signup, before the signup
+        endpoint started upserting by phone — the most-onboarded row wins
+        instead of an arbitrary one. onboarding_step is a reliable
+        "how done is this row" signal: -1/-2/-3 are WhatsApp-native
+        onboarding states, 0-12 are in-progress questions, 99 is complete."""
         try:
-            res = self.db.table("users").select("*").eq("phone", phone).execute()
+            res = (
+                self.db.table("users").select("*")
+                .eq("phone", phone)
+                .order("onboarding_step", desc=True)
+                .order("created_at", desc=True)
+                .execute()
+            )
             if res.data:
                 return res.data[0]
         except Exception:
