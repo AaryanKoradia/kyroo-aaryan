@@ -30,6 +30,16 @@ def _generate_code() -> str:
     return f"{random.randint(0, 999999):06d}"
 
 
+# Captured once, here, before anything ever patches socket.getaddrinfo —
+# this is the one true unpatched reference. _ipv4_only_getaddrinfo below
+# MUST call this captured name, never "socket.getaddrinfo" directly: by
+# the time it runs, socket.getaddrinfo has already been reassigned to
+# _ipv4_only_getaddrinfo itself, so calling "socket.getaddrinfo" from
+# inside it would call itself forever ("maximum recursion depth
+# exceeded" — a real bug from the first version of this fix).
+_real_getaddrinfo = socket.getaddrinfo
+
+
 def _ipv4_only_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
     """Some hosts (Render's containers among them) have no IPv6 route, but
     smtp.gmail.com resolves to both an IPv4 and an IPv6 address — if the
@@ -39,7 +49,7 @@ def _ipv4_only_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
     without changing what hostname smtplib itself thinks it's talking to
     (so TLS hostname verification during starttls() still checks against
     the real "smtp.gmail.com", not a bare IP)."""
-    return socket.getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+    return _real_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
 
 
 def _send_email(to_email: str, code: str):
@@ -54,7 +64,6 @@ def _send_email(to_email: str, code: str):
     msg["From"] = GMAIL_ADDRESS
     msg["To"] = to_email
 
-    original_getaddrinfo = socket.getaddrinfo
     socket.getaddrinfo = _ipv4_only_getaddrinfo
     try:
         with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
@@ -62,7 +71,7 @@ def _send_email(to_email: str, code: str):
             server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
             server.sendmail(GMAIL_ADDRESS, [to_email], msg.as_string())
     finally:
-        socket.getaddrinfo = original_getaddrinfo
+        socket.getaddrinfo = _real_getaddrinfo
 
 
 @router.post("/send")
