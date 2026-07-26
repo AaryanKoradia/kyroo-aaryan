@@ -54,7 +54,7 @@ async def signup(user: UserSignup):
         # /otp/send + /otp/verify — the frontend gate alone isn't enough
         raise HTTPException(status_code=400, detail="Email not verified. Please verify your email first.")
     phone = normalize_phone(user.phone)
-    new_user = db.table("users").insert({
+    fields = {
         "name": user.name,
         "email": user.email,
         "phone": phone,
@@ -79,11 +79,34 @@ async def signup(user: UserSignup):
         "income_range": user.income_range,
         "eat_habits": user.eat_habits,
         "diet_restrictions": user.diet_restrictions,
-        "job_type": user.job_type
-    }).execute()
+        "job_type": user.job_type,
+        "onboarding_step": 99,
+    }
+
+    # If this phone already has a row — e.g. they messaged KYROO on WhatsApp
+    # first and got sent here to finish setup, which creates a row with
+    # onboarding_step=-1/-2 — finish THAT row instead of inserting a second
+    # one. Otherwise the WhatsApp webhook can keep reading the old,
+    # half-onboarded row (it has no way to know this new one is "them"),
+    # and re-asks for consent/onboarding even though signup just completed.
+    existing_by_phone = (
+        db.table("users").select("id")
+        .eq("phone", phone)
+        .order("onboarding_step", desc=True)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    if existing_by_phone.data:
+        user_id = existing_by_phone.data[0]["id"]
+        db.table("users").update(fields).eq("id", user_id).execute()
+    else:
+        new_user = db.table("users").insert(fields).execute()
+        user_id = new_user.data[0]["id"]
+
     return {
         "message": f"Welcome to KIRO, {user.name}! 🎉",
-        "user_id": new_user.data[0]["id"],
+        "user_id": user_id,
         "status": "success"
     }
 
