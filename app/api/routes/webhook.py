@@ -1,5 +1,6 @@
 import asyncio
 import json
+import time
 import traceback
 from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.responses import PlainTextResponse
@@ -23,6 +24,29 @@ from app.services.conversation_service import ConversationService
 router = APIRouter(tags=["WhatsApp"])
 
 MAX_PDF_BYTES = 15 * 1024 * 1024  # 15MB — big enough for a real document, small enough to stay fast
+
+# Meta's Cloud API webhook redelivers the identical payload (same
+# message["id"]) if it doesn't get a fast 200 back — and image/document/
+# video replies here run the full vision/LLM pipeline synchronously before
+# ever returning, easily taking longer than Meta's ack window. Without this,
+# a slow reply gets processed a second time from scratch and the user sees
+# the exact same response sent twice. Keyed on message id, not per-user, so
+# it catches a redelivered duplicate regardless of message type.
+_PROCESSED_MESSAGE_IDS: dict[str, float] = {}
+_DEDUP_TTL_SECONDS = 600  # comfortably longer than any realistic redelivery window
+
+
+def _already_processed(message_id: str) -> bool:
+    if not message_id:
+        return False
+    now = time.monotonic()
+    expired = [mid for mid, seen_at in _PROCESSED_MESSAGE_IDS.items() if now - seen_at > _DEDUP_TTL_SECONDS]
+    for mid in expired:
+        _PROCESSED_MESSAGE_IDS.pop(mid, None)
+    if message_id in _PROCESSED_MESSAGE_IDS:
+        return True
+    _PROCESSED_MESSAGE_IDS[message_id] = now
+    return False
 
 
 def _save_safely(fn, *args):
@@ -182,6 +206,9 @@ async def webhook(request: Request, db=Depends(get_db)):
     phone = message["from"]
     message_id = message.get("id", "")
     msg_type = message.get("type")
+
+    if _already_processed(message_id):
+        return {"status": "ok"}
 
     # looked up once up front — needed to decide whether this number has
     # ever completed onboarding before dispatching on message type
