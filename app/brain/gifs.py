@@ -1,5 +1,9 @@
+import logging
 import os
 import requests
+import sentry_sdk
+
+logger = logging.getLogger(__name__)
 
 GIPHY_API_KEY = os.getenv("GIPHY_API_KEY", "")
 
@@ -30,5 +34,6 @@ def search_gif_url(query: str) -> str | None:
         mp4 = images.get("fixed_height", {}).get("mp4") or images.get("original", {}).get("mp4")
         return mp4 or None
     except Exception as e:
-        print(f"[gifs] search error: {e}")
+        logger.exception(f"[gifs] search error: {e}")
+        sentry_sdk.capture_exception(e)
         return None

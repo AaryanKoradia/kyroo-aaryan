@@ -1,6 +1,10 @@
+import logging
 import os
 import voyageai
+import sentry_sdk
 from database import get_db
+
+logger = logging.getLogger(__name__)
 
 VOYAGE_MODEL = "voyage-3-lite"
 
@@ -32,7 +36,8 @@ def save_memory(user_id: str, content: str, source: str = "chat"):
             "source": source
         }).execute()
     except Exception as e:
-        print(f"[memory] failed to save embedding: {e}")
+        logger.exception(f"[memory] failed to save embedding: {e}")
+        sentry_sdk.capture_exception(e)
 
 
 def search_memories(user_id: str, query: str, limit: int = 3, min_similarity: float = 0.5):
@@ -45,5 +50,6 @@ def search_memories(user_id: str, query: str, limit: int = 3, min_similarity: fl
         }).execute()
         return [m for m in (res.data or []) if m.get("similarity", 0) >= min_similarity]
     except Exception as e:
-        print(f"[memory] search failed: {e}")
+        logger.exception(f"[memory] search failed: {e}")
+        sentry_sdk.capture_exception(e)
         return []

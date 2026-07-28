@@ -1,6 +1,10 @@
 import base64
+import logging
 import os
 import requests
+import sentry_sdk
+
+logger = logging.getLogger(__name__)
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
@@ -42,5 +46,6 @@ def transcribe_audio(audio_base64: str, mime_type: str = "audio/ogg", user_langu
         text = res.json().get("text", "").strip()
         return text or None
     except Exception as e:
-        print(f"[transcription] error: {e}")
+        logger.exception(f"[transcription] error: {e}")
+        sentry_sdk.capture_exception(e)
         return None

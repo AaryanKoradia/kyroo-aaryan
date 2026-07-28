@@ -8,8 +8,12 @@ import asyncio
 import base64
 import hashlib
 import hmac
+import logging
 import random
 import os
+import sentry_sdk
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/whatsapp", tags=["whatsapp"])
 
@@ -71,7 +75,8 @@ def send_whatsapp(phone: str, message: str) -> dict:
         )
         return response.json()
     except Exception as e:
-        print(f"WhatsApp send error: {e}")
+        logger.exception(f"WhatsApp send error: {e}")
+        sentry_sdk.capture_exception(e)
         return {"status": "error", "error": str(e)}
 
 
@@ -96,7 +101,8 @@ def download_whatsapp_media(media_id: str):
         )
         return base64.b64encode(file_resp.content).decode("utf-8"), mime_type
     except Exception as e:
-        print(f"WhatsApp media download error: {e}")
+        logger.exception(f"WhatsApp media download error: {e}")
+        sentry_sdk.capture_exception(e)
         return None
 
 
@@ -298,7 +304,8 @@ async def whatsapp_webhook(request: Request):
         return {"status": "ok"}
 
     except Exception as e:
-        print(f"Webhook error: {e}")
+        logger.exception(f"Webhook error: {e}")
+        sentry_sdk.capture_exception(e)
         return {"status": "ok"}
 
 

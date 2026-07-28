@@ -1,6 +1,10 @@
+import logging
 import random
 import requests
+import sentry_sdk
 from app.database.supabase_client import get_supabase
+
+logger = logging.getLogger(__name__)
 
 # Picked for light "wild thing that happened to somebody" energy —
 # deliberately NOT r/confession or r/relationship_advice, which surface
@@ -64,7 +68,8 @@ def _fetch_subreddit_top(subreddit: str, limit: int) -> list[dict]:
                 break
         return posts
     except Exception as e:
-        print(f"[stories] fetch error for r/{subreddit}: {e}")
+        logger.exception(f"[stories] fetch error for r/{subreddit}: {e}")
+        sentry_sdk.capture_exception(e)
         return []
 
 
@@ -84,7 +89,8 @@ def refresh_story_cache() -> dict:
     try:
         db.table("story_cache").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
     except Exception as e:
-        print(f"[stories] cache clear error: {e}")
+        logger.exception(f"[stories] cache clear error: {e}")
+        sentry_sdk.capture_exception(e)
 
     stored = 0
     for post in all_posts[:TARGET_POOL_SIZE]:
@@ -98,7 +104,8 @@ def refresh_story_cache() -> dict:
             }).execute()
             stored += 1
         except Exception as e:
-            print(f"[stories] store error: {e}")
+            logger.exception(f"[stories] store error: {e}")
+            sentry_sdk.capture_exception(e)
 
     return {"fetched": len(all_posts), "stored": stored}
 

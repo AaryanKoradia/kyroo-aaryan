@@ -1,9 +1,16 @@
+import logging
+
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from logging_config import configure_logging
+
+configure_logging()
+logger = logging.getLogger(__name__)
+
 from routes import users, ai, payments, whatsapp, fitness, files, reminders, tracking, reports, otp
 from rate_limit import limiter
 from scheduler import start_scheduler, stop_scheduler
@@ -33,7 +40,7 @@ async def on_startup():
     if os.getenv("SUPABASE_URL") and os.getenv("SUPABASE_KEY"):
         start_scheduler()
     else:
-        print("[scheduler] skipped — SUPABASE_URL/SUPABASE_KEY not set")
+        logger.warning("[scheduler] skipped — SUPABASE_URL/SUPABASE_KEY not set")
 
 
 @app.on_event("shutdown")

@@ -1,12 +1,15 @@
+import logging
 from datetime import datetime, timedelta
 
 import pytz
+import sentry_sdk
 
 from app.database.supabase_client import get_supabase
 from app.infrastructure.whatsapp.client import WhatsAppClient
 from app.services.proactive_messaging import send_proactive
 
 IST = pytz.timezone("Asia/Kolkata")
+logger = logging.getLogger(__name__)
 
 # "5 mins before, then again at the time" per the feature request — distinct
 # from kiro-backend/routes/reminders.py's unused 30-min offset, which nothing
@@ -95,7 +98,8 @@ def check_and_send_reminders() -> dict:
             db.table("reminders").update({"pre_alert_sent": True}).eq("id", r["id"]).execute()
             sent_pre_alerts.append(r["id"])
         except Exception as e:
-            print(f"[reminders] failed to send pre-alert for {r['id']}: {e}")
+            logger.exception(f"[reminders] failed to send pre-alert for {r['id']}: {e}")
+            sentry_sdk.capture_exception(e)
             failed.append({"id": r["id"], "stage": "pre_alert", "error": str(e)})
 
     main_due = (
@@ -118,7 +122,8 @@ def check_and_send_reminders() -> dict:
             db.table("reminders").update({"is_sent": True}).eq("id", r["id"]).execute()
             sent_reminders.append(r["id"])
         except Exception as e:
-            print(f"[reminders] failed to send reminder for {r['id']}: {e}")
+            logger.exception(f"[reminders] failed to send reminder for {r['id']}: {e}")
+            sentry_sdk.capture_exception(e)
             failed.append({"id": r["id"], "stage": "reminder", "error": str(e)})
 
     return {

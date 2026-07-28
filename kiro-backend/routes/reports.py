@@ -1,6 +1,11 @@
+import logging
+
 from fastapi import APIRouter, HTTPException
+import sentry_sdk
 from database import get_db
 from brain.kyroo_brain import generate_weekly_report
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -54,6 +59,7 @@ async def send_all_weekly():
             }).execute()
             sent.append(user["name"])
         except Exception as e:
-            print(f"Failed for {user['name']}: {e}")
+            logger.exception(f"Failed for {user['name']}: {e}")
+            sentry_sdk.capture_exception(e)
 
     return {"status": "success", "sent_to": sent, "count": len(sent)}

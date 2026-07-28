@@ -2,8 +2,9 @@ import asyncio
 import hashlib
 import hmac
 import json
+import logging
 import time
-import traceback
+import sentry_sdk
 from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.responses import PlainTextResponse
 from app.api.dependencies.database import get_db
@@ -24,6 +25,8 @@ from app.services.user_service import UserService
 from app.services.conversation_service import ConversationService
 
 router = APIRouter(tags=["WhatsApp"])
+
+logger = logging.getLogger(__name__)
 
 MAX_PDF_BYTES = 15 * 1024 * 1024  # 15MB — big enough for a real document, small enough to stay fast
 
@@ -75,7 +78,8 @@ def _save_safely(fn, *args):
     try:
         fn(*args)
     except Exception:
-        print(f"[webhook] Post-send save error:\n{traceback.format_exc()}")
+        logger.exception("[webhook] Post-send save error")
+        sentry_sdk.capture_exception()
 
 
 def _background_save(fn, *args):
@@ -212,11 +216,11 @@ async def verify(request: Request):
 async def webhook(request: Request, db=Depends(get_db)):
     raw_body = await request.body()
     if not _verify_meta_signature(raw_body, request.headers.get("x-hub-signature-256")):
-        print("[webhook] Rejected POST with invalid/missing X-Hub-Signature-256")
+        logger.warning("[webhook] Rejected POST with invalid/missing X-Hub-Signature-256")
         raise HTTPException(status_code=403, detail="Invalid signature")
 
     body = json.loads(raw_body)
-    print(json.dumps(body, indent=2))
+    logger.debug(json.dumps(body, indent=2))
 
     try:
         value = body["entry"][0]["changes"][0]["value"]
@@ -239,14 +243,16 @@ async def webhook(request: Request, db=Depends(get_db)):
     try:
         user = UserService(db).get_or_create_user(phone)
     except Exception:
-        print(f"[webhook] User lookup error:\n{traceback.format_exc()}")
+        logger.exception("[webhook] User lookup error")
+        sentry_sdk.capture_exception()
         return {"status": "ok"}
 
     if needs_onboarding(user):
         try:
             _handle_onboarding_turn(db, user, message, msg_type, message_id)
         except Exception:
-            print(f"[webhook] Onboarding error:\n{traceback.format_exc()}")
+            logger.exception(f"[webhook] Onboarding error")
+            sentry_sdk.capture_exception()
         return {"status": "ok"}
 
     if msg_type == "image":
@@ -274,7 +280,8 @@ async def webhook(request: Request, db=Depends(get_db)):
                 caption or "(sent a photo)", result,
             )
         except Exception:
-            print(f"[webhook] Image error:\n{traceback.format_exc()}")
+            logger.exception(f"[webhook] Image error")
+            sentry_sdk.capture_exception()
         return {"status": "ok"}
 
     if msg_type == "document":
@@ -316,7 +323,8 @@ async def webhook(request: Request, db=Depends(get_db)):
                 caption or "(sent a PDF)", result,
             )
         except Exception:
-            print(f"[webhook] Document error:\n{traceback.format_exc()}")
+            logger.exception(f"[webhook] Document error")
+            sentry_sdk.capture_exception()
         return {"status": "ok"}
 
     if msg_type == "audio":
@@ -346,7 +354,8 @@ async def webhook(request: Request, db=Depends(get_db)):
 
             _background_save(orchestrator.save_exchange, user, transcript, result)
         except Exception:
-            print(f"[webhook] Audio error:\n{traceback.format_exc()}")
+            logger.exception(f"[webhook] Audio error")
+            sentry_sdk.capture_exception()
         return {"status": "ok"}
 
     if msg_type == "video":
@@ -378,7 +387,8 @@ async def webhook(request: Request, db=Depends(get_db)):
                 default_message, result,
             )
         except Exception:
-            print(f"[webhook] Video error:\n{traceback.format_exc()}")
+            logger.exception(f"[webhook] Video error")
+            sentry_sdk.capture_exception()
         return {"status": "ok"}
 
     if msg_type == "sticker":
@@ -398,11 +408,12 @@ async def webhook(request: Request, db=Depends(get_db)):
                 "[sent a sticker]", "[sent a sticker back]", "general",
             )
         except Exception:
-            print(f"[webhook] Sticker error:\n{traceback.format_exc()}")
+            logger.exception(f"[webhook] Sticker error")
+            sentry_sdk.capture_exception()
         return {"status": "ok"}
 
     if msg_type != "text":
-        print(f"[webhook] Unhandled message type from {phone}: {msg_type}")
+        logger.warning(f"[webhook] Unhandled message type from {phone}: {msg_type}")
         return {"status": "ignored"}
 
     text = message["text"]["body"].strip()
@@ -439,7 +450,8 @@ async def webhook(request: Request, db=Depends(get_db)):
             # already on its way to the user, not before
             _background_save(orchestrator.save_exchange, user, combined_text, result)
         except Exception:
-            print(f"[webhook] Error:\n{traceback.format_exc()}")
+            logger.exception("[webhook] Error")
+            sentry_sdk.capture_exception()
 
     # buffers rapid consecutive messages (someone splitting one thought
     # across 2-3 texts) into a single reply instead of responding to each

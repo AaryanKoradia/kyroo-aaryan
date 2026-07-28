@@ -3,6 +3,10 @@ import os
 import sentry_sdk
 from fastapi import FastAPI
 
+from app.core.logging_config import configure_logging
+
+configure_logging()
+
 from app.api.routes.user import router as user_router
 from app.api.routes.webhook import router as webhook_router
 from app.api.routes.nudges import router as nudges_router
@@ -26,9 +30,13 @@ app.include_router(reminders_router)
 
 
 @app.get("/")
-def health():
-
+def root():
     return {
         "status": "ok",
         "service": "kyroo",
     }
+
+
+@app.get("/health")
+def health():
+    return {"status": "healthy", "service": "kyroo"}

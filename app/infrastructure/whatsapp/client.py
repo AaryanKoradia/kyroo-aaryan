@@ -1,11 +1,15 @@
 # app/infrastructure/whatsapp/client.py
 import base64
+import logging
 import random
 import time
 
 import requests
+import sentry_sdk
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class WhatsAppClient:
@@ -42,7 +46,7 @@ class WhatsAppClient:
             if not media_url:
                 return None
             if max_bytes and file_size and file_size > max_bytes:
-                print(f"[whatsapp] media {media_id} too large ({file_size} bytes > {max_bytes}), skipping download")
+                logger.warning(f"[whatsapp] media {media_id} too large ({file_size} bytes > {max_bytes}), skipping download")
                 return None
 
             file_resp = requests.get(
@@ -51,11 +55,12 @@ class WhatsAppClient:
                 timeout=30,
             )
             if max_bytes and len(file_resp.content) > max_bytes:
-                print(f"[whatsapp] media {media_id} too large after download ({len(file_resp.content)} bytes), discarding")
+                logger.warning(f"[whatsapp] media {media_id} too large after download ({len(file_resp.content)} bytes), discarding")
                 return None
             return base64.b64encode(file_resp.content).decode("utf-8"), mime_type
         except Exception as e:
-            print(f"[whatsapp] media download error: {e}")
+            logger.exception(f"[whatsapp] media download error: {e}")
+            sentry_sdk.capture_exception(e)
             return None
 
     def send_typing_indicator(self, message_id: str):
@@ -82,7 +87,7 @@ class WhatsAppClient:
             response.raise_for_status()
         except Exception as e:
             # never let a typing-indicator failure block the actual reply
-            print(f"[whatsapp] typing indicator error: {e}")
+            logger.warning(f"[whatsapp] typing indicator error: {e}")
 
     def _typing_delay(self, message: str) -> float:
         """Longer messages get a longer pre-send pause, so a big bubble
