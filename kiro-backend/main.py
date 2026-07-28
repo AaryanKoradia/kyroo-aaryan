@@ -2,7 +2,10 @@ import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from routes import users, ai, payments, whatsapp, fitness, files, reminders, tracking, reports, otp
+from rate_limit import limiter
 from scheduler import start_scheduler, stop_scheduler
 import os
 
@@ -13,6 +16,16 @@ if SENTRY_DSN:
     sentry_sdk.init(dsn=SENTRY_DSN, environment=os.getenv("ENVIRONMENT", "production"), traces_sample_rate=0.1)
 
 app = FastAPI(title="KYROO API", version="1.0.0")
+
+# Per-IP rate limiting on the public, previously-unlimited endpoints
+# (/otp/send, /users/signup, /ai/chat) — someone could otherwise script
+# unlimited signups/OTP sends, or run up the Anthropic bill through the
+# website chat with no cap at all. In-memory (per-process), matching every
+# other piece of in-memory state already in this codebase — fine at
+# current scale, would need a shared backend (Redis) if this ever runs as
+# more than one worker process.
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 @app.on_event("startup")

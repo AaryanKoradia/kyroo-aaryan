@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 import os
 import random
 import httpx
 from datetime import datetime, timedelta, timezone
 from database import get_db
+from rate_limit import limiter
 
 router = APIRouter(prefix="/otp", tags=["otp"])
 
@@ -50,7 +51,8 @@ def _send_email(to_email: str, code: str):
 
 
 @router.post("/send")
-async def send_otp(req: SendOtpRequest):
+@limiter.limit("5/minute")
+async def send_otp(request: Request, req: SendOtpRequest):
     email = req.email.strip().lower()
     if "@" not in email or "." not in email.split("@")[-1]:
         raise HTTPException(status_code=400, detail="Enter a valid email address")

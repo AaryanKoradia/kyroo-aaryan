@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from database import get_db
 from routes.otp import is_email_verified
+from rate_limit import limiter
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -44,7 +45,8 @@ class UserSignup(BaseModel):
     job_type: str = ""
 
 @router.post("/signup")
-async def signup(user: UserSignup):
+@limiter.limit("10/hour")
+async def signup(request: Request, user: UserSignup):
     db = get_db()
     existing = db.table("users").select("*").eq("email", user.email).execute()
     if existing.data:

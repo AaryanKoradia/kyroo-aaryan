@@ -80,3 +80,4 @@ python-pptx
 pytz
 pytz
 sentry-sdk[fastapi]==2.66.1
+slowapi==0.1.10
