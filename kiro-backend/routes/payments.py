@@ -1,16 +1,22 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 import razorpay
 import os
 import hmac
 import hashlib
+import json
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
 client = razorpay.Client(
-    auth=(os.getenv("RAZORPAY_KEY_ID"), 
+    auth=(os.getenv("RAZORPAY_KEY_ID"),
           os.getenv("RAZORPAY_KEY_SECRET"))
 )
+
+# Separate secret from RAZORPAY_KEY_SECRET — set under Razorpay Dashboard ->
+# Settings -> Webhooks when you add the webhook URL. Used only to verify
+# /webhook below, never to authenticate API calls.
+RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
 
 class CreateOrderRequest(BaseModel):
     user_id: str
@@ -82,3 +88,38 @@ async def verify_payment(req: VerifyPaymentRequest):
         "plan": req.plan,
         "status": "success"
     }
+
+
+@router.post("/webhook")
+async def razorpay_webhook(request: Request):
+    """Server-to-server confirmation from Razorpay, independent of whether
+    the client ever called /verify (a closed tab, a network drop, or a
+    crash right after paying would otherwise leave the DB never updated
+    even though the payment genuinely succeeded). Fails closed — there's no
+    prior behavior to preserve here, this is new, so there's no reason to
+    accept unverified webhook calls in the meantime."""
+    if not RAZORPAY_WEBHOOK_SECRET:
+        raise HTTPException(status_code=503, detail="Webhook not configured")
+
+    raw_body = await request.body()
+    signature = request.headers.get("x-razorpay-signature", "")
+
+    try:
+        client.utility.verify_webhook_signature(raw_body.decode(), signature, RAZORPAY_WEBHOOK_SECRET)
+    except razorpay.errors.SignatureVerificationError:
+        raise HTTPException(status_code=403, detail="Invalid webhook signature")
+
+    payload = json.loads(raw_body)
+    event = payload.get("event", "")
+
+    if event in ("payment.captured", "order.paid"):
+        entity = payload.get("payload", {}).get("payment", {}).get("entity", {})
+        notes = entity.get("notes", {}) or {}
+        user_id = notes.get("user_id")
+        plan = notes.get("plan")
+        if user_id and plan:
+            from database import get_db
+            db = get_db()
+            db.table("users").update({"plan": plan, "is_active": True}).eq("id", user_id).execute()
+
+    return {"status": "ok"}
