@@ -11,7 +11,7 @@ from logging_config import configure_logging
 configure_logging()
 logger = logging.getLogger(__name__)
 
-from routes import users, ai, payments, whatsapp, fitness, files, reminders, tracking, reports, otp
+from routes import users, ai, payments, whatsapp, fitness, files, reminders, tracking, reports, otp, admin
 from rate_limit import limiter
 from scheduler import start_scheduler, stop_scheduler
 import os
@@ -65,6 +65,7 @@ app.include_router(reminders.router)
 app.include_router(tracking.router)
 app.include_router(reports.router)
 app.include_router(otp.router)
+app.include_router(admin.router)
 
 @app.get("/")
 async def root():
