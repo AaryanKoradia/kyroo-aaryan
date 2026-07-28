@@ -97,6 +97,22 @@ def _strip_cringe_emoji(text: str) -> str:
     return re.sub(r' ?' + _CRINGE_EMOJI, '', text).strip()
 
 
+# The model is told to bold with a single pair of asterisks (WhatsApp's own
+# bold syntax, *word* -> word rendered bold), but sometimes defaults to
+# standard Markdown's **word** instead. WhatsApp only consumes one asterisk
+# from each side of a **-wrapped word for the bold match, leaving one
+# literal, unconsumed asterisk visible on each side — exactly the "bold
+# word with stray *s around it" bug. Collapsing every **word** to *word*
+# here guarantees clean rendering regardless of which style the model uses.
+_DOUBLE_ASTERISK_BOLD = re.compile(r'\*\*(.+?)\*\*')
+
+
+def _fix_double_asterisk_bold(text: str) -> str:
+    if "**" not in text:
+        return text
+    return _DOUBLE_ASTERISK_BOLD.sub(r'*\1*', text)
+
+
 STREAM_BUBBLE_MAX_WORDS = 50
 STREAM_BUBBLE_MAX_WORDS_LIST = 500
 MAX_STREAMED_BUBBLES = 8
@@ -120,6 +136,7 @@ def clean_streamed_bubble(text: str, seen_question_mark: bool, max_emojis: int =
         cleaned = re.sub(re.escape(phrase), "", cleaned, flags=re.IGNORECASE)
     cleaned = _strip_em_dashes(cleaned)
     cleaned = _strip_cringe_emoji(cleaned)
+    cleaned = _fix_double_asterisk_bold(cleaned)
     cleaned = re.sub(r' {2,}', ' ', cleaned).strip()
     if not cleaned or _is_leaked_reasoning(cleaned):
         return "", seen_question_mark
@@ -160,6 +177,7 @@ def validate_response(text: str, max_emojis: int = MAX_EMOJIS_PER_BUBBLE) -> lis
 
     cleaned = _strip_em_dashes(cleaned)
     cleaned = _strip_cringe_emoji(cleaned)
+    cleaned = _fix_double_asterisk_bold(cleaned)
     cleaned = re.sub(r' {2,}', ' ', cleaned)
     cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
 
