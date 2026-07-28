@@ -63,6 +63,19 @@ create table if not exists email_otps (
 );
 create index if not exists idx_email_otps_email on email_otps(email, created_at desc);
 
+-- ─── processed_messages ────────────────────────────────────────────────────
+-- Dedup guard for Meta's WhatsApp webhook: Meta redelivers the identical
+-- payload (same message id) if it doesn't get a fast 200 back, and without
+-- this a slow reply (vision + tool calls easily take longer than Meta's ack
+-- window) gets processed twice — the user sees the same explanation sent
+-- twice. DB-backed rather than in-memory so this survives a Render restart
+-- and works correctly even if this ever runs as more than one process.
+create table if not exists processed_messages (
+    message_id  text primary key,
+    created_at  timestamptz default now()
+);
+create index if not exists idx_processed_messages_created on processed_messages(created_at);
+
 -- ─── story_cache ───────────────────────────────────────────────────────────
 -- A rotating pool of ~10 short story gists (title + a short excerpt, not
 -- full posts) fetched periodically from Reddit, offered to users who seem

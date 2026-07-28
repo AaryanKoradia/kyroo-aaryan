@@ -9,10 +9,33 @@ import hmac
 import importlib.util
 import json
 import os
+from unittest.mock import MagicMock
 
 import pytest
 
 from conftest import stub_webhook_dependencies
+
+
+def _make_dedup_db():
+    """Simulates processed_messages' real behavior: insert succeeds the
+    first time a message_id is seen, raises a duplicate-key-shaped error
+    the second time — same signal Postgres' primary key constraint gives."""
+    seen = set()
+    db = MagicMock()
+
+    def insert_side_effect(row):
+        mid = row["message_id"]
+        result = MagicMock()
+        if mid in seen:
+            result.execute.side_effect = Exception('duplicate key value violates unique constraint "processed_messages_pkey"')
+        else:
+            seen.add(mid)
+            result.execute.return_value = MagicMock()
+        return result
+
+    db.table.return_value.insert.side_effect = insert_side_effect
+    db.table.return_value.delete.return_value.lt.return_value.execute.return_value = MagicMock()
+    return db
 
 
 def _load_webhook_module():
@@ -50,9 +73,10 @@ IMAGE_BODY = {
 def test_redelivered_message_id_is_not_reprocessed():
     mod, stubs = _load_webhook_module()
     stubs["_mock_wa_instance"].download_media.return_value = ("b64", "image/jpeg")
+    dedup_db = _make_dedup_db()
 
-    r1 = asyncio.run(mod.webhook(_FakeRequest(IMAGE_BODY), db=None))
-    r2 = asyncio.run(mod.webhook(_FakeRequest(IMAGE_BODY), db=None))
+    r1 = asyncio.run(mod.webhook(_FakeRequest(IMAGE_BODY), db=dedup_db))
+    r2 = asyncio.run(mod.webhook(_FakeRequest(IMAGE_BODY), db=dedup_db))
 
     assert r1 == {"status": "ok"}
     assert r2 == {"status": "ok"}
@@ -63,15 +87,34 @@ def test_redelivered_message_id_is_not_reprocessed():
 def test_different_message_id_is_processed_normally():
     mod, stubs = _load_webhook_module()
     stubs["_mock_wa_instance"].download_media.return_value = ("b64", "image/jpeg")
+    dedup_db = _make_dedup_db()
 
     body_a = IMAGE_BODY
     body_b = json.loads(json.dumps(IMAGE_BODY))
     body_b["entry"][0]["changes"][0]["value"]["messages"][0]["id"] = "wamid.TEST2"
 
-    asyncio.run(mod.webhook(_FakeRequest(body_a), db=None))
-    asyncio.run(mod.webhook(_FakeRequest(body_b), db=None))
+    asyncio.run(mod.webhook(_FakeRequest(body_a), db=dedup_db))
+    asyncio.run(mod.webhook(_FakeRequest(body_b), db=dedup_db))
 
     assert stubs["app.brain.kyroo_brain"].kyroo_brain.call_count == 2
+
+
+def test_already_processed_directly():
+    mod, stubs = _load_webhook_module()
+    dedup_db = _make_dedup_db()
+    assert mod._already_processed(dedup_db, "wamid.DIRECT1") is False
+    assert mod._already_processed(dedup_db, "wamid.DIRECT1") is True
+    assert mod._already_processed(dedup_db, "wamid.DIRECT2") is False
+
+
+def test_already_processed_fails_open_on_unrelated_db_error():
+    mod, stubs = _load_webhook_module()
+    broken_db = MagicMock()
+    broken_db.table.return_value.insert.return_value.execute.side_effect = Exception("connection reset")
+    broken_db.table.return_value.delete.return_value.lt.return_value.execute.return_value = MagicMock()
+    # A transient/unrelated DB error must never be mistaken for "already
+    # processed" — that would silently drop a genuinely new message.
+    assert mod._already_processed(broken_db, "wamid.FLAKY") is False
 
 
 def test_signature_verification_fails_open_when_secret_unset():
