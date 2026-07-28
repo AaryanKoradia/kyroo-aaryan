@@ -1,11 +1,12 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.api.dependencies.cron_auth import require_cron_secret
 from app.services.reminder_service import check_and_send_reminders
 
 router = APIRouter(prefix="/reminders", tags=["reminders"])
 
 
-@router.api_route("/check-and-send", methods=["GET", "POST"])
+@router.api_route("/check-and-send", methods=["GET", "POST"], dependencies=[Depends(require_cron_secret)])
 async def check_and_send():
     """Called on a schedule by an external cron (needs tight, minute-level
     timing to be useful, unlike nudges). Accepts GET or POST since most

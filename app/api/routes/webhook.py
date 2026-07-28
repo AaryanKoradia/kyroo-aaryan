@@ -1,4 +1,6 @@
 import asyncio
+import hashlib
+import hmac
 import json
 import time
 import traceback
@@ -34,6 +36,23 @@ MAX_PDF_BYTES = 15 * 1024 * 1024  # 15MB — big enough for a real document, sma
 # it catches a redelivered duplicate regardless of message type.
 _PROCESSED_MESSAGE_IDS: dict[str, float] = {}
 _DEDUP_TTL_SECONDS = 600  # comfortably longer than any realistic redelivery window
+
+
+def _verify_meta_signature(raw_body: bytes, signature_header: str | None) -> bool:
+    """Verifies Meta's X-Hub-Signature-256 header (HMAC-SHA256 of the raw
+    body, keyed with the app secret) so a forged POST can't be processed as
+    a real WhatsApp message. If WHATSAPP_APP_SECRET isn't configured yet,
+    this fails OPEN (returns True) rather than breaking the bot before
+    Render has the env var set — once it's set, every request is verified."""
+    if not settings.whatsapp_app_secret:
+        return True
+    if not signature_header or not signature_header.startswith("sha256="):
+        return False
+    expected = hmac.new(
+        settings.whatsapp_app_secret.encode(), raw_body, hashlib.sha256
+    ).hexdigest()
+    provided = signature_header.removeprefix("sha256=")
+    return hmac.compare_digest(expected, provided)
 
 
 def _already_processed(message_id: str) -> bool:
@@ -191,7 +210,12 @@ async def verify(request: Request):
 
 @router.post("/webhook")
 async def webhook(request: Request, db=Depends(get_db)):
-    body = await request.json()
+    raw_body = await request.body()
+    if not _verify_meta_signature(raw_body, request.headers.get("x-hub-signature-256")):
+        print("[webhook] Rejected POST with invalid/missing X-Hub-Signature-256")
+        raise HTTPException(status_code=403, detail="Invalid signature")
+
+    body = json.loads(raw_body)
     print(json.dumps(body, indent=2))
 
     try:

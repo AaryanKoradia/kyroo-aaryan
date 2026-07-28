@@ -10,5 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check and send due nudges
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          curl -sf -X POST https://kyroo-whatsapp.onrender.com/nudges/check-and-send
+          curl -sf -X POST https://kyroo-whatsapp.onrender.com/nudges/check-and-send \
+            -H "X-Cron-Secret: $CRON_SECRET"
