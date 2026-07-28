@@ -3,7 +3,8 @@ import hashlib
 import hmac
 import json
 import logging
-import time
+import random
+from datetime import datetime, timedelta, timezone
 import sentry_sdk
 from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.responses import PlainTextResponse
@@ -37,8 +38,13 @@ MAX_PDF_BYTES = 15 * 1024 * 1024  # 15MB — big enough for a real document, sma
 # a slow reply gets processed a second time from scratch and the user sees
 # the exact same response sent twice. Keyed on message id, not per-user, so
 # it catches a redelivered duplicate regardless of message type.
-_PROCESSED_MESSAGE_IDS: dict[str, float] = {}
+#
+# Backed by the processed_messages table (not an in-memory dict) so this
+# survives a Render restart and stays correct even if this ever runs as
+# more than one worker process — a bare dict only works for a single,
+# long-lived process.
 _DEDUP_TTL_SECONDS = 600  # comfortably longer than any realistic redelivery window
+_CLEANUP_PROBABILITY = 0.02  # ~1 in 50 calls sweeps old rows, no need to do it every time
 
 
 def _verify_meta_signature(raw_body: bytes, signature_header: str | None) -> bool:
@@ -58,17 +64,35 @@ def _verify_meta_signature(raw_body: bytes, signature_header: str | None) -> boo
     return hmac.compare_digest(expected, provided)
 
 
-def _already_processed(message_id: str) -> bool:
+def _already_processed(db, message_id: str) -> bool:
+    """True if this message id was already handled — checked by trying to
+    insert it into processed_messages (primary key on message_id): the
+    insert succeeding means this is the first time we've seen it, a
+    constraint violation means it's a genuine redelivery. Any OTHER DB
+    error (a transient connection hiccup, say) fails OPEN — treating an
+    infra blip as "already processed" would silently drop a real message,
+    which is worse than the rare double-send this whole guard exists to
+    prevent."""
     if not message_id:
         return False
-    now = time.monotonic()
-    expired = [mid for mid, seen_at in _PROCESSED_MESSAGE_IDS.items() if now - seen_at > _DEDUP_TTL_SECONDS]
-    for mid in expired:
-        _PROCESSED_MESSAGE_IDS.pop(mid, None)
-    if message_id in _PROCESSED_MESSAGE_IDS:
-        return True
-    _PROCESSED_MESSAGE_IDS[message_id] = now
-    return False
+
+    if random.random() < _CLEANUP_PROBABILITY:
+        try:
+            cutoff = (datetime.now(timezone.utc) - timedelta(seconds=_DEDUP_TTL_SECONDS)).isoformat()
+            db.table("processed_messages").delete().lt("created_at", cutoff).execute()
+        except Exception:
+            logger.exception("[webhook] processed_messages cleanup failed")
+            sentry_sdk.capture_exception()
+
+    try:
+        db.table("processed_messages").insert({"message_id": message_id}).execute()
+        return False
+    except Exception as e:
+        if "duplicate key" in str(e).lower() or "23505" in str(e):
+            return True
+        logger.exception(f"[webhook] dedup check failed for message_id={message_id}")
+        sentry_sdk.capture_exception()
+        return False
 
 
 def _save_safely(fn, *args):
@@ -235,7 +259,7 @@ async def webhook(request: Request, db=Depends(get_db)):
     message_id = message.get("id", "")
     msg_type = message.get("type")
 
-    if _already_processed(message_id):
+    if _already_processed(db, message_id):
         return {"status": "ok"}
 
     # looked up once up front — needed to decide whether this number has
