@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from database import get_db
 from brain.kyroo_brain import kyroo_brain, generate_morning_nudge
+from rate_limit import limiter
 import os
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -17,7 +18,8 @@ class NudgeRequest(BaseModel):
     user_id: str
 
 @router.post("/chat")
-async def chat(msg: ChatMessage):
+@limiter.limit("20/minute")
+async def chat(request: Request, msg: ChatMessage):
     db = get_db()
     
     user_data = db.table("users").select("*").eq("id", msg.user_id).execute()
