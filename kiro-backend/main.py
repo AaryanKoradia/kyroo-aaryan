@@ -1,5 +1,3 @@
-import logging
-
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,11 +7,9 @@ from slowapi.errors import RateLimitExceeded
 from logging_config import configure_logging
 
 configure_logging()
-logger = logging.getLogger(__name__)
 
-from routes import users, ai, payments, whatsapp, fitness, files, reminders, tracking, reports, otp, admin
+from routes import users, ai, payments, fitness, files, tracking, reports, otp, admin
 from rate_limit import limiter
-from scheduler import start_scheduler, stop_scheduler
 import os
 
 load_dotenv()
@@ -35,18 +31,6 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
-@app.on_event("startup")
-async def on_startup():
-    if os.getenv("SUPABASE_URL") and os.getenv("SUPABASE_KEY"):
-        start_scheduler()
-    else:
-        logger.warning("[scheduler] skipped — SUPABASE_URL/SUPABASE_KEY not set")
-
-
-@app.on_event("shutdown")
-async def on_shutdown():
-    stop_scheduler()
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -58,10 +42,8 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(ai.router)
 app.include_router(payments.router)
-app.include_router(whatsapp.router)
 app.include_router(fitness.router)
 app.include_router(files.router)
-app.include_router(reminders.router)
 app.include_router(tracking.router)
 app.include_router(reports.router)
 app.include_router(otp.router)
