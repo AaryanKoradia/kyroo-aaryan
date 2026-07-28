@@ -81,3 +81,5 @@ pytz
 pytz
 sentry-sdk[fastapi]==2.66.1
 slowapi==0.1.10
+pytest==9.1.1
+pytest-asyncio==1.3.0
