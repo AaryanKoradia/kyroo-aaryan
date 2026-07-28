@@ -10,5 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Refresh cached stories
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          curl -sf -X POST https://kyroo-whatsapp.onrender.com/stories/refresh
+          curl -sf -X POST https://kyroo-whatsapp.onrender.com/stories/refresh \
+            -H "X-Cron-Secret: $CRON_SECRET"

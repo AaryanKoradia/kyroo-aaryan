@@ -6,6 +6,8 @@ from brain.debounce import buffer_message
 import requests
 import asyncio
 import base64
+import hashlib
+import hmac
 import random
 import os
 
@@ -15,6 +17,30 @@ WHATSAPP_TOKEN   = os.getenv("WHATSAPP_TOKEN", "")
 PHONE_NUMBER_ID  = os.getenv("PHONE_NUMBER_ID", "")
 GRAPH_VERSION    = "v21.0"
 VERIFY_TOKEN     = os.getenv("WHATSAPP_VERIFY_TOKEN", "kyroo_verify_2026")
+# Same Meta App Secret as app/'s webhook (app/core/config.py) — see that
+# file's comment for why this fails open when unset rather than blank.
+WHATSAPP_APP_SECRET = os.getenv("WHATSAPP_APP_SECRET", "")
+
+
+def _verify_meta_signature(raw_body: bytes, signature_header: str | None) -> bool:
+    if not WHATSAPP_APP_SECRET:
+        return True
+    if not signature_header or not signature_header.startswith("sha256="):
+        return False
+    expected = hmac.new(WHATSAPP_APP_SECRET.encode(), raw_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature_header.removeprefix("sha256="))
+
+
+CRON_SECRET = os.getenv("CRON_SECRET", "")
+
+
+def _require_cron_secret(request: Request) -> None:
+    """Same shared secret as app/'s cron endpoints — /send, /morning-nudge-send,
+    and /send-all-nudges had zero auth and could send arbitrary WhatsApp
+    messages (as KYROO, from the real business number) to any or all users."""
+    provided = request.headers.get("x-cron-secret") or request.query_params.get("secret")
+    if not CRON_SECRET or provided != CRON_SECRET:
+        raise HTTPException(status_code=403, detail="Missing or invalid cron secret")
 
 # ─── HELPER: SEND MESSAGE VIA META WHATSAPP CLOUD API ────────────────────────
 
@@ -97,7 +123,8 @@ class SendNudgeRequest(BaseModel):
 # ─── ROUTES ──────────────────────────────────────────────────────────────────
 
 @router.post("/send")
-async def send_message(req: SendMessageRequest):
+async def send_message(req: SendMessageRequest, request: Request):
+    _require_cron_secret(request)
     db   = get_db()
     user = db.table("users").select("*").eq("id", req.user_id).execute()
     if not user.data:
@@ -115,7 +142,8 @@ async def send_message(req: SendMessageRequest):
 
 
 @router.post("/morning-nudge-send")
-async def send_morning_nudge_route(req: SendNudgeRequest):
+async def send_morning_nudge_route(req: SendNudgeRequest, request: Request):
+    _require_cron_secret(request)
     db        = get_db()
     user_data = db.table("users").select("*").eq("id", req.user_id).execute()
     if not user_data.data:
@@ -145,7 +173,8 @@ async def send_morning_nudge_route(req: SendNudgeRequest):
 
 
 @router.post("/send-all-nudges")
-async def send_all_nudges():
+async def send_all_nudges(request: Request):
+    _require_cron_secret(request)
     db    = get_db()
     users = db.table("users").select("*").eq("is_active", True).execute()
 
@@ -173,8 +202,13 @@ async def send_all_nudges():
 
 @router.post("/webhook")
 async def whatsapp_webhook(request: Request):
+    raw_body = await request.body()
+    if not _verify_meta_signature(raw_body, request.headers.get("x-hub-signature-256")):
+        raise HTTPException(status_code=403, detail="Invalid signature")
+
     try:
-        data = await request.json()
+        import json
+        data = json.loads(raw_body)
 
         # Meta WhatsApp Cloud API webhook format:
         # entry[].changes[].value.messages[] / value.contacts[]
