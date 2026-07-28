@@ -13,5 +13,12 @@ jobs:
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          curl -sf -X POST https://kyroo-whatsapp.onrender.com/stories/refresh \
-            -H "X-Cron-Secret: $CRON_SECRET"
+          status=$(curl -s -o response.txt -w "%{http_code}" -X POST \
+            https://kyroo-whatsapp.onrender.com/stories/refresh \
+            -H "X-Cron-Secret: $CRON_SECRET")
+          echo "HTTP status: $status"
+          echo "Response body:"
+          cat response.txt
+          if [ "$status" -ge 400 ]; then
+            exit 1
+          fi
