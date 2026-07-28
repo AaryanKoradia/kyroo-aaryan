@@ -34,7 +34,7 @@ export default function Privacy() {
         <p>If a conversation suggests you might be in real distress, KYROO is designed to point you to real crisis helplines rather than try to handle it alone. We keep a private note that this happened (not the full message) so future check-ins can be more thoughtful — this is never shared outside KYROO.</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>How long we keep it</h2>
-        <p>We keep your data while your account is active. If you want your data deleted entirely, email us and we'll take care of it.</p>
+        <p>We keep your data while your account is active. If you want your data deleted entirely, do it yourself any time at <a href="/delete-account" style={{ color: "var(--k-coral)" }}>www.kyroo.co.in/delete-account</a>, it's immediate and permanent, or email us if you'd rather we do it for you.</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>Who this is for</h2>
         <p>KYROO isn't intended for anyone under 13. If you believe a child has used KYROO and shared personal data with us, contact us and we'll remove it.</p>

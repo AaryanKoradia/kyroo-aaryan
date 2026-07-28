@@ -161,3 +161,31 @@ async def resubscribe(req: PhoneOnly):
     user = _find_user_by_phone(db, req.phone)
     db.table("users").update({"is_active": True}).eq("id", user["id"]).execute()
     return {"status": "success", "message": f"Welcome back, {user.get('name', 'there')}! Nudges and reminders are back on."}
+
+
+class DeleteAccountRequest(BaseModel):
+    phone: str
+    email: str
+
+
+@router.post("/delete-account")
+@limiter.limit("5/hour")
+async def delete_account(request: Request, req: DeleteAccountRequest):
+    """Self-service erasure — previously the only path was emailing support
+    and someone manually deleting the row. Phone + email, not a raw user_id
+    (a UUID a real visitor has no way of knowing) — same shape as
+    /unsubscribe, plus an email-ownership check since deletion is
+    irreversible and unsubscribe isn't. Every related table (chat_history,
+    user_tracking, weekly_reports, reminders, emotional_memory,
+    memory_embeddings, user_style) has `on delete cascade` on its user_id
+    foreign key, so deleting the users row alone erases everything, no
+    per-table cleanup needed here."""
+    db = get_db()
+    user = _find_user_by_phone(db, req.phone)
+    full = db.table("users").select("email").eq("id", user["id"]).execute()
+    record = (full.data or [{}])[0]
+    if not req.email or req.email.strip().lower() != (record.get("email") or "").strip().lower():
+        raise HTTPException(status_code=403, detail="Email does not match this account")
+
+    db.table("users").delete().eq("id", user["id"]).execute()
+    return {"status": "success", "message": "Your account and all associated data have been deleted."}
