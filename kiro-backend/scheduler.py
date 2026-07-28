@@ -1,12 +1,16 @@
+import logging
 import random
 import re
 import time as time_module
 from datetime import datetime, time as dtime
 
 import pytz
+import sentry_sdk
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from database import get_db
+
+logger = logging.getLogger(__name__)
 from brain.kyroo_brain import generate_morning_nudge, validate_response
 from routes.whatsapp import send_whatsapp
 
@@ -93,9 +97,10 @@ def check_and_send_nudges():
                 "module": "general"
             }).execute()
 
-            print(f"[scheduler] nudge sent to {user.get('name')} ({phone}): {results}")
+            logger.info(f"[scheduler] nudge sent to {user.get('name')} ({phone}): {results}")
         except Exception as e:
-            print(f"[scheduler] failed to send nudge to {user.get('name')}: {e}")
+            logger.exception(f"[scheduler] failed to send nudge to {user.get('name')}: {e}")
+            sentry_sdk.capture_exception(e)
 
 
 _scheduler: BackgroundScheduler | None = None
@@ -109,7 +114,7 @@ def start_scheduler():
     _scheduler = BackgroundScheduler(timezone=str(IST))
     _scheduler.add_job(check_and_send_nudges, "cron", minute="*", id="morning_nudges")
     _scheduler.start()
-    print("[scheduler] started, checking nudge times every minute (IST)")
+    logger.info("[scheduler] started, checking nudge times every minute (IST)")
     return _scheduler
 
 

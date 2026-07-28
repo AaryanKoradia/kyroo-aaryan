@@ -1,8 +1,12 @@
+import logging
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from database import get_db
 from datetime import datetime, timedelta
 import pytz
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/reminders", tags=["reminders"])
 
@@ -87,7 +91,7 @@ async def check_and_send():
     for r in (pre.data or []):
         user = db.table("users").select("name, phone").eq("id", r["user_id"]).single().execute()
         if user.data:
-            print(f"PRE-ALERT to {user.data['name']}: {r['message']} in 30 mins")
+            logger.info(f"PRE-ALERT to {user.data['name']}: {r['message']} in 30 mins")
             # WhatsApp send goes here when connected
         db.table("reminders").update({"pre_alert_sent": True}).eq("id", r["id"]).execute()
 
@@ -100,7 +104,7 @@ async def check_and_send():
     for r in (main.data or []):
         user = db.table("users").select("name, phone").eq("id", r["user_id"]).single().execute()
         if user.data:
-            print(f"REMINDER to {user.data['name']}: {r['message']}")
+            logger.info(f"REMINDER to {user.data['name']}: {r['message']}")
             # WhatsApp send goes here when connected
         db.table("reminders").update({"is_sent": True}).eq("id", r["id"]).execute()
 

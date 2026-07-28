@@ -1,7 +1,9 @@
+import logging
 import re
 from datetime import datetime, time as dtime
 
 import pytz
+import sentry_sdk
 
 from app.database.supabase_client import get_supabase
 from app.brain.kyroo_brain import (
@@ -15,6 +17,7 @@ from app.infrastructure.whatsapp.client import WhatsAppClient
 from app.services.proactive_messaging import send_proactive
 
 IST = pytz.timezone("Asia/Kolkata")
+logger = logging.getLogger(__name__)
 
 # Fixed daily slots (IST) — morning uses each user's own onboarding preference
 # instead, since that's the only per-user time they were actually asked for.
@@ -220,7 +223,8 @@ def check_and_send_nudges() -> dict:
                 # the cron caller (GitHub Actions) doesn't capture the
                 # response body, so this was previously invisible anywhere —
                 # print it so a failure actually shows up in Render logs
-                print(f"[nudges] failed to send {slot} to {user.get('name')} ({user.get('id')}): {e}")
+                logger.exception(f"[nudges] failed to send {slot} to {user.get('name')} ({user.get('id')}): {e}")
+                sentry_sdk.capture_exception(e)
                 failed.append({"user": user.get("name"), "slot": slot, "error": str(e)})
 
     return {"checked": len(users), "sent": sent, "failed": failed, "suppressed": suppressed}

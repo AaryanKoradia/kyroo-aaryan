@@ -1,7 +1,12 @@
+import logging
 import os
 from datetime import datetime, timedelta
 
+import sentry_sdk
+
 from app.infrastructure.whatsapp.client import WhatsAppClient
+
+logger = logging.getLogger(__name__)
 
 SESSION_WINDOW_HOURS = 24
 
@@ -34,7 +39,8 @@ def is_within_session_window(db, user_id: str) -> bool:
         )
         rows = res.data or []
     except Exception as e:
-        print(f"[proactive] session window check failed for {user_id}: {e}")
+        logger.exception(f"[proactive] session window check failed for {user_id}: {e}")
+        sentry_sdk.capture_exception(e)
         return False
 
     if not rows:
@@ -65,7 +71,7 @@ def send_proactive(db, user: dict, free_form_sender, template_env_var: str, temp
 
     template_name = os.getenv(template_env_var, "")
     if not template_name:
-        print(
+        logger.info(
             f"[proactive] {user.get('name')} ({user['id']}) is outside the 24h "
             f"session window and {template_env_var} isn't set yet — skipping "
             "instead of sending a free-form message that would fail with error 131047."
