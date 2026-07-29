@@ -46,6 +46,26 @@ class UserService:
             }).execute()
             return res.data[0]
         except Exception as e:
+            # Two concurrent first-messages from the same brand-new phone
+            # (Meta redelivery racing the original, or two rapid inbound
+            # messages) can both pass the "no existing row" check above
+            # before either INSERT commits. The temp email is deterministic
+            # per phone and unique-constrained, so the loser here hits a
+            # unique-violation rather than silently duplicating — re-fetch
+            # and return the winner's row instead of blowing up the whole
+            # webhook request over a race that isn't actually an error.
+            try:
+                retry = (
+                    self.db.table("users").select("*")
+                    .eq("phone", phone)
+                    .order("onboarding_step", desc=True)
+                    .order("created_at", desc=True)
+                    .execute()
+                )
+                if retry.data:
+                    return retry.data[0]
+            except Exception:
+                pass
             raise RuntimeError(f"Failed to create user: {e}")
 
     def get_user(self, user_id: str) -> dict | None:

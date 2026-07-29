@@ -7,7 +7,6 @@ from app.core.logging_config import configure_logging
 
 configure_logging()
 
-from app.api.routes.user import router as user_router
 from app.api.routes.webhook import router as webhook_router
 from app.api.routes.nudges import router as nudges_router
 from app.api.routes.stories import router as stories_router
@@ -22,7 +21,6 @@ app = FastAPI(
     version="1.0.0",
 )
 
-app.include_router(user_router)
 app.include_router(webhook_router)
 app.include_router(nudges_router)
 app.include_router(stories_router)
