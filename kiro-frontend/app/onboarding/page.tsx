@@ -154,6 +154,8 @@ export default function Onboarding() {
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [otpError, setOtpError] = useState("");
   const [consentGiven, setConsentGiven] = useState(false);
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+  const [finishError, setFinishError] = useState("");
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
@@ -164,6 +166,7 @@ export default function Onboarding() {
       setOtpVerified(false);
       setOtpCode("");
       setOtpError("");
+      setAlreadyRegistered(false);
     }
   };
 
@@ -212,6 +215,7 @@ export default function Onboarding() {
         setOtpError(data.detail || "Incorrect code.");
       } else {
         setOtpVerified(true);
+        setAlreadyRegistered(!!data.already_registered);
       }
     } catch {
       setOtpError("Couldn't verify, try again.");
@@ -293,6 +297,7 @@ export default function Onboarding() {
 
   const handleFinish = async () => {
     setLoading(true);
+    setFinishError("");
     try {
       const res = await fetch(`${BACKEND_URL}/users/signup`, {
         method: "POST",
@@ -321,13 +326,19 @@ export default function Onboarding() {
         })
       });
       const data = await res.json();
-      if (data.user_id) {
-        localStorage.setItem("kiro_user_id", data.user_id);
-        localStorage.setItem("kiro_user_name", name);
-        localStorage.setItem("kiro_nudge_time", nudgeTime);
+      if (!res.ok || !data.user_id) {
+        setFinishError(data.detail || "Something went wrong finishing signup, try again.");
+        setLoading(false);
+        return;
       }
+      localStorage.setItem("kiro_user_id", data.user_id);
+      localStorage.setItem("kiro_user_name", name);
+      localStorage.setItem("kiro_nudge_time", nudgeTime);
     } catch (err) {
       console.error(err);
+      setFinishError("Couldn't reach the server, try again.");
+      setLoading(false);
+      return;
     }
     setLoading(false);
     window.location.href = "/pricing";
@@ -491,12 +502,21 @@ export default function Onboarding() {
               <div style={{ fontSize: 11.5, opacity: 0.55, marginBottom: 12 }}>Sent a code to {otpEmailSentFor}, check your inbox.</div>
             )}
 
-            <label style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 12, opacity: 0.7, cursor: "pointer", marginTop: 4 }}>
-              <input type="checkbox" checked={consentGiven} onChange={e => setConsentGiven(e.target.checked)} style={{ marginTop: 2, flexShrink: 0 }} />
-              <span>
-                I agree to KYROO's <a href="/privacy" target="_blank" style={{ color: "var(--k-ink)", textDecoration: "underline" }}>Privacy Policy</a>, and to receive WhatsApp messages from KYROO including replies and proactive check-ins/nudges (you can turn these off any time).
-              </span>
-            </label>
+            {alreadyRegistered && (
+              <div style={{ background: "var(--k-lime)", border: "3px solid var(--k-ink)", boxShadow: "4px 4px 0 var(--k-ink)", padding: "14px 16px", marginBottom: 16, fontSize: 13, lineHeight: 1.65, transform: "rotate(-0.6deg)" }}>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: 15, marginBottom: 6, textTransform: "uppercase" }}>Welcome back</div>
+                This email already has a KYROO account. No need to sign up again, just head to WhatsApp to pick up where you left off.
+              </div>
+            )}
+
+            {!alreadyRegistered && (
+              <label style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 12, opacity: 0.7, cursor: "pointer", marginTop: 4 }}>
+                <input type="checkbox" checked={consentGiven} onChange={e => setConsentGiven(e.target.checked)} style={{ marginTop: 2, flexShrink: 0 }} />
+                <span>
+                  I agree to KYROO's <a href="/privacy" target="_blank" style={{ color: "var(--k-ink)", textDecoration: "underline" }}>Privacy Policy</a>, and to receive WhatsApp messages from KYROO including replies and proactive check-ins/nudges (you can turn these off any time).
+                </span>
+              </label>
+            )}
           </div>
         )}
 
@@ -671,17 +691,31 @@ export default function Onboarding() {
             {currentError}
           </div>
         )}
+        {finishError && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 13px", background: "rgba(255,74,46,0.1)", border: "2px solid var(--k-coral)", color: "var(--k-coral-dark)", fontSize: 12.5, fontWeight: 600, marginBottom: 10 }}>
+            {finishError}
+          </div>
+        )}
         <div style={{ display: "flex", gap: 10 }}>
           {step > 1 && (
             <button className="k-onb-back" onClick={handleBack} style={{ width: 50, height: 52, fontSize: 18, flexShrink: 0 }}>←</button>
           )}
-          <button
-            className="k-onb-btn"
-            onClick={handleNext}
-            disabled={loading}
-            style={{ flex: 1, height: 52, fontSize: 15, background: "var(--k-lime)", color: "var(--k-ink)" }}>
-            {loading ? "Setting up KYROO..." : step === 10 ? "Choose your plan →" : step === 1 ? "Let's go! →" : "Next →"}
-          </button>
+          {step === 1 && alreadyRegistered ? (
+            <button
+              className="k-onb-btn"
+              onClick={() => { window.location.href = `https://wa.me/917400351463?text=${encodeURIComponent(`Hi KYROO! I'm ${name || "back"}`)}`; }}
+              style={{ flex: 1, height: 52, fontSize: 15, background: "var(--k-lime)", color: "var(--k-ink)" }}>
+              Continue on WhatsApp →
+            </button>
+          ) : (
+            <button
+              className="k-onb-btn"
+              onClick={handleNext}
+              disabled={loading}
+              style={{ flex: 1, height: 52, fontSize: 15, background: "var(--k-lime)", color: "var(--k-ink)" }}>
+              {loading ? "Setting up KYROO..." : step === 10 ? "Choose your plan →" : step === 1 ? "Let's go! →" : "Next →"}
+            </button>
+          )}
         </div>
       </div>
     </div>

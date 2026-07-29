@@ -116,7 +116,20 @@ async def verify_otp(req: VerifyOtpRequest):
         raise HTTPException(status_code=400, detail="That code expired, request a new one")
 
     db.table("email_otps").update({"verified": True}).eq("id", row["id"]).execute()
-    return {"status": "verified"}
+
+    # onboarding_step == 99 means this email belongs to a fully completed
+    # signup, not a stray WhatsApp-first stub (those get -1/-2) — tells the
+    # frontend to stop the onboarding flow here and point them at WhatsApp
+    # instead of walking them through 9 more questions for an account that
+    # already exists (and /users/signup would reject anyway).
+    existing = (
+        db.table("users").select("id")
+        .eq("email", email)
+        .eq("onboarding_step", 99)
+        .limit(1)
+        .execute()
+    )
+    return {"status": "verified", "already_registered": bool(existing.data)}
 
 
 def is_email_verified(email: str) -> bool:
