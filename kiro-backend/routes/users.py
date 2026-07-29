@@ -107,7 +107,7 @@ async def signup(request: Request, user: UserSignup):
         user_id = new_user.data[0]["id"]
 
     return {
-        "message": f"Welcome to KIRO, {user.name}! 🎉",
+        "message": f"Welcome to KYROO, {user.name}!",
         "user_id": user_id,
         "status": "success"
     }

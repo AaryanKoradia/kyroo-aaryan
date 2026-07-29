@@ -2,7 +2,9 @@
 failed three different ways in production) and the rate limit on
 /otp/send (previously only a 30s per-EMAIL cooldown, trivially bypassed
 by using a new address each time)."""
+import asyncio
 import os
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 import httpx
@@ -65,3 +67,39 @@ def test_otp_send_rate_limited_after_5_per_minute():
 
     assert statuses[:5].count(429) == 0
     assert 429 in statuses
+
+
+def _otp_row(code="123456"):
+    return {
+        "id": "otp-1",
+        "otp_code": code,
+        "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat(),
+        "verified": False,
+    }
+
+
+def test_verify_otp_flags_already_registered_for_a_completed_account():
+    mock_db = MagicMock()
+    otp_chain = mock_db.table.return_value.select.return_value.eq.return_value.eq.return_value.order.return_value.limit.return_value
+    otp_chain.execute.return_value.data = [_otp_row()]
+    users_chain = mock_db.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.return_value
+    users_chain.execute.return_value.data = [{"id": "existing-user"}]
+
+    with patch.object(otp_mod, "get_db", return_value=mock_db):
+        result = asyncio.run(otp_mod.verify_otp(otp_mod.VerifyOtpRequest(email="already@example.com", code="123456")))
+
+    assert result["status"] == "verified"
+    assert result["already_registered"] is True
+
+
+def test_verify_otp_reports_not_registered_for_a_new_email():
+    mock_db = MagicMock()
+    otp_chain = mock_db.table.return_value.select.return_value.eq.return_value.eq.return_value.order.return_value.limit.return_value
+    otp_chain.execute.return_value.data = [_otp_row()]
+    users_chain = mock_db.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.return_value
+    users_chain.execute.return_value.data = []
+
+    with patch.object(otp_mod, "get_db", return_value=mock_db):
+        result = asyncio.run(otp_mod.verify_otp(otp_mod.VerifyOtpRequest(email="new@example.com", code="123456")))
+
+    assert result["already_registered"] is False
