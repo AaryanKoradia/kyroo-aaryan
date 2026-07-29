@@ -31,18 +31,92 @@ export default function AccountPage() {
   const [toggling, setToggling] = useState(false);
   const [toggleMessage, setToggleMessage] = useState("");
 
-  const lookup = async () => {
-    if (!phone.trim() || !email.trim()) {
-      setError("Enter both the phone number and email you signed up with.");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpEmailSentFor, setOtpEmailSentFor] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpError, setOtpError] = useState("");
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    if (otpSent && value.trim().toLowerCase() !== otpEmailSentFor) {
+      // editing the email after a code was sent invalidates that code -
+      // otherwise someone could request a code for their own address then
+      // swap in someone else's to look up
+      setOtpSent(false);
+      setOtpCode("");
+      setOtpError("");
+    }
+  };
+
+  const sendOtp = async () => {
+    if (!phone.trim()) {
+      setOtpError("Enter your phone number first.");
       return;
     }
+    const trimmedEmail = email.trim();
+    if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+      setOtpError("Enter a valid email address.");
+      return;
+    }
+    setOtpSending(true);
+    setOtpError("");
+    try {
+      const res = await fetch(`${BACKEND_URL}/otp/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOtpError(data.detail || "Couldn't send code, try again.");
+      } else {
+        setOtpSent(true);
+        setOtpEmailSentFor(trimmedEmail.toLowerCase());
+      }
+    } catch {
+      setOtpError("Couldn't send code, try again.");
+    }
+    setOtpSending(false);
+  };
+
+  const verifyAndLookup = async () => {
+    if (!otpCode.trim()) {
+      setOtpError("Enter the code from your email.");
+      return;
+    }
+    setOtpVerifying(true);
+    setOtpError("");
+    try {
+      const verifyRes = await fetch(`${BACKEND_URL}/otp/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: otpEmailSentFor, code: otpCode.trim() }),
+      });
+      const verifyData = await verifyRes.json();
+      if (!verifyRes.ok) {
+        setOtpError(verifyData.detail || "Incorrect code.");
+        setOtpVerifying(false);
+        return;
+      }
+    } catch {
+      setOtpError("Couldn't verify, try again.");
+      setOtpVerifying(false);
+      return;
+    }
+    setOtpVerifying(false);
+    await lookup();
+  };
+
+  const lookup = async () => {
     setLoading(true);
     setError("");
     try {
       const res = await fetch(`${BACKEND_URL}/users/account`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phone.trim(), email: email.trim() }),
+        body: JSON.stringify({ phone: phone.trim(), email: otpEmailSentFor }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -84,6 +158,9 @@ export default function AccountPage() {
     setAccount(null);
     setToggleMessage("");
     setError("");
+    setOtpSent(false);
+    setOtpCode("");
+    setOtpError("");
   };
 
   return (
@@ -116,7 +193,7 @@ export default function AccountPage() {
         {!account && (
           <>
             <p style={{ fontSize: 14, opacity: 0.65, lineHeight: 1.7, marginBottom: 32 }}>
-              Enter the phone number and email you signed up with to view your account.
+              Enter the phone number and email you signed up with. We&apos;ll send a code to your email to confirm it&apos;s you.
             </p>
 
             <label style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 8 }}>
@@ -128,32 +205,59 @@ export default function AccountPage() {
               placeholder="e.g. 9029392222"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              disabled={otpSent}
               style={{ marginBottom: 18 }}
             />
 
             <label style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 8 }}>
               Email
             </label>
-            <input
-              className="k-input"
-              type="email"
-              placeholder="the email you signed up with"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <div style={{ display: "flex", gap: 8, marginBottom: otpSent ? 10 : 0 }}>
+              <input
+                className="k-input"
+                type="email"
+                placeholder="the email you signed up with"
+                value={email}
+                onChange={(e) => handleEmailChange(e.target.value)}
+                style={{ flex: 1 }}
+              />
+              <button
+                onClick={sendOtp}
+                disabled={otpSending}
+                style={{ padding: "0 16px", border: "3px solid var(--k-ink)", background: "var(--k-lime)", color: "var(--k-ink)", fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", opacity: otpSending ? 0.6 : 1 }}
+              >
+                {otpSending ? "Sending..." : otpSent ? "Resend" : "Send code"}
+              </button>
+            </div>
 
-            <button
-              className="k-btn k-btn-lime"
-              disabled={loading}
-              onClick={lookup}
-              style={{ marginTop: 20, width: "100%" }}
-            >
-              {loading ? "Looking up..." : "View my account"}
-            </button>
+            {otpSent && (
+              <>
+                <div style={{ fontSize: 11.5, opacity: 0.55, margin: "10px 0" }}>Sent a code to {otpEmailSentFor}, check your inbox.</div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    className="k-input"
+                    placeholder="6-digit code"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
+                    style={{ flex: 1, letterSpacing: 3 }}
+                  />
+                  <button
+                    className="k-btn k-btn-lime"
+                    disabled={otpVerifying || loading}
+                    onClick={verifyAndLookup}
+                    style={{ whiteSpace: "nowrap" }}
+                  >
+                    {otpVerifying ? "Checking..." : loading ? "Looking up..." : "Verify"}
+                  </button>
+                </div>
+              </>
+            )}
 
-            {error && (
+            {(otpError || error) && (
               <p style={{ marginTop: 20, padding: "12px 14px", border: "3px solid var(--k-ink)", background: "#ffdcd6", fontSize: 14, lineHeight: 1.6 }}>
-                {error}
+                {otpError || error}
               </p>
             )}
           </>

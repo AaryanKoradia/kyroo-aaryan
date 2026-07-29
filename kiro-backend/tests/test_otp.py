@@ -103,3 +103,38 @@ def test_verify_otp_reports_not_registered_for_a_new_email():
         result = asyncio.run(otp_mod.verify_otp(otp_mod.VerifyOtpRequest(email="new@example.com", code="123456")))
 
     assert result["already_registered"] is False
+
+
+def test_is_recently_verified_true_within_window():
+    mock_db = MagicMock()
+    row = {"verified": True, "created_at": (datetime.now(timezone.utc) - timedelta(minutes=3)).isoformat()}
+    mock_db.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value.execute.return_value.data = [row]
+
+    with patch.object(otp_mod, "get_db", return_value=mock_db):
+        assert otp_mod.is_recently_verified("someone@example.com") is True
+
+
+def test_is_recently_verified_false_once_outside_window():
+    mock_db = MagicMock()
+    row = {"verified": True, "created_at": (datetime.now(timezone.utc) - timedelta(minutes=30)).isoformat()}
+    mock_db.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value.execute.return_value.data = [row]
+
+    with patch.object(otp_mod, "get_db", return_value=mock_db):
+        assert otp_mod.is_recently_verified("someone@example.com") is False
+
+
+def test_is_recently_verified_false_when_unverified():
+    mock_db = MagicMock()
+    row = {"verified": False, "created_at": datetime.now(timezone.utc).isoformat()}
+    mock_db.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value.execute.return_value.data = [row]
+
+    with patch.object(otp_mod, "get_db", return_value=mock_db):
+        assert otp_mod.is_recently_verified("someone@example.com") is False
+
+
+def test_is_recently_verified_false_with_no_otp_history():
+    mock_db = MagicMock()
+    mock_db.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value.execute.return_value.data = []
+
+    with patch.object(otp_mod, "get_db", return_value=mock_db):
+        assert otp_mod.is_recently_verified("someone@example.com") is False

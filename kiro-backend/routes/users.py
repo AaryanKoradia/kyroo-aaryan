@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from database import get_db
-from routes.otp import is_email_verified
+from routes.otp import is_email_verified, is_recently_verified
 from rate_limit import limiter
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -156,12 +156,15 @@ ACCOUNT_FIELDS = (
 @router.post("/account")
 @limiter.limit("20/hour")
 async def get_account(request: Request, req: AccountLookup):
-    """Profile summary for the self-service account page. Same phone +
-    email ownership proof as /delete-account already uses for a more
-    destructive action — reading the profile doesn't need to be a
-    stronger check than deleting it."""
+    """Profile summary for the self-service account page. Unlike
+    /delete-account (phone + email match is enough, a one-time
+    irreversible action), this is checked on every visit, so it requires
+    proving current control of the inbox via a fresh OTP - is_recently_verified,
+    not just is_email_verified - rather than only phone+email knowledge."""
     db = get_db()
     user = _find_user_by_phone(db, req.phone)
+    if not is_recently_verified(req.email):
+        raise HTTPException(status_code=403, detail="Please verify your email first")
     full = db.table("users").select(ACCOUNT_FIELDS).eq("id", user["id"]).execute()
     record = (full.data or [{}])[0]
     if not req.email or req.email.strip().lower() != (record.get("email") or "").strip().lower():

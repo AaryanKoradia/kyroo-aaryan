@@ -135,7 +135,11 @@ async def verify_otp(req: VerifyOtpRequest):
 def is_email_verified(email: str) -> bool:
     """Used by /users/signup to confirm this email actually completed OTP
     verification, so the check can't be bypassed by calling signup
-    directly without ever going through /otp/send + /otp/verify."""
+    directly without ever going through /otp/send + /otp/verify. This has
+    no recency requirement - true forever once verified once - which is
+    fine for signup (a one-time action right after verifying) but wrong
+    for anything checked repeatedly across visits, like /users/account.
+    Use is_recently_verified for those instead."""
     db = get_db()
     res = (
         db.table("email_otps")
@@ -146,3 +150,25 @@ def is_email_verified(email: str) -> bool:
         .execute()
     )
     return bool(res.data)
+
+
+def is_recently_verified(email: str, within_minutes: int = 15) -> bool:
+    """Stricter than is_email_verified: only the MOST RECENT OTP request for
+    this email counts, and only if it was verified within the last
+    within_minutes. Used to gate /users/account, where the point is
+    proving current control of the inbox on every visit - not just once,
+    ever, the way signup only needs to."""
+    db = get_db()
+    res = (
+        db.table("email_otps")
+        .select("verified, created_at")
+        .eq("email", email.strip().lower())
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    if not res.data or not res.data[0].get("verified"):
+        return False
+    created_at = datetime.fromisoformat(res.data[0]["created_at"].replace("Z", "+00:00"))
+    elapsed_minutes = (datetime.now(timezone.utc) - created_at).total_seconds() / 60
+    return elapsed_minutes <= within_minutes
