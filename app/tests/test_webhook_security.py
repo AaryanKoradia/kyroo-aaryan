@@ -9,6 +9,7 @@ import hmac
 import importlib.util
 import json
 import os
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
 
 import pytest
@@ -115,6 +116,42 @@ def test_already_processed_fails_open_on_unrelated_db_error():
     # A transient/unrelated DB error must never be mistaken for "already
     # processed" — that would silently drop a genuinely new message.
     assert mod._already_processed(broken_db, "wamid.FLAKY") is False
+
+
+def test_dedup_survives_far_longer_than_the_old_broken_10_minute_ttl(monkeypatch):
+    """Regression test for the actual reported bug: the same photo
+    explanation got resent repeatedly over TWO DAYS, because the old code
+    expired dedup rows after just 10 minutes — any redelivery arriving
+    later than that found no record and got reprocessed from scratch.
+    This forces the cleanup sweep to run and asserts it only targets rows
+    older than the new ~1 year retention, nowhere near 10 minutes, so a
+    redelivery days later still correctly finds its dedup row intact."""
+    mod, stubs = _load_webhook_module()
+    monkeypatch.setattr(mod.random, "random", lambda: 0.0)  # force the cleanup branch to run
+
+    captured_cutoff = {}
+    db = MagicMock()
+    db.table.return_value.insert.return_value.execute.return_value = MagicMock()
+
+    def lt_side_effect(field, cutoff):
+        captured_cutoff["value"] = cutoff
+        result = MagicMock()
+        result.execute.return_value = MagicMock()
+        return result
+
+    db.table.return_value.delete.return_value.lt.side_effect = lt_side_effect
+
+    mod._already_processed(db, "wamid.REGRESSION1")
+
+    cutoff_dt = datetime.fromisoformat(captured_cutoff["value"])
+    age = datetime.now(timezone.utc) - cutoff_dt
+    ten_minutes = timedelta(minutes=10)
+    two_days = timedelta(days=2)
+
+    assert age > two_days, (
+        f"cleanup cutoff is only {age} old — a redelivery {two_days} later would still be wrongly wiped"
+    )
+    assert age > ten_minutes * 100, "retention window regressed back toward the old ~10-minute bug"
 
 
 def test_signature_verification_fails_open_when_secret_unset():
