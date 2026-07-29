@@ -427,7 +427,7 @@ export default function Home() {
             </div>
             {[
               { label: "Product", links: ["Features", "Pricing", "How it works"] },
-              { label: "Company", links: ["About", "Privacy Policy", "Unsubscribe", "Contact"] },
+              { label: "Company", links: ["About", "Account", "Privacy Policy", "Unsubscribe", "Contact"] },
               { label: "Social", links: ["Instagram", "Twitter / X", "LinkedIn", "WhatsApp"] },
             ].map((s) => (
               <div key={s.label}>
@@ -435,7 +435,7 @@ export default function Home() {
                 <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 11, padding: 0 }}>
                   {s.links.map((l) => {
                     const hrefs: Record<string, string> = {
-                      "Privacy Policy": "/privacy", "Unsubscribe": "/unsubscribe",
+                      "Privacy Policy": "/privacy", "Unsubscribe": "/unsubscribe", "Account": "/account",
                       "About": "/about", "Terms of Service": "/terms", "Contact": "/contact",
                       "Pricing": "/pricing", "Features": "/#features", "How it works": "/#how",
                       "WhatsApp": "https://wa.me/917400351463",

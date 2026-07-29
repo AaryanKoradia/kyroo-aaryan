@@ -142,6 +142,33 @@ def _find_user_by_phone(db, phone: str):
     return res.data[0]
 
 
+class AccountLookup(BaseModel):
+    phone: str
+    email: str
+
+
+ACCOUNT_FIELDS = (
+    "name, email, phone, city, age, plan, is_active, language, nudge_time, "
+    "fitness_level, fitness_goal, diet_type, energy_peak, created_at"
+)
+
+
+@router.post("/account")
+@limiter.limit("20/hour")
+async def get_account(request: Request, req: AccountLookup):
+    """Profile summary for the self-service account page. Same phone +
+    email ownership proof as /delete-account already uses for a more
+    destructive action — reading the profile doesn't need to be a
+    stronger check than deleting it."""
+    db = get_db()
+    user = _find_user_by_phone(db, req.phone)
+    full = db.table("users").select(ACCOUNT_FIELDS).eq("id", user["id"]).execute()
+    record = (full.data or [{}])[0]
+    if not req.email or req.email.strip().lower() != (record.get("email") or "").strip().lower():
+        raise HTTPException(status_code=403, detail="Email does not match this account")
+    return record
+
+
 @router.post("/unsubscribe")
 async def unsubscribe(req: PhoneOnly):
     """Stops all proactive/business-initiated WhatsApp messages (nudges,
