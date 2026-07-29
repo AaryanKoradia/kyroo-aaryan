@@ -43,7 +43,18 @@ MAX_PDF_BYTES = 15 * 1024 * 1024  # 15MB — big enough for a real document, sma
 # survives a Render restart and stays correct even if this ever runs as
 # more than one worker process — a bare dict only works for a single,
 # long-lived process.
-_DEDUP_TTL_SECONDS = 600  # comfortably longer than any realistic redelivery window
+#
+# REAL BUG FIXED HERE: this used to expire dedup rows after 10 minutes,
+# on the (wrong) assumption that's "longer than any realistic redelivery
+# window." It isn't — a real report showed the same photo explanation
+# getting resent repeatedly over TWO DAYS, because every redelivery that
+# arrived more than 10 minutes after the first got treated as brand new
+# the moment its dedup row had been swept, and reprocessed from scratch.
+# A message_id from Meta is globally unique forever, so there is no
+# correctness reason to ever forget one — retention here is now purely
+# storage hygiene (keep the table from growing forever), not a
+# redelivery-window guess, and is deliberately generous.
+_DEDUP_RETENTION_SECONDS = 60 * 60 * 24 * 365  # 1 year — hygiene only, never a correctness window
 _CLEANUP_PROBABILITY = 0.02  # ~1 in 50 calls sweeps old rows, no need to do it every time
 
 
@@ -78,7 +89,7 @@ def _already_processed(db, message_id: str) -> bool:
 
     if random.random() < _CLEANUP_PROBABILITY:
         try:
-            cutoff = (datetime.now(timezone.utc) - timedelta(seconds=_DEDUP_TTL_SECONDS)).isoformat()
+            cutoff = (datetime.now(timezone.utc) - timedelta(seconds=_DEDUP_RETENTION_SECONDS)).isoformat()
             db.table("processed_messages").delete().lt("created_at", cutoff).execute()
         except Exception:
             logger.exception("[webhook] processed_messages cleanup failed")
