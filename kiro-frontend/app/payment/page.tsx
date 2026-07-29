@@ -59,8 +59,8 @@ export default function Payment() {
         key: RAZORPAY_KEY,
         amount: order.amount,
         currency: "INR",
-        name: "KIRO",
-        description: `KIRO ${selectedPlan.toUpperCase()} Plan`,
+        name: "KYROO",
+        description: `KYROO ${selectedPlan.toUpperCase()} Plan`,
         order_id: order.order_id,
         handler: async (response: any) => {
           const verify = await fetch(`${BACKEND_URL}/payments/verify`, {
@@ -106,7 +106,7 @@ export default function Payment() {
           <Image src="/kyroo-logo.png" alt="KYROO" width={26} height={26} style={{ borderRadius: "50%", border: "2px solid var(--k-ink)", objectFit: "cover" }} />
           <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
         </div>
-        <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>Step 2 of 2 — Choose plan</span>
+        <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>Step 2 of 2: Choose plan</span>
       </nav>
 
       <div style={{ maxWidth: 940, margin: "0 auto", padding: "60px 28px" }}>

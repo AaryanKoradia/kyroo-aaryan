@@ -26,7 +26,7 @@ export default function Success() {
           You&apos;re in{name ? `, ${name}` : ""}!
         </h1>
         <p style={{ fontSize: 16, opacity: 0.65, lineHeight: 1.75, marginBottom: 36 }}>
-          KYROO is setting up your personalised AI brain right now. Expect your first WhatsApp message tomorrow morning at {nudgeTime}.
+          KYROO is getting to know you right now. Expect your first WhatsApp message tomorrow morning at {nudgeTime}.
         </p>
 
         <div className="k-card" style={{ border: "3px solid var(--k-ink)", boxShadow: "6px 6px 0 var(--k-ink)", padding: "22px", marginBottom: 36, textAlign: "left", background: "var(--k-paper)", transform: "rotate(-1deg)" }}>
@@ -39,8 +39,8 @@ export default function Success() {
           </div>
           <p style={{ fontSize: 14, lineHeight: 1.75, margin: 0 }}>
             {name ? name : "Hey"}! Welcome to KYROO!<br /><br />
-            Maine tera poora profile padh liya. Kal subah {nudgeTime.toLowerCase().replace(" ", "")} pe milte hain — plan ready hai. Excited hoon honestly 😊<br /><br />
-            Koi bhi baat karni ho — main hoon yahan. 24/7.
+            Maine tera poora profile padh liya. Kal subah {nudgeTime.toLowerCase().replace(" ", "")} pe milte hain, plan ready hai. Excited hoon honestly.<br /><br />
+            Koi bhi baat karni ho, main hoon yahan. 24/7.
           </p>
         </div>
 

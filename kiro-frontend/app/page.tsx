@@ -67,7 +67,7 @@ const WHAT_ELSE: { icon: LucideIcon; title: string; desc: string; color: string 
   { icon: GraduationCap, title: "Learn literally anything", desc: "Ask her to explain anything, compound interest, organic chemistry, how to file your ITR. She teaches it, breaks it down, and sends you a real YouTube video or course to go deeper.", color: "var(--k-purple)" },
   { icon: Link2, title: "Real links, not just advice", desc: "She doesn't just tell you what to do, she sends you where to go. YouTube videos, course links, Google Maps locations, whatever you need, linked, not typed.", color: "var(--k-coral)" },
   { icon: FileText, title: "PDFs that actually get read", desc: "Send her your study notes, a contract, a lab report, a menu. She reads the whole thing and tells you what matters.", color: "var(--k-lime)" },
-  { icon: Sparkles, title: "GIFs, emojis, the whole vibe", desc: "She celebrates with you, hypes you up when you need it, sits with you when things are heavy. And she does it with GIFs and emojis, because that's just how friends talk.", color: "var(--k-blue)" },
+  { icon: Sparkles, title: "Talks like a real friend", desc: "She celebrates with you, hypes you up when you need it, sits with you when things are heavy. No corporate tone, no lecturing, just how a friend actually talks.", color: "var(--k-blue)" },
   { icon: Puzzle, title: "Connects all the dots", desc: "She knows your sleep affected your mood. Your mood affected your spending. Your spending is affecting your goals. She puts all of it together, every single day.", color: "var(--k-purple)" },
 ];
 
@@ -80,7 +80,7 @@ const STEPS: { n: string; icon: LucideIcon; title: string; desc: string; time: s
 const FREE_PLAN_FEATURES = [
   "All 4 life domains", "Unlimited messages", "8 languages", "Voice notes & photos",
   "PDF reading", "Smart reminders", "Study anything", "Real links sent to you",
-  "GIFs + emoji throughout", "Daily briefs & nudges", "Weekly reports",
+  "GIFs when it fits", "Daily briefs & nudges", "Weekly reports",
   "Memory that grows", "Connects all the dots",
 ];
 
@@ -339,7 +339,7 @@ export default function Home() {
 
           <div style={{ textAlign: "center", marginTop: 52 }}>
             <button className="k-btn k-btn-coral" onClick={go("/onboarding")} style={{ padding: "16px 38px", fontSize: 15, display: "inline-flex", alignItems: "center", gap: 10 }}>
-              <MessageCircle size={17} strokeWidth={2.4} /> Start now — it's free
+              <MessageCircle size={17} strokeWidth={2.4} /> Start now, it's free
             </button>
           </div>
         </div>

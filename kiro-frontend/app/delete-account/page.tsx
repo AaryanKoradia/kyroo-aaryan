@@ -17,7 +17,7 @@ export default function DeleteAccount() {
       return;
     }
     if (!confirmed) {
-      setMessage({ text: "Check the box to confirm — this can't be undone.", ok: false });
+      setMessage({ text: "Check the box to confirm, this can't be undone.", ok: false });
       return;
     }
     setLoading(true);
@@ -65,7 +65,7 @@ export default function DeleteAccount() {
           Delete your <span style={{ color: "var(--k-coral)" }}>account</span>
         </h1>
         <p style={{ fontSize: 14, opacity: 0.65, lineHeight: 1.7, marginBottom: 32 }}>
-          This permanently deletes your KYROO account and everything tied to it — your profile, chat history, tracking data, and memory. There&apos;s no undo. If you just want to stop notifications, use{" "}
+          This permanently deletes your KYROO account and everything tied to it: your profile, chat history, tracking data, and memory. There&apos;s no undo. If you just want to stop notifications, use{" "}
           <a href="/unsubscribe" style={{ color: "var(--k-ink)", textDecoration: "underline" }}>unsubscribe</a> instead.
         </p>
 
