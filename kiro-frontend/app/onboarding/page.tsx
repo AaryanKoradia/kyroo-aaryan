@@ -17,16 +17,16 @@ import {
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://kyroo-backend.onrender.com";
 
 const steps: { id: number; icon: LucideIcon | null; domain: string; title: string; sub: string }[] = [
-  { id: 1, icon: null, domain: "Getting Started", title: "Hey! I'm Kiro\nLet's get to know each other", sub: "I'll ask you 10 quick questions. The more you share, the smarter I get. Takes about 3 minutes." },
-  { id: 2, icon: Dumbbell, domain: "Fitness", title: "What's your current fitness situation?", sub: "Be honest — Kiro won't judge. This helps build your perfect plan." },
+  { id: 1, icon: null, domain: "Getting Started", title: "Hey! I'm KYROO\nLet's get to know each other", sub: "I'll ask you 10 quick questions. The more you share, the smarter I get. Takes about 3 minutes." },
+  { id: 2, icon: Dumbbell, domain: "Fitness", title: "What's your current fitness situation?", sub: "Be honest, KYROO won't judge. This helps build your perfect plan." },
   { id: 3, icon: Flag, domain: "Fitness Goal", title: "What do you want your body to do?", sub: "Pick your primary fitness goal." },
-  { id: 4, icon: BedDouble, domain: "Sleep", title: "How's your sleep honestly?", sub: "Sleep affects everything — fitness, money decisions, mood." },
+  { id: 4, icon: BedDouble, domain: "Sleep", title: "How's your sleep honestly?", sub: "Sleep affects everything: fitness, money decisions, mood." },
   { id: 5, icon: Brain, domain: "Mind", title: "How's your mental state these days?", sub: "No judgment. This stays completely private." },
-  { id: 6, icon: Wallet, domain: "Money", title: "Let's talk about your money habits", sub: "Just tell Kiro what you spend, no bank login ever needed." },
-  { id: 7, icon: Salad, domain: "Nutrition", title: "What does your eating look like?", sub: "Kiro plans meals around Indian food — dal, roti, sabzi." },
-  { id: 8, icon: Target, domain: "Productivity", title: "How productive are you really?", sub: "Kiro optimises your day around your actual energy levels." },
-  { id: 9, icon: MessageCircle, domain: "Communication", title: "How should Kiro talk to you?", sub: "Pick language. Kiro handles Hinglish too." },
-  { id: 10, icon: null, domain: "Your KIRO Profile", title: "Kiro knows you now", sub: "Here's your personalised starting profile." },
+  { id: 6, icon: Wallet, domain: "Money", title: "Let's talk about your money habits", sub: "Just tell KYROO what you spend, no bank login ever needed." },
+  { id: 7, icon: Salad, domain: "Nutrition", title: "What does your eating look like?", sub: "KYROO plans meals around Indian food: dal, roti, sabzi." },
+  { id: 8, icon: Target, domain: "Productivity", title: "How productive are you really?", sub: "KYROO optimises your day around your actual energy levels." },
+  { id: 9, icon: MessageCircle, domain: "Communication", title: "How should KYROO talk to you?", sub: "Pick language. KYROO handles Hinglish too." },
+  { id: 10, icon: null, domain: "Your KYROO Profile", title: "KYROO knows you now", sub: "Here's your personalised starting profile." },
 ];
 
 type Opt = { icon: LucideIcon; label: string };
@@ -241,7 +241,7 @@ export default function Onboarding() {
         if (trimmedCity.length < 2 || trimmedCity.length > 50) return "City should be 2–50 characters.";
         if (!/[A-Za-z]/.test(trimmedCity)) return "Enter a valid city name.";
         if (!/^\S+@\S+\.\S+$/.test(email.trim())) return "Enter a valid email address.";
-        if (!otpVerified) return "Please verify your email — send yourself a code and enter it.";
+        if (!otpVerified) return "Please verify your email: send yourself a code and enter it.";
         if (!consentGiven) return "Please agree to the Privacy Policy and WhatsApp messages to continue.";
         return null;
       }
@@ -441,7 +441,7 @@ export default function Onboarding() {
                 <Image src="/kyroo-logo.png" alt="KYROO" width={26} height={26} style={{ borderRadius: "50%", border: "2px solid var(--k-ink)", objectFit: "cover" }} />
                 <span style={{ fontFamily: "var(--font-display)", fontSize: 12 }}>KYROO</span>
               </div>
-              Main hoon tera AI best friend 😊 Fitness, money, mind, sleep — sab kuch handle karunga. Pehle tujhe thoda jaanna chahta hoon. Ready?
+              Main hoon tera best friend. Fitness, money, mind, sleep, sab kuch handle karunga. Pehle tujhe thoda jaanna chahta hoon. Ready?
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
               <div>
@@ -488,7 +488,7 @@ export default function Onboarding() {
               <div style={{ fontSize: 12, color: "var(--k-coral-dark)", marginBottom: 12 }}>{otpError}</div>
             )}
             {otpSent && !otpVerified && !otpError && (
-              <div style={{ fontSize: 11.5, opacity: 0.55, marginBottom: 12 }}>Sent a code to {otpEmailSentFor} — check your inbox.</div>
+              <div style={{ fontSize: 11.5, opacity: 0.55, marginBottom: 12 }}>Sent a code to {otpEmailSentFor}, check your inbox.</div>
             )}
 
             <label style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 12, opacity: 0.7, cursor: "pointer", marginTop: 4 }}>
@@ -640,7 +640,7 @@ export default function Onboarding() {
                 <Image src="/kyroo-logo.png" alt="KYROO" width={26} height={26} style={{ borderRadius: "50%", border: "2px solid var(--k-ink)", objectFit: "cover" }} />
                 <span style={{ fontFamily: "var(--font-display)", fontSize: 12 }}>KYROO</span>
               </div>
-              Yaar sab samajh gaya main 😊 Tera profile ready hai. Kal se sab handle karta hoon.
+              Yaar sab samajh gaya main. Tera profile ready hai. Kal se sab handle karta hoon.
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {[
