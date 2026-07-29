@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from database import get_db
+from rate_limit import limiter
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -30,6 +31,7 @@ PROFILE_FIELDS = (
 
 
 @router.get("/search")
+@limiter.limit("10/minute")
 async def search_users(request: Request, q: str = ""):
     _require_admin(request)
     if not q or len(q.strip()) < 3:
@@ -46,6 +48,7 @@ async def search_users(request: Request, q: str = ""):
 
 
 @router.get("/users/{user_id}")
+@limiter.limit("10/minute")
 async def get_user_detail(request: Request, user_id: str):
     _require_admin(request)
     db = get_db()
@@ -65,6 +68,7 @@ class UpdateUserRequest(BaseModel):
 
 
 @router.post("/users/{user_id}")
+@limiter.limit("5/minute")
 async def update_user_admin(request: Request, user_id: str, req: UpdateUserRequest):
     """Manual plan changes (comp/refund) and account intervention
     (activate/deactivate) — the two concrete support actions the

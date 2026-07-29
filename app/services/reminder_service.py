@@ -21,6 +21,13 @@ PRE_ALERT_MINUTES = 5
 # tight — reminders are only useful if they land close to on time.
 FIRE_WINDOW_MINUTES = 10
 
+# cron-job.org (and similar free cron services) fail a run if the response
+# body is too large, regardless of status code. The failed/sent lists below
+# are for debugging, not required by the caller, so they're capped rather
+# than left to grow unbounded with the checked/backlog count.
+MAX_DETAIL_ITEMS = 20
+MAX_ERROR_CHARS = 200
+
 
 def parse_remind_at(remind_at: str) -> datetime:
     """Parses 'YYYY-MM-DD HH:MM' (as produced by the set_reminder tool,
@@ -68,6 +75,21 @@ def _is_due(target_iso: str, now: datetime) -> bool:
     return 0 <= delta_minutes <= FIRE_WINDOW_MINUTES
 
 
+def _claim(db, reminder_id: str, field: str) -> bool:
+    """Atomically claims a reminder's pre-alert/main send via a conditional
+    UPDATE ... WHERE <field> = false. This cron is driven by an external
+    service with no guarantee only one run is ever in flight (and is also
+    still triggered on a fixed interval that can overlap a slow prior run)
+    — without this, two overlapping runs could both pass the earlier SELECT
+    before either wrote the flag, sending the same reminder twice. Only the
+    run whose UPDATE actually flips the row gets rows back; the loser sees
+    an empty result and skips. On a subsequent send failure the caller
+    flips the flag back so the next tick (still within the fire window)
+    can retry instead of the reminder being silently dropped."""
+    res = db.table("reminders").update({field: True}).eq("id", reminder_id).eq(field, False).execute()
+    return bool(res.data)
+
+
 def check_and_send_reminders() -> dict:
     db = get_supabase()
     now = datetime.now(IST)
@@ -87,6 +109,8 @@ def check_and_send_reminders() -> dict:
     for r in (pre_due.data or []):
         if not _is_due(r["pre_alert_at"], now):
             continue
+        if not _claim(db, r["id"], "pre_alert_sent"):
+            continue  # an overlapping run already claimed this one
         try:
             user = db.table("users").select("id, name, phone, is_active").eq("id", r["user_id"]).single().execute()
             if user.data and user.data.get("is_active", True):
@@ -95,12 +119,12 @@ def check_and_send_reminders() -> dict:
                     lambda: wa.send_one(user.data["phone"], f"heads up, in 5 mins: {r['message']}"),
                     "WHATSAPP_TEMPLATE_REMINDER_PRE_ALERT", [r["message"]],
                 )
-            db.table("reminders").update({"pre_alert_sent": True}).eq("id", r["id"]).execute()
             sent_pre_alerts.append(r["id"])
         except Exception as e:
+            db.table("reminders").update({"pre_alert_sent": False}).eq("id", r["id"]).execute()
             logger.exception(f"[reminders] failed to send pre-alert for {r['id']}: {e}")
             sentry_sdk.capture_exception(e)
-            failed.append({"id": r["id"], "stage": "pre_alert", "error": str(e)})
+            failed.append({"id": r["id"], "stage": "pre_alert", "error": str(e)[:MAX_ERROR_CHARS]})
 
     main_due = (
         db.table("reminders").select("*")
@@ -111,6 +135,8 @@ def check_and_send_reminders() -> dict:
     for r in (main_due.data or []):
         if not _is_due(r["remind_at"], now):
             continue
+        if not _claim(db, r["id"], "is_sent"):
+            continue  # an overlapping run already claimed this one
         try:
             user = db.table("users").select("id, name, phone, is_active").eq("id", r["user_id"]).single().execute()
             if user.data and user.data.get("is_active", True):
@@ -119,17 +145,20 @@ def check_and_send_reminders() -> dict:
                     lambda: wa.send_one(user.data["phone"], f"⏰ {r['message']}"),
                     "WHATSAPP_TEMPLATE_REMINDER", [r["message"]],
                 )
-            db.table("reminders").update({"is_sent": True}).eq("id", r["id"]).execute()
             sent_reminders.append(r["id"])
         except Exception as e:
+            db.table("reminders").update({"is_sent": False}).eq("id", r["id"]).execute()
             logger.exception(f"[reminders] failed to send reminder for {r['id']}: {e}")
             sentry_sdk.capture_exception(e)
-            failed.append({"id": r["id"], "stage": "reminder", "error": str(e)})
+            failed.append({"id": r["id"], "stage": "reminder", "error": str(e)[:MAX_ERROR_CHARS]})
 
     return {
         "checked_pre_alerts": len(pre_due.data or []),
         "checked_reminders": len(main_due.data or []),
-        "sent_pre_alerts": sent_pre_alerts,
-        "sent_reminders": sent_reminders,
-        "failed": failed,
+        "sent_pre_alerts_count": len(sent_pre_alerts),
+        "sent_reminders_count": len(sent_reminders),
+        "sent_pre_alerts": sent_pre_alerts[:MAX_DETAIL_ITEMS],
+        "sent_reminders": sent_reminders[:MAX_DETAIL_ITEMS],
+        "failed_count": len(failed),
+        "failed": failed[:MAX_DETAIL_ITEMS],
     }

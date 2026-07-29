@@ -35,6 +35,11 @@ create table if not exists users (
     onboarding_step   int default 99
 );
 
+-- Looked up on every single inbound WhatsApp message via get_or_create_user()
+-- — the hottest query in the product — with no index until now, meaning a
+-- full table scan per message.
+create index if not exists idx_users_phone on users(phone);
+
 -- Migration for an existing table (safe to run even if columns already exist):
 alter table users add column if not exists injuries          text default '';
 alter table users add column if not exists fitness_workouts  text[] default '{}';
@@ -157,6 +162,24 @@ create table if not exists reminders (
 );
 create index if not exists idx_reminders_user on reminders(user_id, remind_at);
 
+-- ─── sent_nudges ───────────────────────────────────────────────────────────
+-- Idempotency guard for the nudges cron: nudges (unlike reminders) have no
+-- row of their own to atomically claim via an is_sent flag, and the prior
+-- "already sent today" check (a chat_history lookup) is check-then-act —
+-- two overlapping cron runs (e.g. GitHub Actions and an external cron
+-- service both hitting /nudges/check-and-send around the same time) could
+-- both pass that check before either logs the send, producing a duplicate
+-- WhatsApp message. The primary key here makes the claim atomic: whichever
+-- run's INSERT lands first wins, the other gets a constraint violation and
+-- skips. Same rationale as processed_messages for the webhook.
+create table if not exists sent_nudges (
+    user_id     uuid not null references users(id) on delete cascade,
+    slot        text not null,
+    sent_date   date not null,
+    created_at  timestamptz default now(),
+    primary key (user_id, slot, sent_date)
+);
+
 -- ─── emotional_memory ──────────────────────────────────────────────────────
 create table if not exists emotional_memory (
     id               uuid primary key default gen_random_uuid(),
@@ -227,12 +250,13 @@ alter table reminders          enable row level security;
 alter table emotional_memory   enable row level security;
 alter table user_style         enable row level security;
 alter table memory_embeddings  enable row level security;
+alter table sent_nudges        enable row level security;
 
 do $$
 declare
     t text;
 begin
-    foreach t in array array['users','chat_history','user_tracking','weekly_reports','reminders','emotional_memory','user_style','memory_embeddings']
+    foreach t in array array['users','chat_history','user_tracking','weekly_reports','reminders','emotional_memory','user_style','memory_embeddings','sent_nudges']
     loop
         execute format('drop policy if exists "service_role_all_%s" on %I;', t, t);
         execute format(

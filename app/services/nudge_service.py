@@ -132,6 +132,31 @@ def _has_unanswered_nudge(db, user_id: str) -> bool:
     return rows[0].get("user_message") in _NUDGE_SLOT_NAMES
 
 
+def _claim_nudge(db, user_id: str, slot: str) -> bool:
+    """Atomically claims (user_id, slot, today) via sent_nudges' primary
+    key — returns True if this call won the claim, False if another
+    (overlapping) cron run already holds it. Must be called right before
+    sending, not at the top of the loop, so the window where a duplicate
+    run could race in is as small as possible."""
+    today = datetime.now(IST).date().isoformat()
+    try:
+        db.table("sent_nudges").insert({"user_id": user_id, "slot": slot, "sent_date": today}).execute()
+        return True
+    except Exception:
+        return False
+
+
+def _release_nudge_claim(db, user_id: str, slot: str) -> None:
+    """Releases a claim after a failed send so the next cron tick (still
+    within the fire window) can retry instead of the user silently never
+    getting this nudge."""
+    today = datetime.now(IST).date().isoformat()
+    try:
+        db.table("sent_nudges").delete().eq("user_id", user_id).eq("slot", slot).eq("sent_date", today).execute()
+    except Exception:
+        pass
+
+
 def _already_sent_today(db, user_id: str, slot: str) -> bool:
     today_start = datetime.now(IST).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
     res = (
@@ -216,10 +241,15 @@ def check_and_send_nudges() -> dict:
             if slot != "morning_nudge" and disengaged:
                 suppressed.append({"user": user.get("name"), "slot": slot, "reason": "disengaged"})
                 continue
+            if not _claim_nudge(db, user["id"], slot):
+                # another (overlapping) cron run already claimed this
+                # user+slot+day — not a failure, just don't double-send
+                continue
             try:
                 _send_nudge(db, user, slot)
                 sent.append({"user": user.get("name"), "slot": slot})
             except Exception as e:
+                _release_nudge_claim(db, user["id"], slot)
                 # the cron caller (GitHub Actions) doesn't capture the
                 # response body, so this was previously invisible anywhere —
                 # print it so a failure actually shows up in Render logs
