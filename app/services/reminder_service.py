@@ -97,6 +97,7 @@ def check_and_send_reminders() -> dict:
 
     sent_pre_alerts = []
     sent_reminders = []
+    skipped = []
     failed = []
 
     pre_due = (
@@ -113,13 +114,18 @@ def check_and_send_reminders() -> dict:
             continue  # an overlapping run already claimed this one
         try:
             user = db.table("users").select("id, name, phone, is_active").eq("id", r["user_id"]).single().execute()
+            outcome = None
             if user.data and user.data.get("is_active", True):
-                send_proactive(
+                outcome = send_proactive(
                     db, user.data,
                     lambda: wa.send_one(user.data["phone"], f"heads up, in 5 mins: {r['message']}"),
                     "WHATSAPP_TEMPLATE_REMINDER_PRE_ALERT", [r["message"]],
                 )
-            sent_pre_alerts.append(r["id"])
+            if outcome == "skipped_no_template":
+                db.table("reminders").update({"pre_alert_sent": False}).eq("id", r["id"]).execute()
+                skipped.append({"id": r["id"], "stage": "pre_alert", "reason": "no_template_configured"})
+            else:
+                sent_pre_alerts.append(r["id"])
         except Exception as e:
             db.table("reminders").update({"pre_alert_sent": False}).eq("id", r["id"]).execute()
             logger.exception(f"[reminders] failed to send pre-alert for {r['id']}: {e}")
@@ -139,13 +145,18 @@ def check_and_send_reminders() -> dict:
             continue  # an overlapping run already claimed this one
         try:
             user = db.table("users").select("id, name, phone, is_active").eq("id", r["user_id"]).single().execute()
+            outcome = None
             if user.data and user.data.get("is_active", True):
-                send_proactive(
+                outcome = send_proactive(
                     db, user.data,
                     lambda: wa.send_one(user.data["phone"], f"⏰ {r['message']}"),
                     "WHATSAPP_TEMPLATE_REMINDER", [r["message"]],
                 )
-            sent_reminders.append(r["id"])
+            if outcome == "skipped_no_template":
+                db.table("reminders").update({"is_sent": False}).eq("id", r["id"]).execute()
+                skipped.append({"id": r["id"], "stage": "reminder", "reason": "no_template_configured"})
+            else:
+                sent_reminders.append(r["id"])
         except Exception as e:
             db.table("reminders").update({"is_sent": False}).eq("id", r["id"]).execute()
             logger.exception(f"[reminders] failed to send reminder for {r['id']}: {e}")
@@ -159,6 +170,8 @@ def check_and_send_reminders() -> dict:
         "sent_reminders_count": len(sent_reminders),
         "sent_pre_alerts": sent_pre_alerts[:MAX_DETAIL_ITEMS],
         "sent_reminders": sent_reminders[:MAX_DETAIL_ITEMS],
+        "skipped_count": len(skipped),
+        "skipped": skipped[:MAX_DETAIL_ITEMS],
         "failed_count": len(failed),
         "failed": failed[:MAX_DETAIL_ITEMS],
     }

@@ -171,12 +171,15 @@ def _already_sent_today(db, user_id: str, slot: str) -> bool:
     return bool(res.data)
 
 
-def _send_nudge(db, user: dict, slot: str) -> None:
+def _send_nudge(db, user: dict, slot: str) -> str:
     """Generating the full LLM nudge is deferred into the closure below so
     it only actually runs when we're within the 24h session window — if
     we're outside it, send_proactive falls back to a template ping
     instead, and there's no point paying for an LLM call whose output
-    would just get discarded."""
+    would just get discarded. Returns send_proactive's outcome
+    ("sent_freeform", "sent_template", or "skipped_no_template") so the
+    caller can report accurately whether anything was actually
+    delivered, instead of counting every non-exception as "sent"."""
     phone = user.get("phone", "")
     sent_text = {"value": None}
 
@@ -198,7 +201,7 @@ def _send_nudge(db, user: dict, slot: str) -> None:
         # nothing was actually sent — don't log it as today's nudge, so a
         # later attempt (once a template is configured) isn't blocked by
         # _already_sent_today
-        return
+        return outcome
 
     db.table("chat_history").insert({
         "user_id": user["id"],
@@ -206,6 +209,7 @@ def _send_nudge(db, user: dict, slot: str) -> None:
         "kiro_response": sent_text["value"] or f"(sent via {outcome})",
         "module": "general",
     }).execute()
+    return outcome
 
 
 def check_and_send_nudges() -> dict:
@@ -246,8 +250,12 @@ def check_and_send_nudges() -> dict:
                 # user+slot+day — not a failure, just don't double-send
                 continue
             try:
-                _send_nudge(db, user, slot)
-                sent.append({"user": user.get("name"), "slot": slot})
+                outcome = _send_nudge(db, user, slot)
+                if outcome == "skipped_no_template":
+                    _release_nudge_claim(db, user["id"], slot)
+                    suppressed.append({"user": user.get("name"), "slot": slot, "reason": "no_template_configured"})
+                else:
+                    sent.append({"user": user.get("name"), "slot": slot})
             except Exception as e:
                 _release_nudge_claim(db, user["id"], slot)
                 # the cron caller (GitHub Actions) doesn't capture the
