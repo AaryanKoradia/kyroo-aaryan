@@ -98,9 +98,9 @@ class WhatsAppClient:
         base = self.MIN_DELAY + words * self.SECONDS_PER_WORD
         return min(max(base, self.MIN_DELAY), self.MAX_DELAY) + random.uniform(0, 0.4)
 
-    def send_one(self, phone: str, message: str, delay: float | None = None):
+    def send_one(self, phone: str, message: str, delay: float | None = None) -> dict:
         time.sleep(delay if delay is not None else self._typing_delay(message))
-        self._send_single_message(phone, message)
+        return self._send_single_message(phone, message)
 
     def send(self, phone: str, messages: list[str]):
         for message in messages:
@@ -226,7 +226,7 @@ class WhatsAppClient:
         )
         response.raise_for_status()
 
-    def _send_single_message(self, phone: str, message: str):
+    def _send_single_message(self, phone: str, message: str) -> dict:
         response = requests.post(
             f"{self.BASE_URL}/{settings.phone_number_id}/messages",
             headers={
@@ -245,3 +245,10 @@ class WhatsAppClient:
         )
 
         response.raise_for_status()
+        # Meta's response includes the message id and, crucially,
+        # contacts[0].wa_id — the phone number it actually normalized
+        # "to" into. A 200 here only means Meta accepted the request, not
+        # that it was delivered, so returning this (instead of discarding
+        # it, as every other caller of this method already implicitly
+        # does) is what makes real delivery debugging possible.
+        return response.json()
