@@ -18,7 +18,7 @@ SESSION_WINDOW_HOURS = 24
 # replies again. This is exactly what caused a real 131047 error in
 # production: the window check kept passing on nudge-refreshed
 # timestamps alone.
-_NUDGE_PLACEHOLDER_MESSAGES = {"morning_nudge", "afternoon_nudge", "evening_nudge", "night_nudge"}
+_NUDGE_PLACEHOLDER_MESSAGES = {"mind_nudge", "money_nudge", "fitness_nudge", "study_nudge"}
 
 
 def is_within_session_window(db, user_id: str) -> bool:

@@ -1,5 +1,4 @@
 import logging
-import re
 from datetime import datetime, time as dtime
 
 import pytz
@@ -7,32 +6,41 @@ import sentry_sdk
 
 from app.database.supabase_client import get_supabase
 from app.brain.kyroo_brain import (
-    generate_morning_nudge,
-    generate_afternoon_nudge,
-    generate_evening_nudge,
-    generate_night_nudge,
+    generate_mind_nudge,
+    generate_money_nudge,
+    generate_fitness_nudge,
+    generate_study_nudge,
 )
 from app.brain.response_validator import _strip_em_dashes, _strip_cringe_emoji
 from app.infrastructure.whatsapp.client import WhatsAppClient
+from app.services.nudge_time import parse_nudge_time
 from app.services.proactive_messaging import send_proactive
+from app.services.tracking_service import DOMAIN_TIME_COLUMNS
 
 IST = pytz.timezone("Asia/Kolkata")
 logger = logging.getLogger(__name__)
 
-# Fixed daily slots (IST) — morning uses each user's own onboarding preference
-# instead, since that's the only per-user time they were actually asked for.
-FIXED_SLOTS = {
-    "afternoon_nudge": dtime(hour=13, minute=0),
-    "evening_nudge": dtime(hour=18, minute=30),
-    "night_nudge": dtime(hour=22, minute=0),
+GENERATORS = {
+    "mind_nudge": generate_mind_nudge,
+    "money_nudge": generate_money_nudge,
+    "fitness_nudge": generate_fitness_nudge,
+    "study_nudge": generate_study_nudge,
 }
 
-GENERATORS = {
-    "morning_nudge": generate_morning_nudge,
-    "afternoon_nudge": generate_afternoon_nudge,
-    "evening_nudge": generate_evening_nudge,
-    "night_nudge": generate_night_nudge,
+# Falls back to these ONLY if a user's stored time for a domain is missing
+# or unparseable (shouldn't normally happen — the schema gives every
+# domain column a sensible default) — never used to override a real,
+# user-set preference. The actual per-user time always comes from
+# DOMAIN_TIME_COLUMNS on the users row, kept current by the set_nudge_time
+# tool whenever KYROO picks up on the user's own stated routine.
+DEFAULT_SLOT_TIMES = {
+    "mind_nudge": dtime(hour=7, minute=0),
+    "money_nudge": dtime(hour=13, minute=0),
+    "fitness_nudge": dtime(hour=18, minute=30),
+    "study_nudge": dtime(hour=21, minute=0),
 }
+
+_SLOT_TO_DOMAIN = {"mind_nudge": "mind", "money_nudge": "money", "fitness_nudge": "fitness", "study_nudge": "study"}
 
 # How late a slot is still allowed to fire after its target time. This is
 # nominally every 10 min (the cron interval), but GitHub Actions' free
@@ -48,35 +56,20 @@ FIRE_WINDOW_MINUTES = 180
 # analyze_user_style in kyroo_brain.py — already tracked from every chat
 # turn), a user seems consistently checked out rather than just having one
 # flat reply, so non-essential nudge slots get skipped instead of piling
-# on. The morning slot is exempt — it's the one daily check-in, not the
+# on. The mind slot is exempt — it's the one daily check-in, not the
 # thing users described as irritating.
 DISENGAGEMENT_THRESHOLD = -0.4
 MIN_MESSAGES_FOR_DISENGAGEMENT_CHECK = 5
 
-_TIME_RE = re.compile(r'^\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*$', re.IGNORECASE)
 
-
-def parse_nudge_time(nudge_time: str) -> dtime | None:
-    """Parses things like '7 AM', '7:30am', '19:00', '6 PM' into a time in IST."""
-    if not nudge_time:
-        return None
-    match = _TIME_RE.match(nudge_time)
-    if not match:
-        return None
-
-    hour = int(match.group(1))
-    minute = int(match.group(2) or 0)
-    meridiem = (match.group(3) or "").lower()
-
-    if meridiem == "pm" and hour != 12:
-        hour += 12
-    elif meridiem == "am" and hour == 12:
-        hour = 0
-
-    if not (0 <= hour <= 23 and 0 <= minute <= 59):
-        return None
-
-    return dtime(hour=hour, minute=minute)
+def _slot_target_time(user: dict, slot: str) -> dtime:
+    """This user's own time for this domain, parsed from the relevant
+    users.<domain>_nudge_time column — never a fixed global time. Falls
+    back to DEFAULT_SLOT_TIMES only if that column is somehow empty or
+    unparseable."""
+    domain = _SLOT_TO_DOMAIN[slot]
+    column = DOMAIN_TIME_COLUMNS[domain]
+    return parse_nudge_time(user.get(column, "")) or DEFAULT_SLOT_TIMES[slot]
 
 
 def _is_due(now_ist: datetime, target: dtime) -> bool:
@@ -230,17 +223,13 @@ def check_and_send_nudges() -> dict:
     suppressed = []
 
     for user in users:
-        slots_to_check = dict(FIXED_SLOTS)
-        morning_time = parse_nudge_time(user.get("nudge_time", ""))
-        if morning_time:
-            slots_to_check["morning_nudge"] = morning_time
-
         # computed once per user, not per slot — same verdict applies to
         # every slot checked below
         disengaged = _is_disengaged(db, user["id"])
         unanswered = _has_unanswered_nudge(db, user["id"])
 
-        for slot, target in slots_to_check.items():
+        for slot in GENERATORS:
+            target = _slot_target_time(user, slot)
             if not _is_due(now_ist, target):
                 continue
             if _already_sent_today(db, user["id"], slot):
@@ -248,7 +237,7 @@ def check_and_send_nudges() -> dict:
             if unanswered:
                 suppressed.append({"user": user.get("name"), "slot": slot, "reason": "unanswered_nudge"})
                 continue
-            if slot != "morning_nudge" and disengaged:
+            if slot != "mind_nudge" and disengaged:
                 suppressed.append({"user": user.get("name"), "slot": slot, "reason": "disengaged"})
                 continue
             if not _claim_nudge(db, user["id"], slot):
