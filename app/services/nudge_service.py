@@ -108,18 +108,24 @@ _NUDGE_SLOT_NAMES = set(GENERATORS.keys())
 
 
 def _has_unanswered_nudge(db, user_id: str) -> bool:
-    """True if the most recent chat_history row for this user IS a nudge
-    (user_message equals one of the slot-name placeholders _send_nudge
-    writes, never a real inbound message) — meaning the user hasn't
-    actually replied to anything since. Piling another nudge on top of an
-    already-unanswered one is exactly what got reported as spammy, so
-    every slot (including morning) is gated on this, not just the
-    engagement-score check below."""
+    """True if TODAY's most recent chat_history row for this user IS a
+    nudge placeholder — meaning they haven't replied to anything since a
+    nudge went out earlier today. Scoped to today only (previously
+    all-time, with no lower bound): piling another nudge on top of an
+    already-unanswered one same-day is what got reported as spammy, but
+    checking all-time meant a single ignored nudge silenced every future
+    slot for that user forever, across every day, until they happened to
+    message KYROO again for an unrelated reason — directly working
+    against ever reliably reaching someone with 4 nudges a day. This
+    still holds off piling on within a day, and resets fresh every
+    morning."""
+    today_start = datetime.now(IST).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
     try:
         res = (
             db.table("chat_history")
             .select("user_message")
             .eq("user_id", user_id)
+            .gte("created_at", today_start)
             .order("created_at", desc=True)
             .limit(1)
             .execute()
