@@ -10,6 +10,7 @@ from app.brain.slang import lookup_slang
 from app.brain.gifs import search_gif_url
 from app.services.story_service import get_random_stories
 from app.services.reminder_service import create_reminder
+from app.services.tracking_service import log_daily_activity, set_domain_nudge_time
 from app.brain.response_validator import (
     validate_response, clean_streamed_bubble, MAX_EMOJIS_PER_BUBBLE, MAX_STREAMED_BUBBLES,
 )
@@ -855,10 +856,21 @@ REMINDERS:
 - If the time they gave is genuinely ambiguous (no time of day at all, e.g. just "remind me about the meeting"), ask once, casually, rather than guessing.
 - They'll automatically get a heads-up 5 minutes before, then the actual reminder at the exact time, you don't need to mention this mechanism, just confirm casually that you've got it, like a friend would ("done, I got you" / "noted, I'll ping you").
 
+TRACKING (money, mood, workouts, sleep, study):
+- Whenever {name} mentions something trackable in normal conversation, log it with the log_daily_activity tool right away, don't ask permission or announce that you're logging it, just fold it into your reply naturally. Examples: "spent 300 on food" -> spent_today + spent_category; "hit the gym for 40 min" -> workout_done + workout_duration; "only slept 5 hours" -> sleep_hours; "studied DBMS for 2 hours" -> study_minutes + study_topic; a clearly stated mood/stress level -> mood_score/stress_score.
+- Only pass fields they actually told you or clearly implied. Never invent a number (a duration, an amount, a score) that wasn't actually given.
+- This is the ONLY way KYROO remembers this stuff day to day, so don't let a real mention slide by without logging it just because the conversation is casual.
+
+NUDGE TIMING (mind/money/fitness/study check-ins):
+- KYROO checks in about each of these four life domains once a day, and the time for each is per-user, not fixed. If {name} describes a recurring routine that clearly maps to when a check-in should happen ("I always work out first thing in the morning", "I do my budget review every night", "I study best late at night"), use the set_nudge_time tool to move that domain's check-in to match.
+- Only call this for a clearly recurring routine, not a one-off ("I'm going to the gym at 6pm today" is NOT a routine, don't call the tool for that).
+- Acknowledge it naturally and briefly if you do call it, don't make a big deal out of it or explain the mechanism.
+
 TOOLS:
 - web_search: use this when {name} brings up something current you're not confident about, this includes recent news, trending events, sports results, a movie/show that's currently out or trending, celebrity gossip, viral moments, or anything time-sensitive, not just news and politics. If a question is about something recent in ANY category (entertainment, sports, tech, memes) and you're not sure you have current info, search rather than guessing or admitting you don't know. Don't search for things you already know or for casual chat.
 - lookup_slang: use this if {name} uses a slang term, meme reference, or abbreviation you don't recognize the current meaning of. Don't use it for words you already understand.
 - set_reminder: see REMINDERS above.
+- log_daily_activity, set_nudge_time: see TRACKING and NUDGE TIMING above.
 - After using a tool, fold the result into your reply casually, like you just knew it. Never say "according to my search" or "I looked that up."
 - CRITICAL: even after a tool call, your reply still follows every core personality rule above. Pick the ONE most interesting thing from the result and mention it like you're texting a friend what you heard. Never list multiple facts, never write a news summary, never exceed the normal 2-4 line length just because you searched something.
 """
@@ -1113,6 +1125,38 @@ BRAIN_TOOLS = [
             },
             "required": ["reminder_text", "remind_at"]
         }
+    },
+    {
+        "name": "log_daily_activity",
+        "description": "Log something the user just told you about their day, whenever they mention it naturally, without asking for confirmation first: money spent, mood/stress, a workout, sleep, or study time. Only pass the fields they actually mentioned or clearly implied, never guess or fill in the rest.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "spent_today": {"type": "number", "description": "Amount of money spent today, in rupees. If they mention spending more than once in a conversation, use the running total for today, not just the latest amount."},
+                "spent_category": {"type": "string", "description": "What the money went to, e.g. 'food', 'shopping', 'travel'"},
+                "mood_score": {"type": "integer", "description": "1-10, only if they gave one or clearly implied one, never guess a number from a vague mood"},
+                "stress_score": {"type": "integer", "description": "1-10, same rule as mood_score"},
+                "workout_done": {"type": "boolean"},
+                "workout_name": {"type": "string", "description": "e.g. 'gym', 'run', 'yoga'"},
+                "workout_duration": {"type": "integer", "description": "minutes"},
+                "sleep_hours": {"type": "number"},
+                "study_minutes": {"type": "integer"},
+                "study_topic": {"type": "string", "description": "what they studied, e.g. 'DBMS', 'DSA'"}
+            },
+            "required": []
+        }
+    },
+    {
+        "name": "set_nudge_time",
+        "description": "Update what time of day KYROO checks in about one specific life domain (mind, money, fitness, or study), based on the user's own stated routine - e.g. 'I go to the gym every morning' means the fitness check-in should move to morning starting the next check. Only call this for a clearly recurring routine or an explicit preference, never for a one-off mention of something happening at a particular time today.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "domain": {"type": "string", "enum": ["mind", "money", "fitness", "study"]},
+                "time": {"type": "string", "description": "Time in 'H AM/PM' or 'H:MM AM/PM' format, e.g. '7 AM', '9:30 PM'"}
+            },
+            "required": ["domain", "time"]
+        }
     }
 ]
 
@@ -1200,7 +1244,9 @@ def _run_with_tools(
 
         client_tool_calls = [
             b for b in final_message.content
-            if b.type == "tool_use" and b.name in ("lookup_slang", "send_gif", "set_reminder")
+            if b.type == "tool_use" and b.name in (
+                "lookup_slang", "send_gif", "set_reminder", "log_daily_activity", "set_nudge_time",
+            )
         ]
 
         if not client_tool_calls:
@@ -1222,7 +1268,7 @@ def _run_with_tools(
                     result = "gif sent successfully"
                 else:
                     result = "no matching gif found, don't mention this to the user, just continue naturally without one"
-            else:  # set_reminder
+            elif call.name == "set_reminder":
                 outcome = create_reminder(
                     user_id,
                     call.input.get("reminder_text", ""),
@@ -1232,6 +1278,19 @@ def _run_with_tools(
                     result = "reminder set successfully"
                 else:
                     result = f"failed to set reminder: {outcome['error']}, ask the user to clarify"
+            elif call.name == "log_daily_activity":
+                outcome = log_daily_activity(user_id, **call.input)
+                result = "logged successfully" if outcome["ok"] else f"failed to log: {outcome['error']}"
+            else:  # set_nudge_time
+                outcome = set_domain_nudge_time(
+                    user_id,
+                    call.input.get("domain", ""),
+                    call.input.get("time", ""),
+                )
+                if outcome["ok"]:
+                    result = "nudge time updated successfully, don't make a big deal of this, just acknowledge naturally"
+                else:
+                    result = f"failed to update nudge time: {outcome['error']}"
             tool_results.append({
                 "type": "tool_result",
                 "tool_use_id": call.id,
@@ -1467,7 +1526,24 @@ def _mood_trend_line(tracking_logs: list[dict]) -> str:
     return ""
 
 
-def generate_morning_nudge(user: dict) -> str:
+def _time_of_day_word() -> str:
+    """The mind check-in used to always fire in the morning, so its shape
+    hardcoded 'Good morning!'. It's now sent whenever the user's own stated
+    routine says is best for them (see set_nudge_time), so the greeting
+    needs to actually match whatever time that turns out to be."""
+    import pytz
+    from datetime import datetime
+    hour = datetime.now(pytz.timezone("Asia/Kolkata")).hour
+    if hour < 12:
+        return "morning"
+    if hour < 17:
+        return "afternoon"
+    if hour < 21:
+        return "evening"
+    return "night"
+
+
+def generate_mind_nudge(user: dict) -> str:
     db = get_supabase()
     user_id = user.get("id", "")
     name = user.get("name", "yaar") if user else "yaar"
@@ -1488,19 +1564,20 @@ def generate_morning_nudge(user: dict) -> str:
         facts.append(mood_line)
 
     facts_block = "\n".join(facts) if facts else "No tracking data logged yet — that's fine, keep it general."
+    time_word = _time_of_day_word()
 
     response = client.messages.create(
         model=MODEL,
         max_tokens=120,
         system=(
-            f"You are KYROO, {name}'s AI best friend. Morning WhatsApp brief. Goal: {fitness_goal}.\n\n"
+            f"You are KYROO, {name}'s AI best friend. Mind/wellbeing WhatsApp check-in, sent in the {time_word}. Goal: {fitness_goal}.\n\n"
             f"FACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n"
             "EXACT SHAPE to follow:\n"
-            "Good morning!\n\n"
+            f"Good {time_word}!\n\n"
             "[one fact line]\n[another fact line, only if given]\n\n"
             "One thing for today: [one specific, actionable suggestion tied to their goal, not a platitude]"
         ),
-        messages=[{"role": "user", "content": f"Morning nudge for {name}"}]
+        messages=[{"role": "user", "content": f"Mind check-in for {name}"}]
     )
     return response.content[0].text
 
@@ -1524,9 +1601,9 @@ def _todays_tracking_row(db, user_id: str) -> dict | None:
         return None
 
 
-# ─── AFTERNOON NUDGE (money check-in) ────────────────────────────────────────
+# ─── MONEY NUDGE ──────────────────────────────────────────────────────────────
 
-def generate_afternoon_nudge(user: dict) -> str:
+def generate_money_nudge(user: dict) -> str:
     db = get_supabase()
     user_id = user.get("id", "")
     name = user.get("name", "yaar") if user else "yaar"
@@ -1550,15 +1627,15 @@ def generate_afternoon_nudge(user: dict) -> str:
     response = client.messages.create(
         model=MODEL,
         max_tokens=110,
-        system=f"You are KYROO, {name}'s AI best friend. Midday WhatsApp money check-in. Money habit: {money_habit}.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n{shape}\n{instruction}",
-        messages=[{"role": "user", "content": f"Afternoon money check-in for {name}"}]
+        system=f"You are KYROO, {name}'s AI best friend. WhatsApp money check-in. Money habit: {money_habit}.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n{shape}\n{instruction}",
+        messages=[{"role": "user", "content": f"Money check-in for {name}"}]
     )
     return response.content[0].text
 
 
-# ─── EVENING NUDGE (fitness check-in) ────────────────────────────────────────
+# ─── FITNESS NUDGE ─────────────────────────────────────────────────────────────
 
-def generate_evening_nudge(user: dict) -> str:
+def generate_fitness_nudge(user: dict) -> str:
     db = get_supabase()
     user_id = user.get("id", "")
     name = user.get("name", "yaar") if user else "yaar"
@@ -1594,35 +1671,43 @@ def generate_evening_nudge(user: dict) -> str:
     response = client.messages.create(
         model=MODEL,
         max_tokens=110,
-        system=f"You are KYROO, {name}'s AI best friend. Evening WhatsApp movement check-in. Goal: {fitness_goal}.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n{shape}\n{instruction}",
-        messages=[{"role": "user", "content": f"Evening fitness check-in for {name}"}]
+        system=f"You are KYROO, {name}'s AI best friend. WhatsApp movement check-in. Goal: {fitness_goal}.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n{shape}\n{instruction}",
+        messages=[{"role": "user", "content": f"Fitness check-in for {name}"}]
     )
     return response.content[0].text
 
 
-# ─── NIGHT NUDGE (day wrap) ───────────────────────────────────────────────────
+# ─── STUDY NUDGE ───────────────────────────────────────────────────────────────
+# Replaces the old night-slot "day wrap" — generate_weekly_report already
+# covers a broader-than-daily summary, so a dedicated per-day domain
+# check-in here (matching the money/fitness pattern) is more useful than
+# a second, daily version of the same wrap-up idea.
 
-def generate_night_nudge(user: dict) -> str:
+def generate_study_nudge(user: dict) -> str:
     db = get_supabase()
     user_id = user.get("id", "")
     name = user.get("name", "yaar") if user else "yaar"
     today = _todays_tracking_row(db, user_id)
 
-    facts_block = _build_tracking_summary([today]) if today else "No tracking data logged today — that's fine, keep it general."
+    if today and today.get("study_minutes") is not None:
+        topic = today.get("study_topic", "")
+        facts_block = f"Studied today: {today['study_minutes']} min" + (f" ({topic})" if topic else "")
+        shape = (
+            "EXACT SHAPE to follow:\n"
+            "Hey, saw you put in [duration] on [topic, or 'studying' if no topic given] today.\n\n"
+            "[one short, genuine encouragement or question, not generic praise]"
+        )
+        instruction = "Never invent a duration, topic, or subject beyond what's given above."
+    else:
+        facts_block = "Nothing logged yet today."
+        shape = "EXACT SHAPE to follow: one casual line asking what they studied or worked on today, no blank-line block needed since there's nothing to react to yet."
+        instruction = "Don't lecture or invent anything, this is just a casual check-in."
 
     response = client.messages.create(
         model=MODEL,
-        max_tokens=130,
-        system=(
-            f"You are KYROO, {name}'s AI best friend. Late-night WhatsApp day wrap.\n\n"
-            f"FACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n"
-            "EXACT SHAPE to follow:\n"
-            "Day wrap.\n\n"
-            "[short phrase for fact 1]\n[short phrase for fact 2]\n[etc, one phrase per line, only for facts actually given]\n\n"
-            "Tomorrow: [one small, specific thing to focus on, based on the real data, not generic advice]\n\n"
-            "Turn each real fact into a short qualitative phrase (e.g. a real mood_score of 8/10 becomes 'Great energy day', a real logged workout becomes its own line, plain phrases, no 'Label:' prefixes)."
-        ),
-        messages=[{"role": "user", "content": f"Night wrap for {name}"}]
+        max_tokens=110,
+        system=f"You are KYROO, {name}'s AI best friend. WhatsApp study check-in.\n\nFACTS:\n{facts_block}\n\n{_NUDGE_FACTS_RULE}\n{shape}\n{instruction}",
+        messages=[{"role": "user", "content": f"Study check-in for {name}"}]
     )
     return response.content[0].text
 

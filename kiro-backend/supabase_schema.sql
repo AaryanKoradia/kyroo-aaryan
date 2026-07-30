@@ -32,7 +32,15 @@ create table if not exists users (
     eat_habits        text[] default '{}',
     diet_restrictions text default '',
     job_type          text default '',
-    onboarding_step   int default 99
+    onboarding_step   int default 99,
+    -- Per-domain nudge times. nudge_time above already covers the "mind"
+    -- domain slot; these three cover money/fitness/study. All start at a
+    -- sensible default (same times the old fixed slots used) and get
+    -- overwritten by set_domain_nudge_time whenever KYROO picks up on the
+    -- user's own stated routine in conversation — never hardcoded per user.
+    money_nudge_time   text default '1 PM',
+    fitness_nudge_time text default '6:30 PM',
+    study_nudge_time   text default '9 PM'
 );
 
 -- Looked up on every single inbound WhatsApp message via get_or_create_user()
@@ -56,6 +64,9 @@ alter table users add column if not exists job_type          text default '';
 -- brand new WhatsApp-first contact, gating them into the WhatsApp-native
 -- onboarding flow instead of full chat.
 alter table users add column if not exists onboarding_step   int default 99;
+alter table users add column if not exists money_nudge_time   text default '1 PM';
+alter table users add column if not exists fitness_nudge_time text default '6:30 PM';
+alter table users add column if not exists study_nudge_time   text default '9 PM';
 
 -- ─── email_otps ────────────────────────────────────────────────────────────
 create table if not exists email_otps (
@@ -133,10 +144,15 @@ create table if not exists user_tracking (
     bedtime           text,
     wake_time         text,
 
+    study_minutes     int,
+    study_topic       text,
+
     created_at        timestamptz default now(),
     unique (user_id, date)
 );
 create index if not exists idx_user_tracking_user on user_tracking(user_id, date desc);
+alter table user_tracking add column if not exists study_minutes int;
+alter table user_tracking add column if not exists study_topic   text;
 
 -- ─── weekly_reports ────────────────────────────────────────────────────────
 create table if not exists weekly_reports (
