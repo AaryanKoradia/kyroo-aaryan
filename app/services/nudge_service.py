@@ -109,40 +109,6 @@ def _is_disengaged(db, user_id: str) -> bool:
     return (style.get("engagement_score") or 0) < DISENGAGEMENT_THRESHOLD
 
 
-_NUDGE_SLOT_NAMES = set(GENERATORS.keys())
-
-
-def _has_unanswered_nudge(db, user_id: str) -> bool:
-    """True if TODAY's most recent chat_history row for this user IS a
-    nudge placeholder — meaning they haven't replied to anything since a
-    nudge went out earlier today. Scoped to today only (previously
-    all-time, with no lower bound): piling another nudge on top of an
-    already-unanswered one same-day is what got reported as spammy, but
-    checking all-time meant a single ignored nudge silenced every future
-    slot for that user forever, across every day, until they happened to
-    message KYROO again for an unrelated reason — directly working
-    against ever reliably reaching someone with 4 nudges a day. This
-    still holds off piling on within a day, and resets fresh every
-    morning."""
-    today_start = datetime.now(IST).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
-    try:
-        res = (
-            db.table("chat_history")
-            .select("user_message")
-            .eq("user_id", user_id)
-            .gte("created_at", today_start)
-            .order("created_at", desc=True)
-            .limit(1)
-            .execute()
-        )
-        rows = res.data or []
-    except Exception:
-        return False
-    if not rows:
-        return False
-    return rows[0].get("user_message") in _NUDGE_SLOT_NAMES
-
-
 def _claim_nudge(db, user_id: str, slot: str) -> bool:
     """Atomically claims (user_id, slot, today) via sent_nudges' primary
     key — returns True if this call won the claim, False if another
@@ -236,18 +202,19 @@ def check_and_send_nudges() -> dict:
 
     for user in users:
         # computed once per user, not per slot — same verdict applies to
-        # every slot checked below
+        # every slot checked below. This USED to also gate on whether the
+        # most recent nudge of ANY domain went unanswered today — dropped,
+        # because with 4 genuinely different domains now, ignoring the
+        # morning mind check-in is not a reason to also withhold the
+        # unrelated money/fitness/study ones later that day; each domain
+        # already caps at once/day via _already_sent_today on its own.
         disengaged = _is_disengaged(db, user["id"])
-        unanswered = _has_unanswered_nudge(db, user["id"])
 
         for slot in GENERATORS:
             target = _slot_target_time(user, slot)
             if not _is_due(now_ist, target):
                 continue
             if _already_sent_today(db, user["id"], slot):
-                continue
-            if unanswered:
-                suppressed.append({"user": user.get("name"), "slot": slot, "reason": "unanswered_nudge"})
                 continue
             if slot != "mind_nudge" and disengaged:
                 suppressed.append({"user": user.get("name"), "slot": slot, "reason": "disengaged"})
