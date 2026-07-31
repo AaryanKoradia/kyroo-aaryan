@@ -42,6 +42,18 @@ DEFAULT_SLOT_TIMES = {
 
 _SLOT_TO_DOMAIN = {"mind_nudge": "mind", "money_nudge": "money", "fitness_nudge": "fitness", "study_nudge": "study"}
 
+# Each domain gets its own approved WhatsApp template instead of one
+# generic fallback shared across all 4 — otherwise the domain-specific
+# framing (money vs fitness vs study) would be entirely lost for anyone
+# outside their 24h session window, which defeats most of the point of
+# having split nudges into domains in the first place.
+SLOT_TEMPLATE_ENV_VARS = {
+    "mind_nudge": "WHATSAPP_TEMPLATE_NUDGE_MIND",
+    "money_nudge": "WHATSAPP_TEMPLATE_NUDGE_MONEY",
+    "fitness_nudge": "WHATSAPP_TEMPLATE_NUDGE_FITNESS",
+    "study_nudge": "WHATSAPP_TEMPLATE_NUDGE_STUDY",
+}
+
 # How late a slot is still allowed to fire after its target time. This is
 # nominally every 10 min (the cron interval), but GitHub Actions' free
 # scheduled workflows are unreliable in practice — observed real gaps
@@ -194,7 +206,7 @@ def _send_nudge(db, user: dict, slot: str) -> str:
 
     outcome = send_proactive(
         db, user, _generate_and_send,
-        "WHATSAPP_TEMPLATE_NUDGE", [user.get("name", "yaar")],
+        SLOT_TEMPLATE_ENV_VARS[slot], [user.get("name", "yaar")],
     )
     if outcome == "skipped_no_template":
         # nothing was actually sent — don't log it as today's nudge, so a
