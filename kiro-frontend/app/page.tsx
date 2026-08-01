@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { Sunrise, Wallet, Dumbbell, Moon, Brain, BedDouble, Target, FolderOpen, PenLine, MessageCircle, Rocket, GraduationCap, AlarmClock, Mic, Camera, Link2, FileText, Sparkles, Puzzle, type LucideIcon } from "lucide-react";
 import ScrollRevealHero from "@/components/ScrollRevealHero";
+import ScrollRevealFeatures from "@/components/ScrollRevealFeatures";
 
 function useInView(threshold = 0.12) {
   const ref = useRef<HTMLDivElement>(null);
@@ -181,18 +182,14 @@ export default function Home() {
         </div>
       </div>
 
-      {/* FEATURES */}
-      <section id="features" ref={featRef.ref} className="pad" style={{ padding: "110px 48px" }}>
-        <div style={{ maxWidth: 1180, margin: "0 auto" }}>
-          <div style={{ marginBottom: 60, opacity: featRef.inView ? 1 : 0, transform: featRef.inView ? "translateY(0)" : "translateY(20px)", transition: "all .5s ease" }}>
-            <Tag>What KYROO takes care of</Tag>
-            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(34px,5.5vw,68px)", lineHeight: 0.98, letterSpacing: -1.5, marginTop: 18, textTransform: "uppercase" }}>
-              Your whole life.<br />One friend who<br /><span style={{ color: "var(--k-coral)" }}>actually pays attention.</span>
-            </h2>
-          </div>
+      {/* FEATURES (scroll-reveal, one domain at a time) */}
+      <ScrollRevealFeatures />
 
-          <div className="ft-g" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
-            {FEATURES.map((f, i) => (
+      {/* GOALS + FILE TOOLS (the other 2 FEATURES items, kept as a light supplementary pair) */}
+      <section ref={featRef.ref} className="pad" style={{ padding: "80px 48px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <div className="ft-g" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 18 }}>
+            {FEATURES.slice(4).map((f, i) => (
               <div key={f.title} className="k-card" style={{ padding: "28px 24px", transform: `rotate(${i % 2 === 0 ? -1 : 1}deg)`, opacity: featRef.inView ? 1 : 0, transition: `opacity .5s ease ${i * 0.08}s` }}>
                 <div style={{ width: 52, height: 52, background: f.color, border: "3px solid var(--k-ink)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}><f.icon size={24} color="var(--k-ink)" strokeWidth={2.3} /></div>
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 19, marginBottom: 10, textTransform: "uppercase" }}>{f.title}</div>
