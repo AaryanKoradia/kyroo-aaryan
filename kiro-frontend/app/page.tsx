@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { Sunrise, Wallet, Dumbbell, Moon, Brain, BedDouble, Target, FolderOpen, PenLine, MessageCircle, Rocket, GraduationCap, AlarmClock, Mic, Camera, Link2, FileText, Sparkles, Puzzle, type LucideIcon } from "lucide-react";
+import ScrollRevealHero from "@/components/ScrollRevealHero";
 
 function useInView(threshold = 0.12) {
   const ref = useRef<HTMLDivElement>(null);
@@ -105,7 +106,7 @@ export default function Home() {
   const go = (p: string) => () => { window.location.href = p; };
 
   return (
-    <div className="k-grain" style={{ background: "var(--k-paper)", minHeight: "100vh", color: "var(--k-ink)", fontFamily: "var(--font-body)", overflowX: "hidden" }}>
+    <div className="k-grain" style={{ background: "var(--k-paper)", minHeight: "100vh", color: "var(--k-ink)", fontFamily: "var(--font-body)", overflowX: "clip" }}>
       <style>{`
         *, *::before, *::after { box-sizing: border-box; }
         @keyframes k-fade-up { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
@@ -164,45 +165,10 @@ export default function Home() {
       </nav>
 
       {/* HERO */}
-      <section style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "150px 24px 80px", overflow: "hidden" }}>
-        <div className="k-float hero-float-tag" style={{ "--k-rot": "-8deg", position: "absolute", top: "18%", left: "6%", zIndex: 1 } as React.CSSProperties}>
-          <div style={{ transform: "rotate(-8deg)" }}><Tag bg="var(--k-lime)"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Dumbbell size={12} strokeWidth={2.5} /> Fitness</span></Tag></div>
-        </div>
-        <div className="k-float hero-float-tag" style={{ "--k-rot": "6deg", position: "absolute", top: "26%", right: "8%", zIndex: 1, animationDelay: "1s" } as React.CSSProperties}>
-          <div style={{ transform: "rotate(6deg)" }}><Tag bg="var(--k-coral)"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Wallet size={12} strokeWidth={2.5} /> Money</span></Tag></div>
-        </div>
-        <div className="k-float hero-float-tag" style={{ "--k-rot": "5deg", position: "absolute", bottom: "20%", left: "10%", zIndex: 1, animationDelay: "2s" } as React.CSSProperties}>
-          <div style={{ transform: "rotate(5deg)" }}><Tag bg="#fff"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><BedDouble size={12} strokeWidth={2.5} /> Sleep</span></Tag></div>
-        </div>
-        <div className="k-float hero-float-tag" style={{ "--k-rot": "-5deg", position: "absolute", bottom: "28%", right: "6%", zIndex: 1, animationDelay: "1.5s" } as React.CSSProperties}>
-          <div style={{ transform: "rotate(-5deg)" }}><Tag bg="var(--k-blue)"><span style={{ color: "#fff", display: "inline-flex", alignItems: "center", gap: 6 }}><Brain size={12} strokeWidth={2.5} /> Mind</span></Tag></div>
-        </div>
-
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--k-ink)", color: "var(--k-lime)", border: "2px solid var(--k-ink)", padding: "7px 18px", fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 32, transform: "rotate(-2deg)", position: "relative", zIndex: 2 }} className="k-fade-1">
-          <span className="k-blink" style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--k-lime)", display: "inline-block" }} />
-          ✦ Free on WhatsApp, no app needed
-        </div>
-
-        <h1 className="hero-h1 k-fade-2" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(48px,9vw,128px)", lineHeight: 0.94, letterSpacing: -2, marginBottom: 22, maxWidth: 1100, position: "relative", zIndex: 2, textTransform: "uppercase" }}>
-          Your best friend<br />
-          <span style={{ background: "var(--k-coral)", padding: "0 14px", display: "inline-block", transform: "rotate(-1.5deg)", boxShadow: "6px 6px 0 var(--k-ink)", border: "3px solid var(--k-ink)", marginTop: 10 }}>
-            who runs your life.
-          </span>
-        </h1>
-
-        <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 15, color: "rgba(20,18,15,0.72)", maxWidth: 420, lineHeight: 1.8, margin: "0 auto 30px", position: "relative", zIndex: 2 }} className="k-fade-3">
-          FITNESS · MONEY · MIND · SLEEP<br />ONE FRIEND. EVERY DAY. ON WHATSAPP.
-        </p>
-
-        <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", position: "relative", zIndex: 2 }} className="k-fade-4">
-          <button className="k-btn k-btn-lime" onClick={go("/onboarding")} style={{ padding: "18px 40px", fontSize: 16, display: "inline-flex", alignItems: "center", gap: 10 }}>
-            <MessageCircle size={19} strokeWidth={2.4} />Start on WhatsApp, it's free
-          </button>
-          <button className="k-btn k-btn-ghost" onClick={() => document.querySelector("#features")?.scrollIntoView({ behavior: "smooth" })}>
-            See what she does →
-          </button>
-        </div>
-      </section>
+      <ScrollRevealHero
+        onStart={go("/onboarding")}
+        onSeeFeatures={() => document.querySelector("#features")?.scrollIntoView({ behavior: "smooth" })}
+      />
 
       {/* TICKER */}
       <div style={{ overflow: "hidden", borderTop: "3px solid var(--k-ink)", borderBottom: "3px solid var(--k-ink)", padding: "16px 0", background: "var(--k-ink)" }}>
