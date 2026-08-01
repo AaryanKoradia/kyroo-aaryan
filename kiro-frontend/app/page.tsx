@@ -156,11 +156,6 @@ export default function Home() {
             KYROO<span style={{ color: "var(--k-coral)" }}>.</span>
           </div>
         </div>
-        <div className="k-nav-links" style={{ display: "flex", gap: 30 }}>
-          {[["How it works", "#how"], ["Features", "#features"], ["Pricing", "#pricing"]].map(([l, h]) => (
-            <a key={l} className="k-nav-a" href={h} onClick={(e) => { e.preventDefault(); document.querySelector(h)?.scrollIntoView({ behavior: "smooth" }); }}>{l}</a>
-          ))}
-        </div>
         <button className="k-btn k-btn-coral" onClick={go("/onboarding")} style={{ padding: "9px 20px", fontSize: 13, boxShadow: "4px 4px 0 var(--k-ink)" }}>Start free →</button>
       </nav>
 
