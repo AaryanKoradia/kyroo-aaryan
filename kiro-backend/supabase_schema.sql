@@ -196,6 +196,22 @@ create table if not exists sent_nudges (
     primary key (user_id, slot, sent_date)
 );
 
+-- ─── cron_runs ─────────────────────────────────────────────────────────────
+-- One row per /nudges/check-and-send or /reminders/check-and-send hit, so a
+-- "no nudges arrived today" report can be diagnosed from the actual gap
+-- between runs (external cron trigger not firing) instead of guessed at —
+-- query this via GET /debug/cron-status before assuming an app-code bug.
+create table if not exists cron_runs (
+    id          bigint generated always as identity primary key,
+    job         text not null,
+    ran_at      timestamptz not null default now(),
+    checked     int,
+    sent        int,
+    failed      int,
+    suppressed  int
+);
+create index if not exists idx_cron_runs_job_ran_at on cron_runs (job, ran_at desc);
+
 -- ─── emotional_memory ──────────────────────────────────────────────────────
 create table if not exists emotional_memory (
     id               uuid primary key default gen_random_uuid(),

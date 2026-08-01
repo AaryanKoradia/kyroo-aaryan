@@ -16,6 +16,7 @@ from app.infrastructure.whatsapp.client import WhatsAppClient
 from app.services.nudge_time import parse_nudge_time
 from app.services.proactive_messaging import send_proactive
 from app.services.tracking_service import DOMAIN_TIME_COLUMNS
+from app.services.cron_log import log_cron_run
 
 IST = pytz.timezone("Asia/Kolkata")
 logger = logging.getLogger(__name__)
@@ -246,4 +247,5 @@ def check_and_send_nudges() -> dict:
                 sentry_sdk.capture_exception(e)
                 failed.append({"user": user.get("name"), "slot": slot, "error": str(e)})
 
+    log_cron_run(db, "nudges", checked=len(users), sent=len(sent), failed=len(failed), suppressed=len(suppressed))
     return {"checked": len(users), "sent": sent, "failed": failed, "suppressed": suppressed}
