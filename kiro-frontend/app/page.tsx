@@ -2,8 +2,7 @@
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { Sunrise, Wallet, Dumbbell, Moon, Brain, BedDouble, Target, FolderOpen, PenLine, MessageCircle, Rocket, GraduationCap, AlarmClock, Mic, Camera, Link2, FileText, Sparkles, Puzzle, type LucideIcon } from "lucide-react";
-import ScrollRevealHero from "@/components/ScrollRevealHero";
-import ScrollRevealFeatures from "@/components/ScrollRevealFeatures";
+import ScrollRevealJourney from "@/components/ScrollRevealJourney";
 
 function useInView(threshold = 0.12) {
   const ref = useRef<HTMLDivElement>(null);
@@ -160,11 +159,9 @@ export default function Home() {
         <button className="k-btn k-btn-coral" onClick={go("/onboarding")} style={{ padding: "9px 20px", fontSize: 13, boxShadow: "4px 4px 0 var(--k-ink)" }}>Start free →</button>
       </nav>
 
-      {/* HERO */}
-      <ScrollRevealHero
-        onStart={go("/onboarding")}
-        onSeeFeatures={() => document.querySelector("#features")?.scrollIntoView({ behavior: "smooth" })}
-      />
+      {/* HERO -> FEATURES: one continuous pinned scroll journey, no seam
+          between the hero and the first domain */}
+      <ScrollRevealJourney onStart={go("/onboarding")} />
 
       {/* TICKER */}
       <div style={{ overflow: "hidden", borderTop: "3px solid var(--k-ink)", borderBottom: "3px solid var(--k-ink)", padding: "16px 0", background: "var(--k-ink)" }}>
@@ -181,9 +178,6 @@ export default function Home() {
           ))}
         </div>
       </div>
-
-      {/* FEATURES (scroll-reveal, one domain at a time) */}
-      <ScrollRevealFeatures />
 
       {/* GOALS + FILE TOOLS (the other 2 FEATURES items, kept as a light supplementary pair) */}
       <section ref={featRef.ref} className="pad" style={{ padding: "80px 48px" }}>
