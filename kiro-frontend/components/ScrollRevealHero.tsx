@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { MessageCircle, Dumbbell, Wallet, BedDouble, Brain } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 
 // Each shape drifts, rotates, and scales as a pure function of scroll
 // progress (0 to 1) through the pinned section - not real-time animation.
@@ -138,46 +138,12 @@ export default function ScrollRevealHero({ onStart, onSeeFeatures }: { onStart: 
           textAlign: "center", padding: "150px 24px 80px",
         }}
       >
-        <div className="k-float hero-float-tag" style={{ "--k-rot": "-8deg", position: "absolute", top: "18%", left: "6%", zIndex: 1 } as React.CSSProperties}>
-          <div style={{ transform: "rotate(-8deg)" }}>
-            <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, padding: "4px 10px", background: "var(--k-lime)", border: "2px solid var(--k-ink)", color: "var(--k-ink)", display: "inline-flex", alignItems: "center", gap: 6 }}>
-              <Dumbbell size={12} strokeWidth={2.5} /> Fitness
-            </span>
-          </div>
-        </div>
-        <div className="k-float hero-float-tag" style={{ "--k-rot": "6deg", position: "absolute", top: "26%", right: "8%", zIndex: 1, animationDelay: "1s" } as React.CSSProperties}>
-          <div style={{ transform: "rotate(6deg)" }}>
-            <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, padding: "4px 10px", background: "var(--k-coral)", border: "2px solid var(--k-ink)", color: "var(--k-ink)", display: "inline-flex", alignItems: "center", gap: 6 }}>
-              <Wallet size={12} strokeWidth={2.5} /> Money
-            </span>
-          </div>
-        </div>
-        <div className="k-float hero-float-tag" style={{ "--k-rot": "5deg", position: "absolute", bottom: "20%", left: "10%", zIndex: 1, animationDelay: "2s" } as React.CSSProperties}>
-          <div style={{ transform: "rotate(5deg)" }}>
-            <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, padding: "4px 10px", background: "#fff", border: "2px solid var(--k-ink)", color: "var(--k-ink)", display: "inline-flex", alignItems: "center", gap: 6 }}>
-              <BedDouble size={12} strokeWidth={2.5} /> Sleep
-            </span>
-          </div>
-        </div>
-        <div className="k-float hero-float-tag" style={{ "--k-rot": "-5deg", position: "absolute", bottom: "28%", right: "6%", zIndex: 1, animationDelay: "1.5s" } as React.CSSProperties}>
-          <div style={{ transform: "rotate(-5deg)" }}>
-            <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, padding: "4px 10px", background: "var(--k-blue)", border: "2px solid var(--k-ink)", color: "#fff", display: "inline-flex", alignItems: "center", gap: 6 }}>
-              <Brain size={12} strokeWidth={2.5} /> Mind
-            </span>
-          </div>
-        </div>
-
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--k-ink)", color: "var(--k-lime)", border: "2px solid var(--k-ink)", padding: "7px 18px", fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 32, transform: "rotate(-2deg)", position: "relative", zIndex: 2 }}>
-          <span className="k-blink" style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--k-lime)", display: "inline-block" }} />
-          ✦ Free on WhatsApp, no app needed
-        </div>
-
         <h1
           ref={textRef}
           className="hero-h1"
           style={{
             fontFamily: "var(--font-display)", fontSize: "clamp(48px,9vw,128px)", lineHeight: 0.94, letterSpacing: -2,
-            marginBottom: 22, maxWidth: 1100, position: "relative", zIndex: 2, textTransform: "uppercase",
+            marginBottom: 36, maxWidth: 1100, position: "relative", zIndex: 2, textTransform: "uppercase",
             backgroundSize: "100% 100%", backgroundPosition: "center", backgroundRepeat: "no-repeat",
             WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent",
           }}
@@ -185,15 +151,14 @@ export default function ScrollRevealHero({ onStart, onSeeFeatures }: { onStart: 
           Your best friend<br />who runs your life.
         </h1>
 
-        <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 15, color: "rgba(20,18,15,0.72)", maxWidth: 420, lineHeight: 1.8, margin: "0 auto 30px", position: "relative", zIndex: 2 }}>
-          FITNESS · MONEY · MIND · SLEEP<br />ONE FRIEND. EVERY DAY. ON WHATSAPP.
-        </p>
-
-        <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", position: "relative", zIndex: 2 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, position: "relative", zIndex: 2 }}>
           <button className="k-btn k-btn-lime" onClick={onStart} style={{ padding: "18px 40px", fontSize: 16, display: "inline-flex", alignItems: "center", gap: 10 }}>
             <MessageCircle size={19} strokeWidth={2.4} />Start on WhatsApp, it&apos;s free
           </button>
-          <button className="k-btn k-btn-ghost" onClick={onSeeFeatures}>
+          <button
+            onClick={onSeeFeatures}
+            style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-mono-tag)", fontSize: 12, fontWeight: 700, letterSpacing: 0.5, color: "rgba(20,18,15,0.55)", textDecoration: "underline", textUnderlineOffset: 4 }}
+          >
             See what she does →
           </button>
         </div>
