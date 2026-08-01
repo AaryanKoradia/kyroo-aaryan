@@ -42,11 +42,17 @@ DEFAULT_SLOT_TIMES = {
 
 _SLOT_TO_DOMAIN = {"mind_nudge": "mind", "money_nudge": "money", "fitness_nudge": "fitness", "study_nudge": "study"}
 
-# Each domain gets its own approved WhatsApp template instead of one
-# generic fallback shared across all 4 — otherwise the domain-specific
-# framing (money vs fitness vs study) would be entirely lost for anyone
-# outside their 24h session window, which defeats most of the point of
-# having split nudges into domains in the first place.
+# Deliberate product decision, not a temporary gap: nudges only ever go
+# out free-form, inside the user's 24h WhatsApp session window, where the
+# real AI-generated, data-grounded version can be sent. A WhatsApp
+# template is static — the exact same wording every time — which felt
+# robotic and repetitive compared to the real thing once actually
+# compared side by side. So even though templates for all 4 domains
+# exist and can be approved, these env vars are meant to stay UNSET on
+# purpose. If a domain's env var ever does get set (e.g. by accident,
+# or a future decision to reverse this), send_proactive will use it as
+# a fallback — that's just how the shared plumbing works, not something
+# this file forces either way.
 SLOT_TEMPLATE_ENV_VARS = {
     "mind_nudge": "WHATSAPP_TEMPLATE_NUDGE_MIND",
     "money_nudge": "WHATSAPP_TEMPLATE_NUDGE_MONEY",
@@ -227,7 +233,8 @@ def check_and_send_nudges() -> dict:
                 outcome = _send_nudge(db, user, slot)
                 if outcome == "skipped_no_template":
                     _release_nudge_claim(db, user["id"], slot)
-                    suppressed.append({"user": user.get("name"), "slot": slot, "reason": "no_template_configured"})
+                    # by design, not a bug — see SLOT_TEMPLATE_ENV_VARS above
+                    suppressed.append({"user": user.get("name"), "slot": slot, "reason": "outside_session_window_no_fallback_by_design"})
                 else:
                     sent.append({"user": user.get("name"), "slot": slot})
             except Exception as e:
