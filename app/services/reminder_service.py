@@ -7,6 +7,7 @@ import sentry_sdk
 from app.database.supabase_client import get_supabase
 from app.infrastructure.whatsapp.client import WhatsAppClient
 from app.services.proactive_messaging import send_proactive
+from app.services.cron_log import log_cron_run
 
 IST = pytz.timezone("Asia/Kolkata")
 logger = logging.getLogger(__name__)
@@ -163,6 +164,12 @@ def check_and_send_reminders() -> dict:
             sentry_sdk.capture_exception(e)
             failed.append({"id": r["id"], "stage": "reminder", "error": str(e)[:MAX_ERROR_CHARS]})
 
+    log_cron_run(
+        db, "reminders",
+        checked=len(pre_due.data or []) + len(main_due.data or []),
+        sent=len(sent_pre_alerts) + len(sent_reminders),
+        failed=len(failed), suppressed=len(skipped),
+    )
     return {
         "checked_pre_alerts": len(pre_due.data or []),
         "checked_reminders": len(main_due.data or []),

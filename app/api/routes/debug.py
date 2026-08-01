@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.api.dependencies.cron_auth import require_cron_secret
 from app.core.config import settings
+from app.database.supabase_client import get_supabase
 from app.infrastructure.whatsapp.client import WhatsAppClient
 
 router = APIRouter(prefix="/debug", tags=["debug"])
@@ -36,3 +37,25 @@ async def send_test(phone: str, message: str = DEFAULT_TEST_MESSAGE):
         "sending_phone_number_id": settings.phone_number_id,
         "meta_response": meta_response,
     }
+
+
+@router.get("/cron-status", dependencies=[Depends(require_cron_secret)])
+async def cron_status(limit: int = 20):
+    """Shows the last N times /nudges/check-and-send and
+    /reminders/check-and-send actually ran (see cron_runs, written by
+    app.services.cron_log.log_cron_run) - this is what tells you WHETHER
+    the external cron trigger (GitHub Actions / cron-job.org) is actually
+    firing at all, instead of guessing again every time a "no nudge
+    arrived today" report comes in. A big gap in ran_at between rows (or
+    no row at all for a day) means the trigger didn't fire - go check
+    that service's dashboard, not the app code. Rows present on schedule
+    with sent=0/failed=0 all day means the trigger is fine and the miss
+    is inside app logic instead."""
+    db = get_supabase()
+    res = (
+        db.table("cron_runs").select("*")
+        .order("ran_at", desc=True)
+        .limit(limit)
+        .execute()
+    )
+    return {"runs": res.data or []}
