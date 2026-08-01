@@ -453,14 +453,17 @@ async def webhook(request: Request, db=Depends(get_db)):
 
     text = message["text"]["body"].strip()
 
-    async def _reply_to_batch(combined_text: str, latest_message_id: str):
+    async def _reply_to_batch(combined_text: str, message_ids: list[str]):
         try:
             wa = WhatsAppClient()
-            if latest_message_id:
-                # marks the message read + shows "typing..." while the LLM
-                # is actually generating, instead of the user seeing nothing
-                # happen for the next several seconds
-                wa.send_typing_indicator(latest_message_id)
+            # each message in the burst needs its OWN read-receipt call —
+            # marking only the last one left earlier bubbles in a fast
+            # multi-text burst stuck on gray ticks forever, even after
+            # KYROO had already replied to the combined text. The final
+            # call is the one that also shows "typing..." while the LLM
+            # is actually generating.
+            for mid in message_ids:
+                wa.send_typing_indicator(mid)
 
             if is_sticker_war_trigger(combined_text):
                 # kick it off with a couple of stickers rather than a
