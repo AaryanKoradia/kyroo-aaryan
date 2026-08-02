@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { Sunrise, Wallet, Dumbbell, Moon, Brain, BedDouble, Target, FolderOpen, PenLine, MessageCircle, Rocket, GraduationCap, AlarmClock, Mic, Camera, Link2, FileText, Sparkles, Puzzle, type LucideIcon } from "lucide-react";
 import ScrollRevealJourney from "@/components/ScrollRevealJourney";
+import LoadInReveal from "@/components/LoadInReveal";
 
 function useInView(threshold = 0.12) {
   const ref = useRef<HTMLDivElement>(null);
@@ -107,6 +108,7 @@ export default function Home() {
 
   return (
     <div className="k-grain" style={{ background: "var(--k-paper)", minHeight: "100vh", color: "var(--k-ink)", fontFamily: "var(--font-body)", overflowX: "clip" }}>
+      <LoadInReveal />
       <style>{`
         *, *::before, *::after { box-sizing: border-box; }
         @keyframes k-fade-up { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
