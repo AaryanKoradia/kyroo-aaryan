@@ -147,6 +147,7 @@ export default function Home() {
           .k-nav-links { display: none !important; }
           .k-nav { padding-left: 20px !important; padding-right: 20px !important; }
           .hero-float-tag { display: none !important; }
+          .k-dev-badge { display: none !important; }
         }
       `}</style>
 
@@ -156,6 +157,9 @@ export default function Home() {
           <Image src="/kyroo-logo.png" alt="KYROO" width={30} height={30} style={{ borderRadius: "50%", border: "2px solid var(--k-ink)", objectFit: "cover" }} />
           <div style={{ fontFamily: "var(--font-display)", fontSize: 22, letterSpacing: -0.5 }}>
             KYROO<span style={{ color: "var(--k-coral)" }}>.</span>
+          </div>
+          <div className="k-dev-badge" style={{ transform: "rotate(-2deg)" }}>
+            <Tag bg="var(--k-coral)">*Under development</Tag>
           </div>
         </div>
         <button className="k-btn k-btn-coral" onClick={go("/onboarding")} style={{ padding: "9px 20px", fontSize: 13, boxShadow: "4px 4px 0 var(--k-ink)" }}>Start free →</button>
