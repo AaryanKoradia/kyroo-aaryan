@@ -106,6 +106,16 @@ create table if not exists story_cache (
     fetched_at   timestamptz default now()
 );
 
+-- ─── slang_cache ───────────────────────────────────────────────────────────
+-- Urban Dictionary lookups keyed by term, so the same slang/meme term asked
+-- by different users doesn't re-hit the external API every single time -
+-- definitions for a given term are stable, not per-user or time-sensitive.
+create table if not exists slang_cache (
+    term         text primary key,
+    definition   text not null,
+    cached_at    timestamptz default now()
+);
+
 -- ─── chat_history ──────────────────────────────────────────────────────────
 create table if not exists chat_history (
     id             uuid primary key default gen_random_uuid(),
