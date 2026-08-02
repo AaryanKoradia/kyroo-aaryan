@@ -1,14 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, Dumbbell, Wallet, Brain, BedDouble, type LucideIcon } from "lucide-react";
+import { crackClipPath } from "./crackReveal";
 
 // One continuous pinned-scroll journey: Hero, then Fitness/Money/Mind/Sleep,
 // all sharing a SINGLE sticky section and a SINGLE progress value (0 to 1
-// across the whole wrapper). Everything - background color, content
-// opacity, the shapes inside the hero headline - is a pure function of
-// that one number, so there's no seam where one pinned component un-pins
-// and a different one re-pins: the hero cross-fades directly into Fitness
-// exactly the same way Fitness cross-fades into Money.
+// across the whole wrapper). Each slide transition is a scroll-scrubbed
+// "crack" wipe (see crackReveal.ts) - the incoming slide is a full-bleed
+// colored layer clipped by a jagged polygon that grows from the top-right
+// corner as you scroll, the same signature motion as the page's own
+// load-in reveal - rather than a flat cross-fade.
 
 type Shape = {
   color: string; kind: "circle" | "bar" | "blob" | "rect";
@@ -71,18 +72,8 @@ const HERO_TEXT = "#14120f";
 const SLIDE_COUNT = 1 + DOMAINS.length;
 
 // Within each slide's 1/N share of scroll, hold fully for the first HOLD
-// fraction, then cross-fade into the next slide for the rest.
+// fraction, then crack-wipe into the next slide for the rest.
 const HOLD = 0.65;
-
-function hexToRgb(hex: string) {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255] as const;
-}
-function lerpColor(a: string, b: string, t: number) {
-  const [r1, g1, b1] = hexToRgb(a);
-  const [r2, g2, b2] = hexToRgb(b);
-  return `rgb(${Math.round(lerp(r1, r2, t))}, ${Math.round(lerp(g1, g2, t))}, ${Math.round(lerp(b1, b2, t))})`;
-}
 
 function slideBg(i: number) { return i === 0 ? HERO_BG : DOMAINS[i - 1].bg; }
 function slideText(i: number) { return i === 0 ? HERO_TEXT : DOMAINS[i - 1].text; }
@@ -155,9 +146,7 @@ export default function ScrollRevealJourney({ onStart }: { onStart: () => void }
   const hasNext = index < SLIDE_COUNT - 1;
   const blendT = hasNext ? Math.max(0, Math.min(1, (local - HOLD) / (1 - HOLD))) : 0;
 
-  const bg = lerpColor(slideBg(index), hasNext ? slideBg(index + 1) : slideBg(index), blendT);
   const isHero = index === 0;
-  const nextDomain = hasNext ? DOMAINS[Math.max(0, index)] : null; // domains[index] === slide (index+1)-1
 
   const jumpPastHero = () => {
     const wrap = wrapRef.current;
@@ -173,84 +162,89 @@ export default function ScrollRevealJourney({ onStart }: { onStart: () => void }
         style={{
           position: "sticky", top: 0, height: "100vh", overflow: "hidden",
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-          textAlign: "center", padding: "24px", background: bg,
+          textAlign: "center", padding: "24px", background: slideBg(index),
         }}
       >
         {isHero ? (
-          <div style={{ position: "relative", width: "100%" }}>
-            <div
-              style={{
-                opacity: 1 - blendT,
-                // the headline is much bigger than a domain block - fading
-                // it in place would have it flatly overlap the incoming
-                // Fitness card. Scaling it down as it fades makes it recede
-                // toward the same visual weight instead of colliding.
-                transform: `scale(${1 - blendT * 0.32})`,
-                position: hasNext && blendT > 0.01 ? "absolute" : "relative", inset: 0, padding: "0 24px",
-              }}
-            >
-              <h1
-                ref={textRef}
-                className="hero-h1"
-                style={{
-                  fontFamily: "var(--font-display)", fontSize: "clamp(48px,9vw,128px)", lineHeight: 0.94, letterSpacing: -2,
-                  marginBottom: 36, maxWidth: 1100, marginLeft: "auto", marginRight: "auto", textTransform: "uppercase",
-                  backgroundSize: "100% 100%", backgroundPosition: "center", backgroundRepeat: "no-repeat",
-                  WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent",
-                }}
-              >
-                Your best friend<br />who runs your life.
-              </h1>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
-                <button className="k-btn k-btn-lime" onClick={onStart} style={{ padding: "18px 40px", fontSize: 16, display: "inline-flex", alignItems: "center", gap: 10 }}>
-                  <MessageCircle size={19} strokeWidth={2.4} />Start on WhatsApp, it&apos;s free
-                </button>
-                <button
-                  onClick={jumpPastHero}
-                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-mono-tag)", fontSize: 12, fontWeight: 700, letterSpacing: 0.5, color: "rgba(20,18,15,0.55)", textDecoration: "underline", textUnderlineOffset: 4 }}
-                >
-                  See what she does →
-                </button>
-              </div>
-            </div>
-
-            {hasNext && blendT > 0.01 && nextDomain && (
-              <div style={{ opacity: blendT, position: "relative", inset: 0, maxWidth: 640, margin: "0 auto" }}>
-                <DomainBlock d={nextDomain} />
-              </div>
-            )}
-          </div>
+          <HeroContent textRef={textRef} onStart={onStart} onSeeFeatures={jumpPastHero} />
         ) : (
           <>
-            <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5, color: slideText(index), opacity: 0.6, marginBottom: 28 }}>
-              What KYROO takes care of
-            </span>
-            <div style={{ position: "relative", width: "100%", maxWidth: 640 }}>
-              <div style={{ opacity: 1 - blendT, position: hasNext && blendT > 0.01 ? "absolute" : "relative", inset: 0 }}>
-                <DomainBlock d={DOMAINS[index - 1]} />
-              </div>
-              {hasNext && blendT > 0.01 && (
-                <div style={{ opacity: blendT, position: "relative", inset: 0 }}>
-                  <DomainBlock d={DOMAINS[index]} />
-                </div>
-              )}
-            </div>
+            <SlideTag color={slideText(index)} />
+            <DomainBlock d={DOMAINS[index - 1]} />
+            <Dots count={SLIDE_COUNT} active={index} color={slideText(index)} />
           </>
         )}
 
-        <div style={{ display: "flex", gap: 10, marginTop: 44 }}>
-          {Array.from({ length: SLIDE_COUNT }).map((_, i) => (
-            <span
-              key={i}
-              style={{
-                width: 8, height: 8, borderRadius: "50%",
-                background: i === index || (i === index + 1 && blendT > 0.5) ? slideText(index) : "transparent",
-                border: `2px solid ${slideText(index)}`, opacity: 0.7,
-              }}
-            />
-          ))}
-        </div>
+        {hasNext && blendT > 0.001 && (
+          <div
+            style={{
+              position: "absolute", inset: 0, background: slideBg(index + 1),
+              clipPath: crackClipPath(blendT), WebkitClipPath: crackClipPath(blendT),
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              textAlign: "center", padding: "24px",
+            }}
+          >
+            <SlideTag color={slideText(index + 1)} />
+            <DomainBlock d={DOMAINS[index]} />
+            <Dots count={SLIDE_COUNT} active={index + 1} color={slideText(index + 1)} />
+          </div>
+        )}
       </section>
+    </div>
+  );
+}
+
+function HeroContent({ textRef, onStart, onSeeFeatures }: { textRef: React.RefObject<HTMLHeadingElement | null>; onStart: () => void; onSeeFeatures: () => void }) {
+  return (
+    <div style={{ padding: "0 24px" }}>
+      <h1
+        ref={textRef}
+        className="hero-h1"
+        style={{
+          fontFamily: "var(--font-display)", fontSize: "clamp(48px,9vw,128px)", lineHeight: 0.94, letterSpacing: -2,
+          marginBottom: 36, maxWidth: 1100, marginLeft: "auto", marginRight: "auto", textTransform: "uppercase",
+          backgroundSize: "100% 100%", backgroundPosition: "center", backgroundRepeat: "no-repeat",
+          WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent",
+        }}
+      >
+        Your best friend<br />who runs your life.
+      </h1>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
+        <button className="k-btn k-btn-lime" onClick={onStart} style={{ padding: "18px 40px", fontSize: 16, display: "inline-flex", alignItems: "center", gap: 10 }}>
+          <MessageCircle size={19} strokeWidth={2.4} />Start on WhatsApp, it&apos;s free
+        </button>
+        <button
+          onClick={onSeeFeatures}
+          style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-mono-tag)", fontSize: 12, fontWeight: 700, letterSpacing: 0.5, color: "rgba(20,18,15,0.55)", textDecoration: "underline", textUnderlineOffset: 4 }}
+        >
+          See what she does →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SlideTag({ color }: { color: string }) {
+  return (
+    <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5, color, opacity: 0.6, marginBottom: 28 }}>
+      What KYROO takes care of
+    </span>
+  );
+}
+
+function Dots({ count, active, color }: { count: number; active: number; color: string }) {
+  return (
+    <div style={{ display: "flex", gap: 10, marginTop: 44 }}>
+      {Array.from({ length: count }).map((_, i) => (
+        <span
+          key={i}
+          style={{
+            width: 8, height: 8, borderRadius: "50%",
+            background: i === active ? color : "transparent",
+            border: `2px solid ${color}`, opacity: 0.7,
+          }}
+        />
+      ))}
     </div>
   );
 }
@@ -258,7 +252,7 @@ export default function ScrollRevealJourney({ onStart }: { onStart: () => void }
 function DomainBlock({ d }: { d: Domain }) {
   const Icon = d.icon;
   return (
-    <>
+    <div style={{ maxWidth: 640 }}>
       <div style={{ width: 88, height: 88, borderRadius: "50%", background: d.text, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 28px" }}>
         <Icon size={40} color={d.bg} strokeWidth={2.2} />
       </div>
@@ -268,6 +262,6 @@ function DomainBlock({ d }: { d: Domain }) {
       <p style={{ fontFamily: "var(--font-body)", fontSize: 17, lineHeight: 1.7, color: d.text, opacity: 0.85, maxWidth: 480, margin: "0 auto" }}>
         {d.desc}
       </p>
-    </>
+    </div>
   );
 }
