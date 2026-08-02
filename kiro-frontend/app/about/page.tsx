@@ -1,4 +1,12 @@
 import Image from "next/image";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "About KYROO — your best friend on WhatsApp",
+  description: "KYROO is an AI companion that lives inside WhatsApp, built around fitness, money, mind, and sleep. No app to download, just a phone number.",
+  alternates: { canonical: "/about" },
+};
+
 export default function About() {
   return (
     <main className="k-grain" style={{ background: "var(--k-paper)", minHeight: "100vh", color: "var(--k-ink)", fontFamily: "var(--font-body)" }}>

@@ -29,6 +29,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: SITE_TITLE,
   description: SITE_DESCRIPTION,
+  alternates: { canonical: "/" },
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",
@@ -50,6 +51,19 @@ export const metadata: Metadata = {
   },
 };
 
+// Organization structured data - helps KYROO qualify for a Google
+// knowledge panel / rich result rather than a plain blue link, and costs
+// nothing behaviorally (it's inert to a browser, only read by crawlers).
+const ORGANIZATION_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "KYROO",
+  url: SITE_URL,
+  logo: `${SITE_URL}/kyroo-logo.png`,
+  description: SITE_DESCRIPTION,
+  sameAs: ["https://wa.me/917400351463"],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -60,7 +74,13 @@ export default function RootLayout({
       lang="en"
       className={`${spaceGrotesk.variable} ${archivoBlack.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_JSON_LD) }}
+        />
+        {children}
+      </body>
       <CookieConsent gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
     </html>
   );
