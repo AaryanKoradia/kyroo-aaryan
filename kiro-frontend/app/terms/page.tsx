@@ -1,4 +1,12 @@
 import Image from "next/image";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service — KYROO",
+  description: "The terms that govern using KYROO on WhatsApp.",
+  alternates: { canonical: "/terms" },
+};
+
 export default function Terms() {
   return (
     <main className="k-grain" style={{ background: "var(--k-paper)", minHeight: "100vh", color: "var(--k-ink)", fontFamily: "var(--font-body)" }}>

@@ -1,4 +1,12 @@
 import Image from "next/image";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Contact KYROO",
+  description: "Questions or feedback about KYROO? Here's how to reach us.",
+  alternates: { canonical: "/contact" },
+};
+
 export default function Contact() {
   return (
     <main className="k-grain" style={{ background: "var(--k-paper)", minHeight: "100vh", color: "var(--k-ink)", fontFamily: "var(--font-body)" }}>

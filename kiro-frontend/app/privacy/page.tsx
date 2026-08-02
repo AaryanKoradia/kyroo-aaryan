@@ -1,4 +1,12 @@
 import Image from "next/image";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy — KYROO",
+  description: "How KYROO collects, uses, and protects your data, including WhatsApp messages, payments, and retention.",
+  alternates: { canonical: "/privacy" },
+};
+
 export default function Privacy() {
   return (
     <main className="k-grain" style={{ background: "var(--k-paper)", minHeight: "100vh", color: "var(--k-ink)", fontFamily: "var(--font-body)" }}>
