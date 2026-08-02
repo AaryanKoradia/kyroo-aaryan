@@ -1,15 +1,22 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, Dumbbell, Wallet, Brain, BedDouble, type LucideIcon } from "lucide-react";
-import { crackClipPath } from "./crackReveal";
+import { shatterClipPath, lerpColor } from "./crackReveal";
 
 // One continuous pinned-scroll journey: Hero, then Fitness/Money/Mind/Sleep,
 // all sharing a SINGLE sticky section and a SINGLE progress value (0 to 1
-// across the whole wrapper). Each slide transition is a scroll-scrubbed
-// "crack" wipe (see crackReveal.ts) - the incoming slide is a full-bleed
-// colored layer clipped by a jagged polygon that grows from the top-right
-// corner as you scroll, the same signature motion as the page's own
-// load-in reveal - rather than a flat cross-fade.
+// across the whole wrapper).
+//
+// The hero -> Fitness handoff is a distinct effect from the rest: the
+// giant headline keeps scaling up as you scroll, the color inside it
+// (and the page background) shifts toward Fitness's lime, and the real
+// Fitness content fades in on top - the next section "growing inside"
+// the big text, rather than a wipe.
+//
+// Every other transition (Fitness->Money->Mind->Sleep) is a scroll-
+// scrubbed shatter wipe (see crackReveal.ts) - many irregular shards
+// scattered across the screen, each growing on its own timer, rather
+// than a single edge sweeping from one side.
 
 type Shape = {
   color: string; kind: "circle" | "bar" | "blob" | "rect";
@@ -72,7 +79,7 @@ const HERO_TEXT = "#14120f";
 const SLIDE_COUNT = 1 + DOMAINS.length;
 
 // Within each slide's 1/N share of scroll, hold fully for the first HOLD
-// fraction, then crack-wipe into the next slide for the rest.
+// fraction, then transition into the next slide for the rest.
 const HOLD = 0.65;
 
 function slideBg(i: number) { return i === 0 ? HERO_BG : DOMAINS[i - 1].bg; }
@@ -82,6 +89,7 @@ export default function ScrollRevealJourney({ onStart }: { onStart: () => void }
   const wrapRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLHeadingElement>(null);
   const [progress, setProgress] = useState(0);
+  const [viewport, setViewport] = useState({ w: 0, h: 0 });
 
   useEffect(() => {
     const canvas = document.createElement("canvas");
@@ -101,13 +109,22 @@ export default function ScrollRevealJourney({ onStart }: { onStart: () => void }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    const paintHeroText = (t: number) => {
+    // mixT: 0 = ink base + full shapes (hold phase), ramping toward a flat
+    // Fitness-lime fill with the shapes fading out as the text grows into
+    // the crossfade - so what shows "inside" the text drifts toward the
+    // next section's color instead of staying a static pattern
+    const paintHeroText = (t: number, mixT: number) => {
       const el = textRef.current;
       if (!ctx || !el || !cw || !ch) return;
       ctx.clearRect(0, 0, cw, ch);
-      ctx.fillStyle = HERO_TEXT;
+      ctx.fillStyle = mixT > 0 ? lerpColor(HERO_TEXT, DOMAINS[0].bg, mixT) : HERO_TEXT;
       ctx.fillRect(0, 0, cw, ch);
-      SHAPES.forEach((s) => drawShape(ctx, s, t, cw, ch));
+      const shapeAlpha = Math.max(0, 1 - mixT / 0.7);
+      if (shapeAlpha > 0) {
+        ctx.globalAlpha = shapeAlpha;
+        SHAPES.forEach((s) => drawShape(ctx, s, t, cw, ch));
+        ctx.globalAlpha = 1;
+      }
       el.style.backgroundImage = `url(${canvas.toDataURL()})`;
     };
 
@@ -123,12 +140,17 @@ export default function ScrollRevealJourney({ onStart }: { onStart: () => void }
       const raw = p * SLIDE_COUNT;
       const index = Math.min(SLIDE_COUNT - 1, Math.floor(raw));
       const local = raw - index;
-      if (index === 0) paintHeroText(local);
+      if (index === 0) {
+        const hasNext = index < SLIDE_COUNT - 1;
+        const blendT = hasNext ? Math.max(0, Math.min(1, (local - HOLD) / (1 - HOLD))) : 0;
+        paintHeroText(local, blendT);
+      }
     };
 
     const onScroll = () => { if (rafId) return; rafId = requestAnimationFrame(update); };
-    const onResize = () => { resizeCanvas(); update(); };
+    const onResize = () => { setViewport({ w: window.innerWidth, h: window.innerHeight }); resizeCanvas(); update(); };
 
+    setViewport({ w: window.innerWidth, h: window.innerHeight });
     resizeCanvas();
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -156,47 +178,67 @@ export default function ScrollRevealJourney({ onStart }: { onStart: () => void }
     window.scrollTo({ top: wrapTop + scrollable / SLIDE_COUNT, behavior: "smooth" });
   };
 
+  const sectionBg = isHero && hasNext ? lerpColor(HERO_BG, DOMAINS[0].bg, blendT) : slideBg(index);
+
   return (
     <div ref={wrapRef} id="features" style={{ height: `${SLIDE_COUNT * 100}vh`, position: "relative" }}>
       <section
         style={{
           position: "sticky", top: 0, height: "100vh", overflow: "hidden",
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-          textAlign: "center", padding: "24px", background: slideBg(index),
+          textAlign: "center", padding: "24px", background: sectionBg,
         }}
       >
         {isHero ? (
-          <HeroContent textRef={textRef} onStart={onStart} onSeeFeatures={jumpPastHero} />
+          <>
+            <HeroContent textRef={textRef} onStart={onStart} onSeeFeatures={jumpPastHero} growT={blendT} />
+            {hasNext && blendT > 0.001 && (
+              <div
+                style={{
+                  position: "absolute", inset: 0, opacity: blendT,
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  textAlign: "center", padding: "24px",
+                }}
+              >
+                <SlideTag color={slideText(1)} />
+                <DomainBlock d={DOMAINS[0]} />
+                <Dots count={SLIDE_COUNT} active={1} color={slideText(1)} />
+              </div>
+            )}
+          </>
         ) : (
           <>
             <SlideTag color={slideText(index)} />
             <DomainBlock d={DOMAINS[index - 1]} />
             <Dots count={SLIDE_COUNT} active={index} color={slideText(index)} />
-          </>
-        )}
 
-        {hasNext && blendT > 0.001 && (
-          <div
-            style={{
-              position: "absolute", inset: 0, background: slideBg(index + 1),
-              clipPath: crackClipPath(blendT), WebkitClipPath: crackClipPath(blendT),
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-              textAlign: "center", padding: "24px",
-            }}
-          >
-            <SlideTag color={slideText(index + 1)} />
-            <DomainBlock d={DOMAINS[index]} />
-            <Dots count={SLIDE_COUNT} active={index + 1} color={slideText(index + 1)} />
-          </div>
+            {hasNext && blendT > 0.001 && viewport.w > 0 && (
+              <div
+                style={{
+                  position: "absolute", inset: 0, background: slideBg(index + 1),
+                  clipPath: shatterClipPath(blendT, viewport.w, viewport.h),
+                  WebkitClipPath: shatterClipPath(blendT, viewport.w, viewport.h),
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  textAlign: "center", padding: "24px",
+                }}
+              >
+                <SlideTag color={slideText(index + 1)} />
+                <DomainBlock d={DOMAINS[index]} />
+                <Dots count={SLIDE_COUNT} active={index + 1} color={slideText(index + 1)} />
+              </div>
+            )}
+          </>
         )}
       </section>
     </div>
   );
 }
 
-function HeroContent({ textRef, onStart, onSeeFeatures }: { textRef: React.RefObject<HTMLHeadingElement | null>; onStart: () => void; onSeeFeatures: () => void }) {
+function HeroContent({ textRef, onStart, onSeeFeatures, growT }: { textRef: React.RefObject<HTMLHeadingElement | null>; onStart: () => void; onSeeFeatures: () => void; growT: number }) {
+  const scale = 1 + growT * growT * 8;
+  const ctaOpacity = Math.max(0, 1 - growT * 3.2);
   return (
-    <div style={{ padding: "0 24px" }}>
+    <div style={{ padding: "0 24px", position: "relative" }}>
       <h1
         ref={textRef}
         className="hero-h1"
@@ -205,11 +247,12 @@ function HeroContent({ textRef, onStart, onSeeFeatures }: { textRef: React.RefOb
           marginBottom: 36, maxWidth: 1100, marginLeft: "auto", marginRight: "auto", textTransform: "uppercase",
           backgroundSize: "100% 100%", backgroundPosition: "center", backgroundRepeat: "no-repeat",
           WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent",
+          transform: `scale(${scale})`,
         }}
       >
         Your best friend<br />who runs your life.
       </h1>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, opacity: ctaOpacity, pointerEvents: ctaOpacity < 0.1 ? "none" : "auto" }}>
         <button className="k-btn k-btn-lime" onClick={onStart} style={{ padding: "18px 40px", fontSize: 16, display: "inline-flex", alignItems: "center", gap: 10 }}>
           <MessageCircle size={19} strokeWidth={2.4} />Start on WhatsApp, it&apos;s free
         </button>
