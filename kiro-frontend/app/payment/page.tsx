@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { RefreshCw, Lock } from "lucide-react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://kyroo-backend.onrender.com";
+// Test key — swap for a live key once Pro/Pro Plus are ready to take real payments.
 const RAZORPAY_KEY = "rzp_test_Slcdo1LLMUlvul";
 const WHATSAPP_NUMBER = "917400351463";
 
@@ -11,31 +12,31 @@ declare global {
   interface Window { Razorpay: any; }
 }
 
+const PLANS = [
+  { id: "free", name: "FREE", price: "₹0", period: "forever", features: ["All 4 modules", "100 messages/day", "8 languages", "Voice, photos & PDFs", "Daily nudges"] },
+  { id: "pro", name: "PRO", price: "₹100", period: "/month", features: ["Everything in Free", "300 messages/day", "Priority responses", "Deeper weekly reports"] },
+  { id: "pro_plus", name: "PRO PLUS", price: "₹299", period: "/month", features: ["Everything in Pro", "Unlimited messages", "Monthly audit PDF", "Priority support"] },
+];
+
 export default function Payment() {
   const [selectedPlan, setSelectedPlan] = useState("free");
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState("");
   const [userId, setUserId] = useState("");
+  const [phone, setPhone] = useState("");
 
   useEffect(() => {
     setUserName(localStorage.getItem("kiro_user_name") || "");
     setUserId(localStorage.getItem("kiro_user_id") || "");
+    setPhone(localStorage.getItem("kiro_phone") || "");
     const savedPlan = localStorage.getItem("kiro_selected_plan");
-    // pro/pro_plus aren't sellable yet — if a stale value from before that
-    // was locked down is sitting in localStorage, fall back to free rather
-    // than letting someone land here mid-checkout for a plan that isn't real
-    if (savedPlan === "free") setSelectedPlan(savedPlan);
+    if (savedPlan && PLANS.some(p => p.id === savedPlan)) setSelectedPlan(savedPlan);
+
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     document.body.appendChild(script);
   }, []);
-
-  const plans = [
-    { id: "free", name: "FREE", price: "₹0", period: "forever", features: ["All 4 modules", "Unlimited messages", "8 languages", "Voice, photos & PDFs", "Daily nudges"], locked: false },
-    { id: "pro", name: "PRO", price: "Coming soon", period: "", features: ["Everything in Free", "Priority responses", "Deeper weekly reports"], locked: true },
-    { id: "pro_plus", name: "PRO PLUS", price: "Coming soon", period: "", features: ["Everything in Pro", "Monthly audit PDF", "Priority support"], locked: true },
-  ];
 
   const handlePayment = async () => {
     if (selectedPlan === "free") {
@@ -43,34 +44,34 @@ export default function Payment() {
       window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(greeting)}`;
       return;
     }
-    if (!userId) {
+    if (!userId && !phone) {
       window.location.href = "/onboarding";
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/payments/create-order`, {
+      const res = await fetch(`${BACKEND_URL}/payments/create-subscription`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, plan: selectedPlan })
+        body: JSON.stringify({ user_id: userId, phone, plan: selectedPlan })
       });
-      const order = await res.json();
+      const sub = await res.json();
+      if (!res.ok) throw new Error(sub.detail || "Couldn't start checkout");
+
       const options = {
         key: RAZORPAY_KEY,
-        amount: order.amount,
-        currency: "INR",
+        subscription_id: sub.subscription_id,
         name: "KYROO",
-        description: `KYROO ${selectedPlan.toUpperCase()} Plan`,
-        order_id: order.order_id,
+        description: `KYROO ${selectedPlan.toUpperCase()} — billed monthly`,
         handler: async (response: any) => {
-          const verify = await fetch(`${BACKEND_URL}/payments/verify`, {
+          const verify = await fetch(`${BACKEND_URL}/payments/verify-subscription`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_subscription_id: response.razorpay_subscription_id,
               razorpay_signature: response.razorpay_signature,
-              user_id: userId,
+              user_id: sub.user_id,
               plan: selectedPlan
             })
           });
@@ -118,25 +119,23 @@ export default function Payment() {
             {userName ? `Welcome, ${userName}!` : "Choose your plan"}
           </h1>
           <p style={{ fontSize: 15, opacity: 0.6 }}>
-            Start free. Cancel with one WhatsApp message.
+            Start free. Cancel a paid plan anytime via WhatsApp.
           </p>
         </div>
 
         <div className="plan-g" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, marginBottom: 40 }}>
-          {plans.map((p, i) => (
-            <div key={p.id} onClick={() => !p.locked && setSelectedPlan(p.id)} style={{
-              background: p.locked ? "var(--k-paper-2)" : "var(--k-paper)",
-              opacity: p.locked ? 0.6 : 1,
+          {PLANS.map((p, i) => (
+            <div key={p.id} onClick={() => setSelectedPlan(p.id)} style={{
+              background: "var(--k-paper)",
               border: "3px solid var(--k-ink)",
               boxShadow: selectedPlan === p.id ? "8px 8px 0 var(--k-ink)" : "4px 4px 0 var(--k-ink)",
-              padding: "30px 22px", position: "relative", cursor: p.locked ? "not-allowed" : "pointer", textAlign: "left",
+              padding: "30px 22px", position: "relative", cursor: "pointer", textAlign: "left",
               transform: `translate(${selectedPlan === p.id ? -3 : 0}px, ${selectedPlan === p.id ? -3 : 0}px) rotate(${i === 1 ? 0 : i === 0 ? 1 : -1}deg)`,
               transition: "all .15s ease",
             }}>
-              {p.locked && <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%) rotate(-2deg)", background: "var(--k-ink)", color: "var(--k-paper)", fontFamily: "var(--font-mono-tag)", fontSize: 9.5, fontWeight: 700, padding: "4px 12px", border: "2px solid var(--k-ink)", whiteSpace: "nowrap", textTransform: "uppercase" }}>🔒 Coming soon</div>}
-              {!p.locked && selectedPlan === p.id && <div style={{ position: "absolute", top: 14, right: 14, width: 24, height: 24, background: "var(--k-ink)", color: "var(--k-paper)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>✓</div>}
+              {selectedPlan === p.id && <div style={{ position: "absolute", top: 14, right: 14, width: 24, height: 24, background: "var(--k-ink)", color: "var(--k-paper)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>✓</div>}
               <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10.5, letterSpacing: 1.5, textTransform: "uppercase", opacity: 0.55, marginBottom: 16, fontWeight: 700 }}>{p.name}</div>
-              <div style={{ fontFamily: "var(--font-display)", fontSize: p.locked ? 26 : 40, letterSpacing: -1.5 }}>{p.price}</div>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: 40, letterSpacing: -1.5 }}>{p.price}</div>
               <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 22 }}>{p.period}</div>
               <ul style={{ listStyle: "none", marginBottom: 0, padding: 0 }}>
                 {p.features.map(f => (
@@ -162,10 +161,10 @@ export default function Payment() {
 
         <div style={{ textAlign: "center" }}>
           <button className="k-btn k-btn-lime" onClick={handlePayment} disabled={loading} style={{ fontSize: 16, padding: "18px 0", opacity: loading ? 0.7 : 1, width: "100%", maxWidth: 420 }}>
-            {loading ? "Processing..." : "Start for free →"}
+            {loading ? "Processing..." : selectedPlan === "free" ? "Start for free →" : "Subscribe →"}
           </button>
           <p style={{ fontSize: 12, opacity: 0.55, marginTop: 14 }}>
-            No credit card needed
+            {selectedPlan === "free" ? "No credit card needed" : "Billed monthly, cancel anytime"}
           </p>
         </div>
       </div>
