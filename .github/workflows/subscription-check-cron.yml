@@ -1,0 +1,24 @@
+name: KYROO Expired Subscription Safety Net
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # once a day - the webhook is the primary mechanism, this only catches what it misses
+  workflow_dispatch:  # manual trigger for testing
+
+jobs:
+  check-expired-subscriptions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Downgrade any lapsed paid subscriptions
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          status=$(curl -s -o response.txt -w "%{http_code}" -X POST \
+            https://kyroo-backend.onrender.com/payments/check-expired-subscriptions \
+            -H "X-Cron-Secret: $CRON_SECRET")
+          echo "HTTP status: $status"
+          echo "Response body:"
+          cat response.txt
+          if [ "$status" -ge 400 ]; then
+            exit 1
+          fi
