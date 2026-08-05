@@ -24,6 +24,7 @@ from app.brain.onboarding_flow import (
 from app.brain.transcription import transcribe_audio
 from app.services.user_service import UserService
 from app.services.conversation_service import ConversationService
+from app.services.usage_service import check_usage
 
 router = APIRouter(tags=["WhatsApp"])
 
@@ -291,6 +292,22 @@ async def webhook(request: Request, db=Depends(get_db)):
             logger.exception(f"[webhook] Onboarding error")
             sentry_sdk.capture_exception()
         return {"status": "ok"}
+
+    # stickers never reach the LLM (see the sticker handler below) so they're
+    # free and exempt - every other message type below does trigger a real
+    # Claude call and counts against the daily plan limit.
+    if msg_type != "sticker":
+        allowed, block_message = check_usage(db, user)
+        if not allowed:
+            try:
+                wa = WhatsAppClient()
+                if message_id:
+                    wa.send_typing_indicator(message_id)
+                wa.send_one(phone, block_message)
+            except Exception:
+                logger.exception("[webhook] Failed to send usage-limit message")
+                sentry_sdk.capture_exception()
+            return {"status": "ok"}
 
     if msg_type == "image":
         # images bypass the text debounce buffer and get a direct reply

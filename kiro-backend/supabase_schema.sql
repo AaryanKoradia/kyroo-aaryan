@@ -40,7 +40,21 @@ create table if not exists users (
     -- user's own stated routine in conversation — never hardcoded per user.
     money_nudge_time   text default '1 PM',
     fitness_nudge_time text default '6:30 PM',
-    study_nudge_time   text default '9 PM'
+    study_nudge_time   text default '9 PM',
+    -- Recurring subscription tracking (Razorpay Subscriptions, not one-off
+    -- orders) - plan_expires_at is the current billing period's end,
+    -- updated on every subscription.charged webhook; subscription_status
+    -- mirrors Razorpay's own status field (active/halted/cancelled/etc)
+    -- so the cron safety-net job can tell a healthy subscription apart
+    -- from one that's lapsed without relying on plan_expires_at alone.
+    subscription_id     text,
+    subscription_status text,
+    plan_expires_at      timestamptz,
+    -- Running balance of purchased top-up messages - consumed one at a
+    -- time once a free/pro user is over their daily cap, never expires
+    -- or resets on its own (a user who pays for 25 extra messages should
+    -- get to use all 25, not lose unused ones at midnight).
+    bonus_messages       int default 0
 );
 
 -- Looked up on every single inbound WhatsApp message via get_or_create_user()
@@ -207,6 +221,61 @@ create table if not exists sent_nudges (
     primary key (user_id, slot, sent_date)
 );
 
+-- ─── message_usage ─────────────────────────────────────────────────────────
+-- One row per user per day, incremented on every inbound WhatsApp message
+-- that reaches an LLM call (see increment_message_usage below) - drives the
+-- free/pro daily message cap. A separate table rather than columns on
+-- users so the increment can be a single atomic upsert (INSERT ... ON
+-- CONFLICT) instead of a read-then-write on the users row, which is
+-- written by many other things (nudge times, tracking, etc) and would
+-- risk losing a concurrent increment.
+create table if not exists message_usage (
+    user_id     uuid not null references users(id) on delete cascade,
+    date        date not null,
+    count       int not null default 0,
+    primary key (user_id, date)
+);
+
+-- Atomically increments (and creates if needed) today's usage row,
+-- returning the new count - a plain read-then-write from Python would
+-- lose an increment if two messages from the same user landed at
+-- nearly the same time.
+create or replace function increment_message_usage(p_user_id uuid, p_date date)
+returns int
+language sql
+as $$
+    insert into message_usage (user_id, date, count)
+    values (p_user_id, p_date, 1)
+    on conflict (user_id, date)
+    do update set count = message_usage.count + 1
+    returning count;
+$$;
+
+-- Atomically spends one purchased top-up message, returning the new
+-- balance - or NULL (via WHERE matching zero rows) if there was nothing
+-- left to spend, which is how the caller tells "had a bonus message"
+-- apart from "balance is now zero" without a second query.
+create or replace function consume_bonus_message(p_user_id uuid)
+returns int
+language sql
+as $$
+    update users
+    set bonus_messages = bonus_messages - 1
+    where id = p_user_id and bonus_messages > 0
+    returning bonus_messages;
+$$;
+
+-- Atomically credits a top-up purchase to a user's bonus balance.
+create or replace function add_bonus_messages(p_user_id uuid, p_amount int)
+returns int
+language sql
+as $$
+    update users
+    set bonus_messages = bonus_messages + p_amount
+    where id = p_user_id
+    returning bonus_messages;
+$$;
+
 -- ─── cron_runs ─────────────────────────────────────────────────────────────
 -- One row per /nudges/check-and-send or /reminders/check-and-send hit, so a
 -- "no nudges arrived today" report can be diagnosed from the actual gap
@@ -294,12 +363,13 @@ alter table emotional_memory   enable row level security;
 alter table user_style         enable row level security;
 alter table memory_embeddings  enable row level security;
 alter table sent_nudges        enable row level security;
+alter table message_usage      enable row level security;
 
 do $$
 declare
     t text;
 begin
-    foreach t in array array['users','chat_history','user_tracking','weekly_reports','reminders','emotional_memory','user_style','memory_embeddings','sent_nudges']
+    foreach t in array array['users','chat_history','user_tracking','weekly_reports','reminders','emotional_memory','user_style','memory_embeddings','sent_nudges','message_usage']
     loop
         execute format('drop policy if exists "service_role_all_%s" on %I;', t, t);
         execute format(
