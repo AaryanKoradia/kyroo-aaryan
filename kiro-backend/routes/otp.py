@@ -14,6 +14,7 @@ RESEND_FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "KYROO <onboarding@resend.dev
 
 OTP_EXPIRY_MINUTES = 10
 OTP_RESEND_COOLDOWN_SECONDS = 30
+MAX_VERIFY_ATTEMPTS = 5
 
 
 class SendOtpRequest(BaseModel):
@@ -93,16 +94,22 @@ async def send_otp(request: Request, req: SendOtpRequest):
 
 
 @router.post("/verify")
-async def verify_otp(req: VerifyOtpRequest):
+@limiter.limit("10/minute")
+async def verify_otp(request: Request, req: VerifyOtpRequest):
     email = req.email.strip().lower()
     code = req.code.strip()
 
     db = get_db()
+    # Looks up the latest OTP request for this email regardless of code -
+    # requesting a fresh code now supersedes any earlier one, and this is
+    # also what lets attempts be tracked against a specific row even when
+    # the submitted code is wrong (matching on otp_code directly, like
+    # before, would return zero rows on a wrong guess and there'd be
+    # nothing to increment).
     res = (
         db.table("email_otps")
         .select("*")
         .eq("email", email)
-        .eq("otp_code", code)
         .order("created_at", desc=True)
         .limit(1)
         .execute()
@@ -114,6 +121,17 @@ async def verify_otp(req: VerifyOtpRequest):
     expires_at = datetime.fromisoformat(row["expires_at"].replace("Z", "+00:00"))
     if datetime.now(timezone.utc) > expires_at:
         raise HTTPException(status_code=400, detail="That code expired, request a new one")
+
+    # Per-OTP attempt cap, independent of the per-IP rate limit above - a
+    # 6-digit code is only 1,000,000 combinations, and the rate limit alone
+    # doesn't stop an attacker spread across many IPs from grinding through
+    # them against one still-valid code within its 10-minute window.
+    if (row.get("attempts") or 0) >= MAX_VERIFY_ATTEMPTS:
+        raise HTTPException(status_code=429, detail="Too many incorrect attempts, request a new code")
+
+    if row["otp_code"] != code:
+        db.table("email_otps").update({"attempts": (row.get("attempts") or 0) + 1}).eq("id", row["id"]).execute()
+        raise HTTPException(status_code=400, detail="Incorrect code")
 
     db.table("email_otps").update({"verified": True}).eq("id", row["id"]).execute()
 
