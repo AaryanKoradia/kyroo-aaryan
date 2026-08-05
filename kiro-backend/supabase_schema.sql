@@ -75,6 +75,7 @@ create table if not exists email_otps (
     otp_code     text not null,
     expires_at   timestamptz not null,
     verified     boolean default false,
+    attempts     int default 0,
     created_at   timestamptz default now()
 );
 create index if not exists idx_email_otps_email on email_otps(email, created_at desc);

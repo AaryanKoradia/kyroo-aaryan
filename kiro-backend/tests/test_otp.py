@@ -69,40 +69,104 @@ def test_otp_send_rate_limited_after_5_per_minute():
     assert 429 in statuses
 
 
-def _otp_row(code="123456"):
+def _otp_row(code="123456", attempts=0):
     return {
         "id": "otp-1",
         "otp_code": code,
         "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat(),
         "verified": False,
+        "attempts": attempts,
     }
+
+
+def _verify_client(mock_db):
+    import main
+    from fastapi.testclient import TestClient
+    return TestClient(main.app), patch.object(otp_mod, "get_db", return_value=mock_db)
 
 
 def test_verify_otp_flags_already_registered_for_a_completed_account():
     mock_db = MagicMock()
-    otp_chain = mock_db.table.return_value.select.return_value.eq.return_value.eq.return_value.order.return_value.limit.return_value
+    otp_chain = mock_db.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value
     otp_chain.execute.return_value.data = [_otp_row()]
     users_chain = mock_db.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.return_value
     users_chain.execute.return_value.data = [{"id": "existing-user"}]
 
-    with patch.object(otp_mod, "get_db", return_value=mock_db):
-        result = asyncio.run(otp_mod.verify_otp(otp_mod.VerifyOtpRequest(email="already@example.com", code="123456")))
+    client, patched = _verify_client(mock_db)
+    with patched:
+        resp = client.post("/otp/verify", json={"email": "already1@example.com", "code": "123456"})
 
+    assert resp.status_code == 200
+    result = resp.json()
     assert result["status"] == "verified"
     assert result["already_registered"] is True
 
 
 def test_verify_otp_reports_not_registered_for_a_new_email():
     mock_db = MagicMock()
-    otp_chain = mock_db.table.return_value.select.return_value.eq.return_value.eq.return_value.order.return_value.limit.return_value
+    otp_chain = mock_db.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value
     otp_chain.execute.return_value.data = [_otp_row()]
     users_chain = mock_db.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.return_value
     users_chain.execute.return_value.data = []
 
-    with patch.object(otp_mod, "get_db", return_value=mock_db):
-        result = asyncio.run(otp_mod.verify_otp(otp_mod.VerifyOtpRequest(email="new@example.com", code="123456")))
+    client, patched = _verify_client(mock_db)
+    with patched:
+        resp = client.post("/otp/verify", json={"email": "new1@example.com", "code": "123456"})
 
-    assert result["already_registered"] is False
+    assert resp.json()["already_registered"] is False
+
+
+def test_verify_otp_wrong_code_increments_attempts_and_never_matches_an_old_code():
+    """The lookup is by email only (latest request wins), not by code - a
+    stale code from an earlier /otp/send should no longer verify once a
+    newer one has been requested, and a wrong guess should count against
+    the attempt cap."""
+    mock_db = MagicMock()
+    otp_chain = mock_db.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value
+    otp_chain.execute.return_value.data = [_otp_row(code="123456", attempts=2)]
+
+    client, patched = _verify_client(mock_db)
+    with patched:
+        resp = client.post("/otp/verify", json={"email": "wrong1@example.com", "code": "000000"})
+
+    assert resp.status_code == 400
+    update_call = mock_db.table.return_value.update.call_args
+    assert update_call is not None
+    assert update_call[0][0] == {"attempts": 3}
+
+
+def test_verify_otp_blocked_after_max_attempts_even_with_correct_code():
+    mock_db = MagicMock()
+    otp_chain = mock_db.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value
+    otp_chain.execute.return_value.data = [_otp_row(code="123456", attempts=otp_mod.MAX_VERIFY_ATTEMPTS)]
+
+    client, patched = _verify_client(mock_db)
+    with patched:
+        resp = client.post("/otp/verify", json={"email": "locked1@example.com", "code": "123456"})
+
+    assert resp.status_code == 429
+
+
+def test_otp_verify_rate_limited_after_10_per_minute():
+    # the in-memory limiter's state is process-wide, not per-test - reset
+    # it first so quota already spent by other tests hitting /otp/verify
+    # above doesn't make this one flaky depending on run order
+    from rate_limit import limiter
+    limiter.reset()
+
+    mock_db = MagicMock()
+    otp_chain = mock_db.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value
+    otp_chain.execute.return_value.data = [_otp_row(code="123456")]
+
+    client, patched = _verify_client(mock_db)
+    with patched:
+        statuses = [
+            client.post("/otp/verify", json={"email": "ratelimit-verify@example.com", "code": "000000"}).status_code
+            for _ in range(12)
+        ]
+
+    assert statuses[:10].count(429) == 0
+    assert 429 in statuses
 
 
 def test_is_recently_verified_true_within_window():
