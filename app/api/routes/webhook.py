@@ -30,6 +30,8 @@ router = APIRouter(tags=["WhatsApp"])
 logger = logging.getLogger(__name__)
 
 MAX_PDF_BYTES = 15 * 1024 * 1024  # 15MB — big enough for a real document, small enough to stay fast
+MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5MB — WhatsApp's own limit for images, no reason to allow more
+MAX_AUDIO_BYTES = 16 * 1024 * 1024  # 16MB — WhatsApp's own limit for audio/voice notes
 
 # Meta's Cloud API webhook redelivers the identical payload (same
 # message["id"]) if it doesn't get a fast 200 back — and image/document/
@@ -294,7 +296,7 @@ async def webhook(request: Request, db=Depends(get_db)):
         # images bypass the text debounce buffer and get a direct reply
         caption = message.get("image", {}).get("caption", "")
         media_id = message.get("image", {}).get("id")
-        downloaded = WhatsAppClient().download_media(media_id) if media_id else None
+        downloaded = WhatsAppClient().download_media(media_id, max_bytes=MAX_IMAGE_BYTES) if media_id else None
         image_base64, image_media_type = downloaded if downloaded else (None, None)
 
         try:
@@ -374,7 +376,7 @@ async def webhook(request: Request, db=Depends(get_db)):
             if message_id:
                 wa.send_typing_indicator(message_id)
 
-            downloaded = wa.download_media(media_id) if media_id else None
+            downloaded = wa.download_media(media_id, max_bytes=MAX_AUDIO_BYTES) if media_id else None
             transcript = transcribe_audio(downloaded[0], audio_mime, user.get("language", "Hinglish")) if downloaded else None
 
             if not transcript:
