@@ -31,9 +31,19 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
+# Wide open to any origin used to be the default here - fine for a purely
+# server-to-server API, but this one is called directly from the browser
+# (website signup/OTP/payments/admin), so a malicious page could otherwise
+# ride a logged-in-ish visitor's browser to hit these endpoints cross-site.
+# Restricted to KYROO's actual frontend origins; ALLOWED_ORIGINS (comma-
+# separated) lets this be extended (a staging domain, say) without a
+# code change.
+_default_origins = "https://www.kyroo.co.in,https://kyroo.co.in,http://localhost:3000"
+ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", _default_origins).split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
