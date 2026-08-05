@@ -81,6 +81,10 @@ alter table users add column if not exists onboarding_step   int default 99;
 alter table users add column if not exists money_nudge_time   text default '1 PM';
 alter table users add column if not exists fitness_nudge_time text default '6:30 PM';
 alter table users add column if not exists study_nudge_time   text default '9 PM';
+alter table users add column if not exists subscription_id     text;
+alter table users add column if not exists subscription_status text;
+alter table users add column if not exists plan_expires_at      timestamptz;
+alter table users add column if not exists bonus_messages       int default 0;
 
 -- ─── email_otps ────────────────────────────────────────────────────────────
 create table if not exists email_otps (
@@ -93,6 +97,7 @@ create table if not exists email_otps (
     created_at   timestamptz default now()
 );
 create index if not exists idx_email_otps_email on email_otps(email, created_at desc);
+alter table email_otps add column if not exists attempts int default 0;
 
 -- ─── processed_messages ────────────────────────────────────────────────────
 -- Dedup guard for Meta's WhatsApp webhook: Meta redelivers the identical
