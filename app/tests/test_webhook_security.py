@@ -36,6 +36,10 @@ def _make_dedup_db():
 
     db.table.return_value.insert.side_effect = insert_side_effect
     db.table.return_value.delete.return_value.lt.return_value.execute.return_value = MagicMock()
+    # usage_service.check_usage runs on every non-sticker message now -
+    # keep it a well-under-the-limit no-op here so these dedup-focused
+    # tests aren't actually exercising the usage-limit path
+    db.rpc.return_value.execute.return_value.data = 1
     return db
 
 
