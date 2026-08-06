@@ -80,7 +80,7 @@ export default function Payment() {
           }
         },
         prefill: { name: userName },
-        theme: { color: "#B3571A" },
+        theme: { color: "#ff4a2e" },
         modal: { ondismiss: () => setLoading(false) }
       };
       const rzp = new window.Razorpay(options);
@@ -97,20 +97,20 @@ export default function Payment() {
         .k-btn { font-family: var(--font-body); font-weight: 700; cursor: pointer; border: 3px solid var(--k-ink); background: var(--k-ink); color: var(--k-paper); padding: 12px 24px; font-size: 14px; box-shadow: 4px 4px 0 var(--k-ink); transition: transform .12s ease, box-shadow .12s ease; }
         .k-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--k-ink); }
         .k-btn:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--k-ink); }
-        .k-btn-lime { background: var(--k-cheerful-vibe); color: var(--k-ink); }
+        .k-btn-lime { background: var(--k-lime); color: var(--k-ink); }
         @media(max-width: 780px) { .plan-g { grid-template-columns: 1fr !important; } }
       `}</style>
 
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", borderBottom: "3px solid var(--k-ink)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-warm-glow-dark)" }}>.</span></div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
         </div>
         <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>Step 2 of 2: Choose plan</span>
       </nav>
 
       <div style={{ maxWidth: 940, margin: "0 auto", padding: "60px 28px" }}>
         <div style={{ textAlign: "center", marginBottom: 52 }}>
-          <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, padding: "5px 14px", background: "var(--k-cheerful-vibe)", border: "2px solid var(--k-ink)", display: "inline-block", transform: "rotate(-2deg)" }}>
+          <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, padding: "5px 14px", background: "var(--k-lime)", border: "2px solid var(--k-ink)", display: "inline-block", transform: "rotate(-2deg)" }}>
             Free to start
           </span>
           <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(30px,5vw,54px)", letterSpacing: -1.5, margin: "22px 0 12px", textTransform: "uppercase" }}>

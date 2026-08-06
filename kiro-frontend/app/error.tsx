@@ -13,7 +13,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       <style>{`
         .k-btn { font-family: var(--font-body); font-weight: 700; cursor: pointer; border: 3px solid var(--k-ink); background: var(--k-ink); color: var(--k-paper); padding: 15px 32px; font-size: 15px; box-shadow: 5px 5px 0 var(--k-ink); transition: transform .12s ease, box-shadow .12s ease; }
         .k-btn:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 var(--k-ink); }
-        .k-btn-lime { background: var(--k-cheerful-vibe); color: var(--k-ink); }
+        .k-btn-lime { background: var(--k-lime); color: var(--k-ink); }
       `}</style>
       <div style={{ maxWidth: 480 }}>
         <Image src="/kyroo-logo.png" alt="KYROO" width={80} height={80} style={{ borderRadius: "50%", border: "3px solid var(--k-ink)", objectFit: "cover", marginBottom: 24 }} />

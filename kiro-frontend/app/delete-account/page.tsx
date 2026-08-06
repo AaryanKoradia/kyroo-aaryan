@@ -53,14 +53,14 @@ export default function DeleteAccount() {
 
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", borderBottom: "3px solid var(--k-ink)" }}>
         <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: "var(--k-ink)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-warm-glow-dark)" }}>.</span></div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
         </a>
       </nav>
 
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "60px 28px" }}>
         <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, padding: "4px 10px", background: "var(--k-paper)", border: "2px solid var(--k-ink)" }}>Account settings</span>
         <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px,5vw,40px)", letterSpacing: -1, margin: "20px 0 12px", textTransform: "uppercase", lineHeight: 1.1 }}>
-          Delete your <span style={{ color: "var(--k-warm-glow-dark)" }}>account</span>
+          Delete your <span style={{ color: "var(--k-coral)" }}>account</span>
         </h1>
         <p style={{ fontSize: 14, opacity: 0.65, lineHeight: 1.7, marginBottom: 32 }}>
           This permanently deletes your KYROO account and everything tied to it: your profile, chat history, tracking data, and memory. There&apos;s no undo. If you just want to stop notifications, use{" "}
@@ -104,7 +104,7 @@ export default function DeleteAccount() {
           className="k-btn"
           disabled={loading}
           onClick={submit}
-          style={{ marginTop: 20, width: "100%", background: "var(--k-warm-glow)", boxShadow: "4px 4px 0 var(--k-ink)" }}
+          style={{ marginTop: 20, width: "100%", background: "var(--k-coral)", boxShadow: "4px 4px 0 var(--k-ink)" }}
         >
           {loading ? "Deleting..." : "Delete my account"}
         </button>
@@ -112,7 +112,7 @@ export default function DeleteAccount() {
         {message && (
           <p style={{
             marginTop: 20, padding: "12px 14px", border: "3px solid var(--k-ink)",
-            background: message.ok ? "var(--k-cheerful-vibe)" : "#ffdcd6", fontSize: 14, lineHeight: 1.6,
+            background: message.ok ? "var(--k-lime)" : "#ffdcd6", fontSize: 14, lineHeight: 1.6,
           }}>
             {message.text}
           </p>

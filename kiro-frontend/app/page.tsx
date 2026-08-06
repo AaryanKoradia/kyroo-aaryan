@@ -40,41 +40,41 @@ function Tag({ children, bg = "var(--k-paper)" }: { children: React.ReactNode; b
 }
 
 const TIMELINE: { time: string; label: string; icon: LucideIcon; color: string; iconColor?: string; text: string }[] = [
-  { time: "7:00 AM",  label: "Morning Brief",    icon: Sunrise,      color: "var(--k-cheerful-vibe)",   text: "Good morning.\n\nSleep: 6.8 hrs\nMood trend: up 3 days straight\n\nOne thing today: that 20-min walk before lunch. You said you would, let's do it." },
-  { time: "9:15 AM",  label: "Learning",         icon: GraduationCap,color: "var(--k-fresh-mint)", text: "You asked her to explain compound interest.\n\nShe broke it down in plain language, sent a quick example, and dropped a YouTube link.\n\nThen asked if you got it. You did." },
-  { time: "12:30 PM", label: "Spending Alert",   icon: Wallet,       color: "var(--k-warm-glow)",  text: "Hey, ₹340 just went to Swiggy.\n\nThat's today's food spend so far. Cooking dinner tonight keeps it right there.\n\nWorth it?" },
+  { time: "7:00 AM",  label: "Morning Brief",    icon: Sunrise,      color: "var(--k-lime)",   text: "Good morning.\n\nSleep: 6.8 hrs\nMood trend: up 3 days straight\n\nOne thing today: that 20-min walk before lunch. You said you would, let's do it." },
+  { time: "9:15 AM",  label: "Learning",         icon: GraduationCap,color: "var(--k-purple)", text: "You asked her to explain compound interest.\n\nShe broke it down in plain language, sent a quick example, and dropped a YouTube link.\n\nThen asked if you got it. You did." },
+  { time: "12:30 PM", label: "Spending Alert",   icon: Wallet,       color: "var(--k-coral)",  text: "Hey, ₹340 just went to Swiggy.\n\nThat's today's food spend so far. Cooking dinner tonight keeps it right there.\n\nWorth it?" },
   { time: "2:45 PM",  label: "Reminder",         icon: AlarmClock,   color: "#FFC939",         text: "You: remind me about my 3 PM presentation today\nKYROO: got it, I'll check in at 2:45\n\n[ at 2:45 PM ]\nyour presentation is in 15. you've been prepping for this, you know your stuff. go get it." },
-  { time: "6:30 PM",  label: "Workout Check-in", icon: Dumbbell,     color: "var(--k-calm-trust)",   text: "You haven't moved much today.\n\nJust 20 min now = 4/7 days this week. That streak is worth protecting.\n\nWant a quick home workout? No equipment needed, I'll send it." },
-  { time: "9:00 PM",  label: "Voice Note",       icon: Mic,          color: "var(--k-fresh-mint)", text: "You sent a voice note, venting about a rough day.\n\nShe listened to the whole thing, said exactly the right thing back, then sent a gif.\n\nTomorrow is a new one." },
+  { time: "6:30 PM",  label: "Workout Check-in", icon: Dumbbell,     color: "var(--k-blue)",   text: "You haven't moved much today.\n\nJust 20 min now = 4/7 days this week. That streak is worth protecting.\n\nWant a quick home workout? No equipment needed, I'll send it." },
+  { time: "9:00 PM",  label: "Voice Note",       icon: Mic,          color: "var(--k-purple)", text: "You sent a voice note, venting about a rough day.\n\nShe listened to the whole thing, said exactly the right thing back, then sent a gif.\n\nTomorrow is a new one." },
   { time: "10:00 PM", label: "Evening Wrap",     icon: Moon,         color: "var(--k-ink)", iconColor: "var(--k-paper)", text: "Day wrap.\n\nGreat energy day\nAte well (mostly!)\nSaved ₹340\nNailed the presentation\nSkipped the workout\n\nTomorrow: that walk happens first, deal?" },
 ];
 
 const FEATURES: { icon: LucideIcon; title: string; desc: string; tags: string[]; color: string }[] = [
-  { icon: Dumbbell,   title: "Fitness",    desc: "Tracks your workouts, diet, and recovery. Nudges you when you go quiet. Goes absolutely crazy when you show up.", tags: ["Workouts", "Recovery", "Nutrition"], color: "var(--k-cheerful-vibe)" },
-  { icon: Wallet,     title: "Money",      desc: "Knows when you overspent on Swiggy. Keeps your budget alive without making you feel bad about it. No bank access, ever.", tags: ["Budgets", "Alerts", "Savings"], color: "var(--k-warm-glow)" },
-  { icon: Brain,      title: "Mind",       desc: "The one place you can vent without being judged. Remembers how you felt last Tuesday. Shows up when things get heavy.", tags: ["Mood", "Memory"], color: "var(--k-fresh-mint)" },
-  { icon: BedDouble,  title: "Sleep",      desc: "Tracks your sleep, reminds you to wind down, and notices when you've been running on 5 hours all week, then actually says something about it.", tags: [], color: "var(--k-calm-trust)" },
-  { icon: Target,     title: "Goals",      desc: "Tell her once. She will not let you forget. Gentle enough to not stress you out, persistent enough to actually work.", tags: [], color: "var(--k-warm-glow)" },
-  { icon: FolderOpen, title: "File Tools", desc: "Send a PDF, a photo, a voice note, or a screenshot. She reads it, understands it, and responds to it, right there in WhatsApp.", tags: ["Photos", "PDFs", "Voice"], color: "var(--k-cheerful-vibe)" },
+  { icon: Dumbbell,   title: "Fitness",    desc: "Tracks your workouts, diet, and recovery. Nudges you when you go quiet. Goes absolutely crazy when you show up.", tags: ["Workouts", "Recovery", "Nutrition"], color: "var(--k-lime)" },
+  { icon: Wallet,     title: "Money",      desc: "Knows when you overspent on Swiggy. Keeps your budget alive without making you feel bad about it. No bank access, ever.", tags: ["Budgets", "Alerts", "Savings"], color: "var(--k-coral)" },
+  { icon: Brain,      title: "Mind",       desc: "The one place you can vent without being judged. Remembers how you felt last Tuesday. Shows up when things get heavy.", tags: ["Mood", "Memory"], color: "var(--k-purple)" },
+  { icon: BedDouble,  title: "Sleep",      desc: "Tracks your sleep, reminds you to wind down, and notices when you've been running on 5 hours all week, then actually says something about it.", tags: [], color: "var(--k-blue)" },
+  { icon: Target,     title: "Goals",      desc: "Tell her once. She will not let you forget. Gentle enough to not stress you out, persistent enough to actually work.", tags: [], color: "var(--k-coral)" },
+  { icon: FolderOpen, title: "File Tools", desc: "Send a PDF, a photo, a voice note, or a screenshot. She reads it, understands it, and responds to it, right there in WhatsApp.", tags: ["Photos", "PDFs", "Voice"], color: "var(--k-lime)" },
 ];
 
 const TICKER = ["Fitness tracked", "Money managed", "Sleep scored", "Mood understood", "Daily brief delivered", "Hindi + English", "8 languages", "WhatsApp native", "No app download", "Hinglish supported"];
 
 const WHAT_ELSE: { icon: LucideIcon; title: string; desc: string; color: string }[] = [
-  { icon: Mic, title: "Send a voice note", desc: "Can't type? Just talk. Hindi, Hinglish, English, whatever feels natural. She listens to the whole thing and actually gets it.", color: "var(--k-cheerful-vibe)" },
-  { icon: Camera, title: "Send a photo", desc: "Gym selfie, food photo, a screenshot, a bill. Whatever you send, she sees it and responds like she was right there with you.", color: "var(--k-warm-glow)" },
-  { icon: AlarmClock, title: "Reminders that actually work", desc: "Ask her once, casually, however you'd tell a friend, for a meeting, a deadline, a call. She'll remind you before it happens and right when it does. No setup, no separate app.", color: "var(--k-calm-trust)" },
-  { icon: GraduationCap, title: "Learn literally anything", desc: "Ask her to explain anything, compound interest, organic chemistry, how to file your ITR. She teaches it, breaks it down, and sends you a real YouTube video or course to go deeper.", color: "var(--k-fresh-mint)" },
-  { icon: Link2, title: "Real links, not just advice", desc: "She doesn't just tell you what to do, she sends you where to go. YouTube videos, course links, Google Maps locations, whatever you need, linked, not typed.", color: "var(--k-warm-glow)" },
-  { icon: FileText, title: "PDFs that actually get read", desc: "Send her your study notes, a contract, a lab report, a menu. She reads the whole thing and tells you what matters.", color: "var(--k-cheerful-vibe)" },
-  { icon: Sparkles, title: "Talks like a real friend", desc: "She celebrates with you, hypes you up when you need it, sits with you when things are heavy. No corporate tone, no lecturing, just how a friend actually talks.", color: "var(--k-calm-trust)" },
-  { icon: Puzzle, title: "Connects all the dots", desc: "She knows your sleep affected your mood. Your mood affected your spending. Your spending is affecting your goals. She puts all of it together, every single day.", color: "var(--k-fresh-mint)" },
+  { icon: Mic, title: "Send a voice note", desc: "Can't type? Just talk. Hindi, Hinglish, English, whatever feels natural. She listens to the whole thing and actually gets it.", color: "var(--k-lime)" },
+  { icon: Camera, title: "Send a photo", desc: "Gym selfie, food photo, a screenshot, a bill. Whatever you send, she sees it and responds like she was right there with you.", color: "var(--k-coral)" },
+  { icon: AlarmClock, title: "Reminders that actually work", desc: "Ask her once, casually, however you'd tell a friend, for a meeting, a deadline, a call. She'll remind you before it happens and right when it does. No setup, no separate app.", color: "var(--k-blue)" },
+  { icon: GraduationCap, title: "Learn literally anything", desc: "Ask her to explain anything, compound interest, organic chemistry, how to file your ITR. She teaches it, breaks it down, and sends you a real YouTube video or course to go deeper.", color: "var(--k-purple)" },
+  { icon: Link2, title: "Real links, not just advice", desc: "She doesn't just tell you what to do, she sends you where to go. YouTube videos, course links, Google Maps locations, whatever you need, linked, not typed.", color: "var(--k-coral)" },
+  { icon: FileText, title: "PDFs that actually get read", desc: "Send her your study notes, a contract, a lab report, a menu. She reads the whole thing and tells you what matters.", color: "var(--k-lime)" },
+  { icon: Sparkles, title: "Talks like a real friend", desc: "She celebrates with you, hypes you up when you need it, sits with you when things are heavy. No corporate tone, no lecturing, just how a friend actually talks.", color: "var(--k-blue)" },
+  { icon: Puzzle, title: "Connects all the dots", desc: "She knows your sleep affected your mood. Your mood affected your spending. Your spending is affecting your goals. She puts all of it together, every single day.", color: "var(--k-purple)" },
 ];
 
 const STEPS: { n: string; icon: LucideIcon; title: string; desc: string; time: string; color: string }[] = [
-  { n: "01", icon: PenLine,      title: "Sign up", desc: "10 quick questions. Tell KYROO your goals, lifestyle, habits, and how you like to be spoken to.", time: "~2 min", color: "var(--k-cheerful-vibe)" },
-  { n: "02", icon: MessageCircle,title: "Connect WhatsApp", desc: "She shows up in WhatsApp. No download, no new app. Just your number and one quick verify.", time: "~1 min", color: "var(--k-warm-glow)" },
-  { n: "03", icon: Rocket,       title: "Let her run", desc: "Morning briefs, real-time nudges, study sessions, reminders, GIFs. She learns who you are every day and gets sharper every week.", time: "Forever", color: "var(--k-calm-trust)" },
+  { n: "01", icon: PenLine,      title: "Sign up", desc: "10 quick questions. Tell KYROO your goals, lifestyle, habits, and how you like to be spoken to.", time: "~2 min", color: "var(--k-lime)" },
+  { n: "02", icon: MessageCircle,title: "Connect WhatsApp", desc: "She shows up in WhatsApp. No download, no new app. Just your number and one quick verify.", time: "~1 min", color: "var(--k-coral)" },
+  { n: "03", icon: Rocket,       title: "Let her run", desc: "Morning briefs, real-time nudges, study sessions, reminders, GIFs. She learns who you are every day and gets sharper every week.", time: "Forever", color: "var(--k-blue)" },
 ];
 
 const FREE_PLAN_FEATURES = [
@@ -117,14 +117,14 @@ export default function Home() {
         .k-btn { font-family: var(--font-body); font-weight: 700; cursor: pointer; border: 3px solid var(--k-ink); background: var(--k-ink); color: var(--k-paper); padding: 15px 30px; font-size: 15px; box-shadow: 5px 5px 0 var(--k-ink); transition: transform .12s ease, box-shadow .12s ease; }
         .k-btn:hover { transform: translate(-3px, -3px); box-shadow: 8px 8px 0 var(--k-ink); }
         .k-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--k-ink); }
-        .k-btn-coral { background: var(--k-warm-glow); color: var(--k-ink); }
-        .k-btn-lime { background: var(--k-cheerful-vibe); color: var(--k-ink); }
+        .k-btn-coral { background: var(--k-coral); color: var(--k-ink); }
+        .k-btn-lime { background: var(--k-lime); color: var(--k-ink); }
         .k-btn-ghost { background: var(--k-paper); color: var(--k-ink); }
         .k-nav-a { font-family: var(--font-mono-tag); font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--k-ink); text-decoration: none; border-bottom: 2px solid transparent; transition: border-color .2s; }
-        .k-nav-a:hover { border-color: var(--k-warm-glow-dark); }
+        .k-nav-a:hover { border-color: var(--k-coral); }
         .k-card { border: 3px solid var(--k-ink); background: var(--k-paper); box-shadow: 6px 6px 0 var(--k-ink); transition: transform .2s ease, box-shadow .2s ease; }
         .k-card:hover { transform: translate(-3px, -3px); box-shadow: 9px 9px 0 var(--k-ink); }
-        ::selection { background: var(--k-warm-glow-dark); color: var(--k-paper); }
+        ::selection { background: var(--k-coral); color: var(--k-paper); }
         ::-webkit-scrollbar { width: 10px; }
         ::-webkit-scrollbar-track { background: var(--k-paper); }
         ::-webkit-scrollbar-thumb { background: var(--k-ink); border: 2px solid var(--k-paper); }
@@ -152,10 +152,10 @@ export default function Home() {
       <nav className="k-fade-1 k-nav" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 40px", background: scrolled ? "var(--k-paper)" : "transparent", borderBottom: scrolled ? "3px solid var(--k-ink)" : "3px solid transparent", transition: "all .25s ease" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <div style={{ fontFamily: "var(--font-display)", fontSize: 22, letterSpacing: -0.5 }}>
-            KYROO<span style={{ color: "var(--k-warm-glow-dark)" }}>.</span>
+            KYROO<span style={{ color: "var(--k-coral)" }}>.</span>
           </div>
           <div className="k-dev-badge" style={{ transform: "rotate(-2deg)" }}>
-            <Tag bg="var(--k-warm-glow)">*Under development</Tag>
+            <Tag bg="var(--k-coral)">*Under development</Tag>
           </div>
         </div>
         <div className="k-nav-links" style={{ display: "flex", gap: 30 }}>
@@ -169,26 +169,26 @@ export default function Home() {
       {/* HERO */}
       <section style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "150px 24px 80px", overflow: "hidden" }}>
         <div className="k-float hero-float-tag" style={{ "--k-rot": "-8deg", position: "absolute", top: "18%", left: "6%", zIndex: 1 } as React.CSSProperties}>
-          <div style={{ transform: "rotate(-8deg)" }}><Tag bg="var(--k-cheerful-vibe)"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Dumbbell size={12} strokeWidth={2.5} /> Fitness</span></Tag></div>
+          <div style={{ transform: "rotate(-8deg)" }}><Tag bg="var(--k-lime)"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Dumbbell size={12} strokeWidth={2.5} /> Fitness</span></Tag></div>
         </div>
         <div className="k-float hero-float-tag" style={{ "--k-rot": "6deg", position: "absolute", top: "26%", right: "8%", zIndex: 1, animationDelay: "1s" } as React.CSSProperties}>
-          <div style={{ transform: "rotate(6deg)" }}><Tag bg="var(--k-warm-glow)"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Wallet size={12} strokeWidth={2.5} /> Money</span></Tag></div>
+          <div style={{ transform: "rotate(6deg)" }}><Tag bg="var(--k-coral)"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Wallet size={12} strokeWidth={2.5} /> Money</span></Tag></div>
         </div>
         <div className="k-float hero-float-tag" style={{ "--k-rot": "5deg", position: "absolute", bottom: "20%", left: "10%", zIndex: 1, animationDelay: "2s" } as React.CSSProperties}>
           <div style={{ transform: "rotate(5deg)" }}><Tag bg="#fff"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><BedDouble size={12} strokeWidth={2.5} /> Sleep</span></Tag></div>
         </div>
         <div className="k-float hero-float-tag" style={{ "--k-rot": "-5deg", position: "absolute", bottom: "28%", right: "6%", zIndex: 1, animationDelay: "1.5s" } as React.CSSProperties}>
-          <div style={{ transform: "rotate(-5deg)" }}><Tag bg="var(--k-calm-trust)"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Brain size={12} strokeWidth={2.5} /> Mind</span></Tag></div>
+          <div style={{ transform: "rotate(-5deg)" }}><Tag bg="var(--k-blue)"><span style={{ color: "#fff", display: "inline-flex", alignItems: "center", gap: 6 }}><Brain size={12} strokeWidth={2.5} /> Mind</span></Tag></div>
         </div>
 
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--k-ink)", color: "var(--k-cheerful-vibe)", border: "2px solid var(--k-ink)", padding: "7px 18px", fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 32, transform: "rotate(-2deg)", position: "relative", zIndex: 2 }} className="k-fade-1">
-          <span className="k-blink" style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--k-cheerful-vibe)", display: "inline-block" }} />
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--k-ink)", color: "var(--k-lime)", border: "2px solid var(--k-ink)", padding: "7px 18px", fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 32, transform: "rotate(-2deg)", position: "relative", zIndex: 2 }} className="k-fade-1">
+          <span className="k-blink" style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--k-lime)", display: "inline-block" }} />
           ✦ Free on WhatsApp, no app needed
         </div>
 
         <h1 className="hero-h1 k-fade-2" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(48px,9vw,128px)", lineHeight: 0.94, letterSpacing: -2, marginBottom: 22, maxWidth: 1100, position: "relative", zIndex: 2, textTransform: "uppercase" }}>
           Your best friend<br />
-          <span style={{ background: "var(--k-warm-glow)", padding: "0 14px", display: "inline-block", transform: "rotate(-1.5deg)", boxShadow: "6px 6px 0 var(--k-ink)", border: "3px solid var(--k-ink)", marginTop: 10 }}>
+          <span style={{ background: "var(--k-coral)", padding: "0 14px", display: "inline-block", transform: "rotate(-1.5deg)", boxShadow: "6px 6px 0 var(--k-ink)", border: "3px solid var(--k-ink)", marginTop: 10 }}>
             who runs your life.
           </span>
         </h1>
@@ -215,7 +215,7 @@ export default function Home() {
               {[...TICKER, ...TICKER].map((item, i) => (
                 <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 18, padding: "0 28px", fontFamily: "var(--font-mono-tag)", fontSize: 12, color: "var(--k-paper)", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", whiteSpace: "nowrap" }}>
                   {item}
-                  <span style={{ width: 6, height: 6, background: "var(--k-cheerful-vibe)", display: "inline-block" }} />
+                  <span style={{ width: 6, height: 6, background: "var(--k-lime)", display: "inline-block" }} />
                 </span>
               ))}
             </span>
@@ -229,7 +229,7 @@ export default function Home() {
           <div style={{ marginBottom: 60, opacity: featRef.inView ? 1 : 0, transform: featRef.inView ? "translateY(0)" : "translateY(20px)", transition: "all .5s ease" }}>
             <Tag>What KYROO takes care of</Tag>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(34px,5.5vw,68px)", lineHeight: 0.98, letterSpacing: -1.5, marginTop: 18, textTransform: "uppercase" }}>
-              Your whole life.<br />One friend who<br /><span style={{ color: "var(--k-warm-glow-dark)" }}>actually pays attention.</span>
+              Your whole life.<br />One friend who<br /><span style={{ color: "var(--k-coral)" }}>actually pays attention.</span>
             </h2>
           </div>
 
@@ -254,9 +254,9 @@ export default function Home() {
       <section ref={elseRef.ref} className="pad" style={{ padding: "110px 48px", background: "var(--k-paper-2)", borderTop: "3px solid var(--k-ink)", borderBottom: "3px solid var(--k-ink)" }}>
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
           <div style={{ marginBottom: 60, opacity: elseRef.inView ? 1 : 0, transform: elseRef.inView ? "translateY(0)" : "translateY(20px)", transition: "all .5s ease" }}>
-            <Tag bg="var(--k-calm-trust)">Not just a chat</Tag>
+            <Tag bg="var(--k-blue)"><span style={{ color: "#fff" }}>Not just a chat</span></Tag>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(34px,5.5vw,68px)", lineHeight: 0.98, letterSpacing: -1.5, marginTop: 18, textTransform: "uppercase" }}>
-              She hears you.<br />Sees you.<br /><span style={{ color: "var(--k-warm-glow-dark)" }}>Remembers everything.</span>
+              She hears you.<br />Sees you.<br /><span style={{ color: "var(--k-coral)" }}>Remembers everything.</span>
             </h2>
           </div>
 
@@ -282,7 +282,7 @@ export default function Home() {
         </div>
         <div style={{ display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap" }}>
           {["YOUR LIFE", "YOUR FRIEND", "YOUR WHATSAPP"].map((w) => (
-            <span key={w} style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, letterSpacing: 3, color: "var(--k-cheerful-vibe)", textTransform: "uppercase" }}>{w}</span>
+            <span key={w} style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, letterSpacing: 3, color: "var(--k-lime)", textTransform: "uppercase" }}>{w}</span>
           ))}
         </div>
       </section>
@@ -291,7 +291,7 @@ export default function Home() {
       <section ref={tlRef.ref} className="pad" style={{ padding: "110px 24px" }}>
         <div style={{ maxWidth: 780, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 64, opacity: tlRef.inView ? 1 : 0, transform: tlRef.inView ? "translateY(0)" : "translateY(20px)", transition: "all .5s ease" }}>
-            <Tag bg="var(--k-cheerful-vibe)">A day with KYROO</Tag>
+            <Tag bg="var(--k-lime)">A day with KYROO</Tag>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(32px,5vw,58px)", letterSpacing: -1.5, marginTop: 18, textTransform: "uppercase" }}>
               Every day has a shape.
             </h2>
@@ -322,7 +322,7 @@ export default function Home() {
           <div style={{ textAlign: "center", marginBottom: 60, opacity: howRef.inView ? 1 : 0, transform: howRef.inView ? "translateY(0)" : "translateY(20px)", transition: "all .5s ease" }}>
             <Tag>Simple setup</Tag>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(32px,5vw,58px)", letterSpacing: -1.5, marginTop: 18, textTransform: "uppercase" }}>
-              Up in <span style={{ color: "var(--k-warm-glow-dark)" }}>3 minutes.</span>
+              Up in <span style={{ color: "var(--k-coral)" }}>3 minutes.</span>
             </h2>
           </div>
 
@@ -352,10 +352,10 @@ export default function Home() {
       <div ref={statsRef.ref} style={{ padding: "56px 24px", background: "var(--k-ink)" }}>
         <div className="st-g" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 24, maxWidth: 900, margin: "0 auto" }}>
           {[
-            { target: 4, suffix: "", label: "Life domains", dec: 0, color: "var(--k-cheerful-vibe)" },
-            { target: 8, suffix: "", label: "Languages", dec: 0, color: "var(--k-warm-glow)" },
+            { target: 4, suffix: "", label: "Life domains", dec: 0, color: "var(--k-lime)" },
+            { target: 8, suffix: "", label: "Languages", dec: 0, color: "var(--k-coral)" },
             { target: 24, suffix: "/7", label: "Always on", dec: 0, color: "#fff" },
-            { target: 100, suffix: "%", label: "WhatsApp native", dec: 0, color: "var(--k-cheerful-vibe)" },
+            { target: 100, suffix: "%", label: "WhatsApp native", dec: 0, color: "var(--k-lime)" },
           ].map((s, i) => (
             <div key={s.label} style={{ textAlign: "center", opacity: statsRef.inView ? 1 : 0, transition: `opacity .5s ease ${i * 0.08}s` }}>
               <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,4vw,44px)", color: s.color }}>
@@ -373,13 +373,13 @@ export default function Home() {
           <div style={{ textAlign: "center", marginBottom: 48, opacity: pricRef.inView ? 1 : 0, transform: pricRef.inView ? "translateY(0)" : "translateY(20px)", transition: "all .5s ease" }}>
             <Tag>Simple pricing</Tag>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,4.5vw,50px)", letterSpacing: -1.5, marginTop: 18, textTransform: "uppercase" }}>
-              Free. For everyone.<br /><span style={{ color: "var(--k-warm-glow-dark)" }}>Right now.</span>
+              Free. For everyone.<br /><span style={{ color: "var(--k-coral)" }}>Right now.</span>
             </h2>
             <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 12, opacity: 0.6, marginTop: 12 }}>NO CREDIT CARD · NO CATCH · NO EXPIRY DATE</p>
           </div>
 
-          <div className="k-card" style={{ padding: "36px 30px", background: "var(--k-cheerful-vibe)", opacity: pricRef.inView ? 1 : 0, transform: "rotate(-1deg)", transition: "opacity .5s ease" }}>
-            <Tag bg="var(--k-ink)"><span style={{ color: "var(--k-cheerful-vibe)" }}>Free</span></Tag>
+          <div className="k-card" style={{ padding: "36px 30px", background: "var(--k-lime)", opacity: pricRef.inView ? 1 : 0, transform: "rotate(-1deg)", transition: "opacity .5s ease" }}>
+            <Tag bg="var(--k-ink)"><span style={{ color: "var(--k-lime)" }}>Free</span></Tag>
             <div style={{ fontFamily: "var(--font-display)", fontSize: 52, letterSpacing: -2, marginTop: 18 }}>₹0</div>
             <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, opacity: 0.65, marginBottom: 24 }}>forever, for real</div>
             <ul style={{ listStyle: "none", marginBottom: 28, padding: 0, display: "grid", gap: 2 }}>
@@ -392,7 +392,7 @@ export default function Home() {
             <button
               className="k-btn"
               onClick={go("/onboarding")}
-              style={{ width: "100%", padding: "14px", fontSize: 14, background: "var(--k-ink)", color: "var(--k-cheerful-vibe)", boxShadow: "4px 4px 0 var(--k-ink)" }}>
+              style={{ width: "100%", padding: "14px", fontSize: 14, background: "var(--k-ink)", color: "var(--k-lime)", boxShadow: "4px 4px 0 var(--k-ink)" }}>
               Start on WhatsApp →
             </button>
           </div>
@@ -403,7 +403,7 @@ export default function Home() {
       {/* CTA */}
       <section className="pad" style={{ padding: "120px 48px", textAlign: "center", background: "var(--k-ink)", position: "relative", overflow: "hidden" }}>
         <div style={{ maxWidth: 700, margin: "0 auto", position: "relative", zIndex: 2 }}>
-          <Tag bg="var(--k-cheerful-vibe)">Ready?</Tag>
+          <Tag bg="var(--k-lime)">Ready?</Tag>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(32px,6vw,72px)", letterSpacing: -2, lineHeight: 1.02, margin: "20px 0", color: "var(--k-paper)", textTransform: "uppercase" }}>
             Your best friend<br />is one message away.
           </h2>
