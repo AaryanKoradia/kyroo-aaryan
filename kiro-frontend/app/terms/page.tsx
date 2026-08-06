@@ -11,7 +11,7 @@ export default function Terms() {
     <main className="k-grain" style={{ background: "var(--k-paper)", minHeight: "100vh", color: "var(--k-ink)", fontFamily: "var(--font-body)" }}>
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", borderBottom: "3px solid var(--k-ink)" }}>
         <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: "var(--k-ink)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-warm-glow-dark)" }}>.</span></div>
         </a>
       </nav>
 
@@ -29,7 +29,7 @@ export default function Terms() {
         <p>The Free plan is fully available today, at no cost, with no credit card required. Pro and Pro Plus are not yet on sale, anything shown for them on the pricing page is a preview of what's coming, not something you can currently purchase. If and when paid plans launch, pricing, billing terms, and a cancellation/refund policy will be clearly shown before you pay for anything, and you'll never be charged without an explicit action from you.</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>Your data</h2>
-        <p>See the <a href="/privacy" style={{ color: "var(--k-coral)" }}>Privacy Policy</a> for what's collected and how it's used. You can turn off proactive WhatsApp messages any time at <a href="/unsubscribe" style={{ color: "var(--k-coral)" }}>www.kyroo.co.in/unsubscribe</a>.</p>
+        <p>See the <a href="/privacy" style={{ color: "var(--k-warm-glow-dark)" }}>Privacy Policy</a> for what's collected and how it's used. You can turn off proactive WhatsApp messages any time at <a href="/unsubscribe" style={{ color: "var(--k-warm-glow-dark)" }}>www.kyroo.co.in/unsubscribe</a>.</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>Acceptable use</h2>
         <p>Don't use KYROO to attempt to harm, harass, or extract harmful content, or to impersonate someone else when creating an account. We may suspend accounts that abuse the service.</p>
@@ -44,7 +44,7 @@ export default function Terms() {
         <p>These terms are governed by the laws of India.</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>Contact</h2>
-        <p>Questions about these terms, email <a href="mailto:admin.kyroo@gmail.com" style={{ color: "var(--k-coral)" }}>admin.kyroo@gmail.com</a>.</p>
+        <p>Questions about these terms, email <a href="mailto:admin.kyroo@gmail.com" style={{ color: "var(--k-warm-glow-dark)" }}>admin.kyroo@gmail.com</a>.</p>
       </div>
     </main>
   );

@@ -18,10 +18,10 @@ export default function Success() {
         .k-btn { font-family: var(--font-body); font-weight: 700; cursor: pointer; border: 3px solid var(--k-ink); background: var(--k-ink); color: var(--k-paper); padding: 15px 32px; font-size: 15px; box-shadow: 5px 5px 0 var(--k-ink); transition: transform .12s ease, box-shadow .12s ease; }
         .k-btn:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 var(--k-ink); }
         .k-btn:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--k-ink); }
-        .k-btn-lime { background: var(--k-lime); color: var(--k-ink); }
+        .k-btn-lime { background: var(--k-cheerful-vibe); color: var(--k-ink); }
       `}</style>
       <div style={{ maxWidth: 520 }}>
-        <div style={{ width: 100, height: 100, background: "var(--k-lime)", border: "3px solid var(--k-ink)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 28px", transform: "rotate(-4deg)" }}><PartyPopper size={44} strokeWidth={2} color="var(--k-ink)" /></div>
+        <div style={{ width: 100, height: 100, background: "var(--k-cheerful-vibe)", border: "3px solid var(--k-ink)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 28px", transform: "rotate(-4deg)" }}><PartyPopper size={44} strokeWidth={2} color="var(--k-ink)" /></div>
         <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(30px,5vw,48px)", letterSpacing: -1.5, marginBottom: 18, textTransform: "uppercase" }}>
           You&apos;re in{name ? `, ${name}` : ""}!
         </h1>
@@ -34,7 +34,7 @@ export default function Success() {
             <Image src="/kyroo-logo.png" alt="KYROO" width={38} height={38} style={{ borderRadius: "50%", border: "3px solid var(--k-ink)", objectFit: "cover" }} />
             <div>
               <div style={{ fontFamily: "var(--font-display)", fontSize: 14 }}>KYROO</div>
-              <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10, color: "var(--k-coral)", fontWeight: 700 }}>● JUST NOW</div>
+              <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10, color: "var(--k-warm-glow-dark)", fontWeight: 700 }}>● JUST NOW</div>
             </div>
           </div>
           <p style={{ fontSize: 14, lineHeight: 1.75, margin: 0 }}>

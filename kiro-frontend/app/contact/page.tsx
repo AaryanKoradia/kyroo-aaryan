@@ -11,7 +11,7 @@ export default function Contact() {
     <main className="k-grain" style={{ background: "var(--k-paper)", minHeight: "100vh", color: "var(--k-ink)", fontFamily: "var(--font-body)" }}>
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", borderBottom: "3px solid var(--k-ink)" }}>
         <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: "var(--k-ink)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-warm-glow-dark)" }}>.</span></div>
         </a>
       </nav>
 
@@ -20,7 +20,7 @@ export default function Contact() {
 
         <div className="k-card" style={{ border: "3px solid var(--k-ink)", boxShadow: "6px 6px 0 var(--k-ink)", padding: 22, marginBottom: 20, background: "var(--k-paper)" }}>
           <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, opacity: 0.55, marginBottom: 8 }}>Email</div>
-          <a href="mailto:admin.kyroo@gmail.com" style={{ fontSize: 16, color: "var(--k-coral)", fontWeight: 700 }}>admin.kyroo@gmail.com</a>
+          <a href="mailto:admin.kyroo@gmail.com" style={{ fontSize: 16, color: "var(--k-warm-glow-dark)", fontWeight: 700 }}>admin.kyroo@gmail.com</a>
           <p style={{ fontSize: 13, opacity: 0.65, marginTop: 8, lineHeight: 1.6 }}>For anything, bugs, feedback, data requests, or just to say hi.</p>
         </div>
 
