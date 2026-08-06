@@ -61,7 +61,7 @@ export default function CookieConsent({ gaId }: { gaId?: string }) {
                 fontWeight: 700,
                 cursor: "pointer",
                 border: "3px solid var(--k-ink)",
-                background: "var(--k-lime)",
+                background: "var(--k-cheerful-vibe)",
                 color: "var(--k-ink)",
                 padding: "10px 22px",
                 fontSize: 13.5,

@@ -9,11 +9,21 @@
   --k-paper: #f4efe4;
   --k-paper-2: #ece5d4;
   --k-ink: #14120f;
-  --k-coral: #ff4a2e;
-  --k-coral-dark: #d63a20;
-  --k-lime: #cfff3d;
-  --k-blue: #2b46ff;
-  --k-purple: #7b3fff;
+
+  /* Accent palette. Each has a soft "-fill" tone (the actual brand color,
+     used for backgrounds/buttons/tags/icon circles - always paired with
+     dark var(--k-ink) text/icons on top for contrast) and a darker
+     same-hue "-dark" variant for the opposite case: this color used AS
+     text/a border directly against the cream page background, where the
+     soft tone alone is too close in lightness to var(--k-paper) to read. */
+  --k-warm-glow: #FFE0CC;
+  --k-warm-glow-dark: #B3571A;
+  --k-cheerful-vibe: #FEF08A;
+  --k-cheerful-vibe-dark: #9C8D16;
+  --k-calm-trust: #BAE6FD;
+  --k-calm-trust-dark: #16729C;
+  --k-fresh-mint: #BBF7D0;
+  --k-fresh-mint-dark: #1F7A4B;
 }
 
 /* ── Brutalist primitives, reused across the marketing site ── */

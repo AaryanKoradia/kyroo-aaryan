@@ -169,7 +169,7 @@ export default function AccountPage() {
         .k-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--k-ink); }
         .k-btn:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--k-ink); }
         .k-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .k-btn-lime { background: var(--k-lime); color: var(--k-ink); }
+        .k-btn-lime { background: var(--k-cheerful-vibe); color: var(--k-ink); }
         .k-btn-ghost { background: var(--k-paper); color: var(--k-ink); }
         .k-input { font-family: var(--font-body); font-size: 15px; padding: 12px 14px; border: 3px solid var(--k-ink); background: var(--k-paper); width: 100%; box-sizing: border-box; }
         .k-input:focus { outline: none; box-shadow: 4px 4px 0 var(--k-ink); }
@@ -178,14 +178,14 @@ export default function AccountPage() {
 
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", borderBottom: "3px solid var(--k-ink)" }}>
         <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: "var(--k-ink)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-warm-glow-dark)" }}>.</span></div>
         </a>
       </nav>
 
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "60px 28px 100px" }}>
         <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, padding: "4px 10px", background: "var(--k-paper)", border: "2px solid var(--k-ink)" }}>Account</span>
         <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px,5vw,40px)", letterSpacing: -1, margin: "20px 0 12px", textTransform: "uppercase", lineHeight: 1.1 }}>
-          Your <span style={{ color: "var(--k-coral)" }}>KYROO</span> account
+          Your <span style={{ color: "var(--k-warm-glow-dark)" }}>KYROO</span> account
         </h1>
 
         {!account && (
@@ -222,7 +222,7 @@ export default function AccountPage() {
               <button
                 onClick={sendOtp}
                 disabled={otpSending}
-                style={{ padding: "0 16px", border: "3px solid var(--k-ink)", background: "var(--k-lime)", color: "var(--k-ink)", fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", opacity: otpSending ? 0.6 : 1 }}
+                style={{ padding: "0 16px", border: "3px solid var(--k-ink)", background: "var(--k-cheerful-vibe)", color: "var(--k-ink)", fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", opacity: otpSending ? 0.6 : 1 }}
               >
                 {otpSending ? "Sending..." : otpSent ? "Resend" : "Send code"}
               </button>
@@ -288,13 +288,13 @@ export default function AccountPage() {
               className="k-btn"
               disabled={toggling}
               onClick={toggleNudges}
-              style={{ width: "100%", marginBottom: 10, background: account.is_active ? "var(--k-paper)" : "var(--k-lime)", color: "var(--k-ink)" }}
+              style={{ width: "100%", marginBottom: 10, background: account.is_active ? "var(--k-paper)" : "var(--k-cheerful-vibe)", color: "var(--k-ink)" }}
             >
               {toggling ? "Updating..." : account.is_active ? "Turn off nudges & reminders" : "Turn nudges & reminders back on"}
             </button>
 
             {toggleMessage && (
-              <p style={{ marginBottom: 10, padding: "10px 12px", border: "2.5px solid var(--k-ink)", background: "var(--k-lime)", fontSize: 13, lineHeight: 1.6 }}>
+              <p style={{ marginBottom: 10, padding: "10px 12px", border: "2.5px solid var(--k-ink)", background: "var(--k-cheerful-vibe)", fontSize: 13, lineHeight: 1.6 }}>
                 {toggleMessage}
               </p>
             )}
@@ -311,7 +311,7 @@ export default function AccountPage() {
               <button className="k-btn k-btn-ghost" onClick={reset} style={{ flex: 1, fontSize: 12.5, padding: "10px 16px" }}>
                 Look up a different account
               </button>
-              <a href="/delete-account" className="k-btn k-btn-ghost" style={{ flex: 1, fontSize: 12.5, padding: "10px 16px", textAlign: "center", textDecoration: "none", color: "var(--k-coral-dark)" }}>
+              <a href="/delete-account" className="k-btn k-btn-ghost" style={{ flex: 1, fontSize: 12.5, padding: "10px 16px", textAlign: "center", textDecoration: "none", color: "var(--k-warm-glow-dark)" }}>
                 Delete account
               </a>
             </div>
