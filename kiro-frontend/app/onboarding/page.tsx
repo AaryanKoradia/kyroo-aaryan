@@ -353,7 +353,7 @@ export default function Onboarding() {
   const btn = (active: boolean, onClick: () => void, label: string, Icon?: LucideIcon) => (
     <button key={label} onClick={onClick} style={{
       padding: "9px 15px", border: active ? "2.5px solid var(--k-ink)" : "2.5px solid rgba(20,18,15,0.14)",
-      background: active ? "var(--k-cheerful-vibe)" : "var(--k-paper)",
+      background: active ? "var(--k-lime)" : "var(--k-paper)",
       color: "var(--k-ink)",
       fontSize: 13, cursor: "pointer", fontFamily: "var(--font-body)",
       fontWeight: active ? 700 : 400,
@@ -368,7 +368,7 @@ export default function Onboarding() {
       width: "100%", display: "flex", alignItems: "center", gap: 12,
       padding: "14px 16px",
       border: active ? "3px solid var(--k-ink)" : "2.5px solid rgba(20,18,15,0.12)",
-      background: active ? "var(--k-cheerful-vibe)" : "var(--k-paper)",
+      background: active ? "var(--k-lime)" : "var(--k-paper)",
       color: "var(--k-ink)", fontSize: 14, cursor: "pointer",
       fontFamily: "var(--font-body)", fontWeight: active ? 700 : 400,
       marginBottom: 10, textAlign: "left",
@@ -381,7 +381,7 @@ export default function Onboarding() {
         background: active ? "var(--k-ink)" : "transparent",
         flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center"
       }}>
-        {active && <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--k-cheerful-vibe)" }}></div>}
+        {active && <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--k-lime)" }}></div>}
       </div>
       {Icon && <Icon size={16} strokeWidth={2.2} style={{ flexShrink: 0 }} />}
       {label}
@@ -392,7 +392,7 @@ export default function Onboarding() {
     <button key={label} onClick={onClick} style={{
       padding: "16px 14px", borderRadius: 16, textAlign: "center",
       border: active ? "3px solid var(--k-ink)" : "2.5px solid rgba(20,18,15,0.14)",
-      background: active ? "var(--k-cheerful-vibe)" : "var(--k-paper)",
+      background: active ? "var(--k-lime)" : "var(--k-paper)",
       color: "var(--k-ink)", fontSize: 13, cursor: "pointer", fontFamily: "var(--font-body)",
       fontWeight: active ? 700 : 400, boxShadow: active ? "3px 3px 0 var(--k-ink)" : "none",
       display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
@@ -424,16 +424,16 @@ export default function Onboarding() {
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 28px", borderBottom: "3px solid var(--k-ink)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 17 }}>KYROO<span style={{ color: "var(--k-warm-glow-dark)" }}>.</span></div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 17 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
         </div>
         <div style={{ flex: 1, margin: "0 24px", height: 12, background: "var(--k-paper)", border: "2px solid var(--k-ink)" }}>
-          <div style={{ width: `${progress}%`, height: "100%", background: "var(--k-cheerful-vibe)", transition: "width 0.4s ease" }}></div>
+          <div style={{ width: `${progress}%`, height: "100%", background: "var(--k-lime)", transition: "width 0.4s ease" }}></div>
         </div>
         <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700 }}>{step} / 10</div>
       </div>
 
       <div style={{ flex: 1, padding: "36px 28px 20px", maxWidth: 540, margin: "0 auto", width: "100%" }}>
-        <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10.5, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, padding: "3px 9px", background: "var(--k-cheerful-vibe)", border: "2px solid var(--k-ink)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
+        <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10.5, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, padding: "3px 9px", background: "var(--k-lime)", border: "2px solid var(--k-ink)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
           {CurrentDomainIcon && <CurrentDomainIcon size={12} strokeWidth={2.5} />}
           {steps[step - 1].domain}
         </span>
@@ -469,12 +469,12 @@ export default function Onboarding() {
             <div style={{ display: "flex", gap: 8, marginBottom: otpSent ? 10 : 12 }}>
               <input style={{ ...inputStyle, marginBottom: 0, flex: 1 }} placeholder="you@email.com" type="email" maxLength={100} value={email} onChange={e => handleEmailChange(e.target.value)} disabled={otpVerified} />
               {!otpVerified && (
-                <button onClick={sendOtp} disabled={otpSending} style={{ padding: "0 16px", border: "2.5px solid var(--k-ink)", background: "var(--k-cheerful-vibe)", color: "var(--k-ink)", fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", opacity: otpSending ? 0.6 : 1 }}>
+                <button onClick={sendOtp} disabled={otpSending} style={{ padding: "0 16px", border: "2.5px solid var(--k-ink)", background: "var(--k-lime)", color: "var(--k-ink)", fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", opacity: otpSending ? 0.6 : 1 }}>
                   {otpSending ? "Sending..." : otpSent ? "Resend" : "Send code"}
                 </button>
               )}
               {otpVerified && (
-                <span style={{ display: "flex", alignItems: "center", gap: 6, padding: "0 14px", border: "2.5px solid var(--k-ink)", background: "var(--k-cheerful-vibe)", fontSize: 12.5, fontWeight: 700 }}>✓ Verified</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 6, padding: "0 14px", border: "2.5px solid var(--k-ink)", background: "var(--k-lime)", fontSize: 12.5, fontWeight: 700 }}>✓ Verified</span>
               )}
             </div>
 
@@ -495,14 +495,14 @@ export default function Onboarding() {
             )}
 
             {otpError && (
-              <div style={{ fontSize: 12, color: "var(--k-warm-glow-dark)", marginBottom: 12 }}>{otpError}</div>
+              <div style={{ fontSize: 12, color: "var(--k-coral-dark)", marginBottom: 12 }}>{otpError}</div>
             )}
             {otpSent && !otpVerified && !otpError && (
               <div style={{ fontSize: 11.5, opacity: 0.55, marginBottom: 12 }}>Sent a code to {otpEmailSentFor}, check your inbox.</div>
             )}
 
             {alreadyRegistered && (
-              <div style={{ background: "var(--k-cheerful-vibe)", border: "3px solid var(--k-ink)", boxShadow: "4px 4px 0 var(--k-ink)", padding: "14px 16px", marginBottom: 16, fontSize: 13, lineHeight: 1.65, transform: "rotate(-0.6deg)" }}>
+              <div style={{ background: "var(--k-lime)", border: "3px solid var(--k-ink)", boxShadow: "4px 4px 0 var(--k-ink)", padding: "14px 16px", marginBottom: 16, fontSize: 13, lineHeight: 1.65, transform: "rotate(-0.6deg)" }}>
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 15, marginBottom: 6, textTransform: "uppercase" }}>Welcome back</div>
                 This email already has a KYROO account. No need to sign up again, just head to WhatsApp to pick up where you left off.
               </div>
@@ -548,7 +548,7 @@ export default function Onboarding() {
                 <button key={h} onClick={() => setSleepHour(h)} style={{
                   flex: 1, height: 44, borderRadius: 12,
                   border: sleepHour === h ? "3px solid var(--k-ink)" : "2.5px solid rgba(20,18,15,0.14)",
-                  background: sleepHour === h ? "var(--k-cheerful-vibe)" : "var(--k-paper)",
+                  background: sleepHour === h ? "var(--k-lime)" : "var(--k-paper)",
                   color: "var(--k-ink)",
                   fontSize: 13, cursor: "pointer", fontFamily: "var(--font-body)", fontWeight: sleepHour === h ? 700 : 400
                 }}>{h}</button>
@@ -573,7 +573,7 @@ export default function Onboarding() {
                 <button key={n} onClick={() => setStressLevel(n)} style={{
                   flex: 1, height: 44, borderRadius: 10,
                   border: stressLevel === n ? "3px solid var(--k-ink)" : "2.5px solid rgba(20,18,15,0.14)",
-                  background: stressLevel === n ? "var(--k-cheerful-vibe)" : "var(--k-paper)",
+                  background: stressLevel === n ? "var(--k-lime)" : "var(--k-paper)",
                   color: "var(--k-ink)",
                   fontSize: 13, cursor: "pointer", fontFamily: "var(--font-body)", fontWeight: stressLevel === n ? 700 : 400
                 }}>{n}</button>
@@ -625,7 +625,7 @@ export default function Onboarding() {
                 <button key={l} onClick={() => setLanguage(l)} style={{
                   padding: "12px 8px", borderRadius: 14, textAlign: "center",
                   border: language === l ? "3px solid var(--k-ink)" : "2.5px solid rgba(20,18,15,0.14)",
-                  background: language === l ? "var(--k-cheerful-vibe)" : "var(--k-paper)",
+                  background: language === l ? "var(--k-lime)" : "var(--k-paper)",
                   color: "var(--k-ink)",
                   fontSize: 13, cursor: "pointer", fontFamily: "var(--font-body)", fontWeight: language === l ? 700 : 400
                 }}>{l}</button>
@@ -643,7 +643,7 @@ export default function Onboarding() {
                 <button key={t} onClick={() => setNudgeTime(t)} style={{
                   flex: 1, padding: "11px 8px", borderRadius: 12,
                   border: nudgeTime === t ? "3px solid var(--k-ink)" : "2.5px solid rgba(20,18,15,0.14)",
-                  background: nudgeTime === t ? "var(--k-cheerful-vibe)" : "var(--k-paper)",
+                  background: nudgeTime === t ? "var(--k-lime)" : "var(--k-paper)",
                   color: "var(--k-ink)",
                   fontSize: 12, cursor: "pointer", fontFamily: "var(--font-body)", fontWeight: nudgeTime === t ? 700 : 400
                 }}>{t}</button>
@@ -686,12 +686,12 @@ export default function Onboarding() {
 
       <div style={{ padding: "16px 28px", borderTop: "3px solid var(--k-ink)", maxWidth: 540, margin: "0 auto", width: "100%" }}>
         {showValidation && currentError && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 13px", background: "rgba(255,224,204,0.4)", border: "2px solid var(--k-warm-glow-dark)", color: "var(--k-warm-glow-dark)", fontSize: 12.5, fontWeight: 600, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 13px", background: "rgba(255,74,46,0.1)", border: "2px solid var(--k-coral)", color: "var(--k-coral-dark)", fontSize: 12.5, fontWeight: 600, marginBottom: 10 }}>
             {currentError}
           </div>
         )}
         {finishError && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 13px", background: "rgba(255,224,204,0.4)", border: "2px solid var(--k-warm-glow-dark)", color: "var(--k-warm-glow-dark)", fontSize: 12.5, fontWeight: 600, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 13px", background: "rgba(255,74,46,0.1)", border: "2px solid var(--k-coral)", color: "var(--k-coral-dark)", fontSize: 12.5, fontWeight: 600, marginBottom: 10 }}>
             {finishError}
           </div>
         )}
@@ -703,7 +703,7 @@ export default function Onboarding() {
             <button
               className="k-onb-btn"
               onClick={() => { window.location.href = `https://wa.me/917400351463?text=${encodeURIComponent(`Hi KYROO! I'm ${name || "back"}`)}`; }}
-              style={{ flex: 1, height: 52, fontSize: 15, background: "var(--k-cheerful-vibe)", color: "var(--k-ink)" }}>
+              style={{ flex: 1, height: 52, fontSize: 15, background: "var(--k-lime)", color: "var(--k-ink)" }}>
               Continue on WhatsApp →
             </button>
           ) : (
@@ -711,7 +711,7 @@ export default function Onboarding() {
               className="k-onb-btn"
               onClick={handleNext}
               disabled={loading}
-              style={{ flex: 1, height: 52, fontSize: 15, background: "var(--k-cheerful-vibe)", color: "var(--k-ink)" }}>
+              style={{ flex: 1, height: 52, fontSize: 15, background: "var(--k-lime)", color: "var(--k-ink)" }}>
               {loading ? "Setting up KYROO..." : step === 10 ? "Choose your plan →" : step === 1 ? "Let's go! →" : "Next →"}
             </button>
           )}

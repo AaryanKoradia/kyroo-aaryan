@@ -11,7 +11,7 @@ export default function About() {
     <main className="k-grain" style={{ background: "var(--k-paper)", minHeight: "100vh", color: "var(--k-ink)", fontFamily: "var(--font-body)" }}>
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", borderBottom: "3px solid var(--k-ink)" }}>
         <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: "var(--k-ink)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-warm-glow-dark)" }}>.</span></div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
         </a>
       </nav>
 
@@ -22,7 +22,7 @@ export default function About() {
         <p>The idea is simple: most habit and wellness apps fail because they ask you to open a separate app you'll forget exists within a week. WhatsApp is already open. So KYROO meets you there instead, checking in, remembering context across conversations, and adapting to how you actually text, in Hinglish, English, or whatever mix feels natural.</p>
         <p>KYROO is built for India's Gen Z specifically, casual, direct, no lecturing, no corporate wellness-app tone.</p>
         <p>It's early. Pro and Pro Plus tiers are coming, but right now everything real about KYROO is available for free, the site's pricing page reflects that honestly.</p>
-        <p>Questions or feedback are genuinely welcome, see the <a href="/contact" style={{ color: "var(--k-warm-glow-dark)" }}>contact page</a> for how to reach us.</p>
+        <p>Questions or feedback are genuinely welcome, see the <a href="/contact" style={{ color: "var(--k-coral)" }}>contact page</a> for how to reach us.</p>
       </div>
     </main>
   );
