@@ -183,7 +183,7 @@ export default function Home() {
 
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--k-ink)", color: "var(--k-lime)", border: "2px solid var(--k-ink)", padding: "7px 18px", fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 32, transform: "rotate(-2deg)", position: "relative", zIndex: 2 }} className="k-fade-1">
           <span className="k-blink" style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--k-lime)", display: "inline-block" }} />
-          ✦ Free on WhatsApp, no app needed
+            Free on WhatsApp, no app needed
         </div>
 
         <h1 className="hero-h1 k-fade-2" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(48px,9vw,128px)", lineHeight: 0.94, letterSpacing: -2, marginBottom: 22, maxWidth: 1100, position: "relative", zIndex: 2, textTransform: "uppercase" }}>
