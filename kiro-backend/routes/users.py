@@ -87,10 +87,10 @@ async def signup(request: Request, user: UserSignup):
 
     # If this phone already has a row — e.g. they messaged KYROO on WhatsApp
     # first and got sent here to finish setup, which creates a row with
-    # onboarding_step=-1/-2 — finish THAT row instead of inserting a second
+    # onboarding_step=-1 — finish THAT row instead of inserting a second
     # one. Otherwise the WhatsApp webhook can keep reading the old,
-    # half-onboarded row (it has no way to know this new one is "them"),
-    # and re-asks for consent/onboarding even though signup just completed.
+    # unregistered row (it has no way to know this new one is "them"),
+    # and re-sends the registration link even though signup just completed.
     existing_by_phone = (
         db.table("users").select("id")
         .eq("phone", phone)
