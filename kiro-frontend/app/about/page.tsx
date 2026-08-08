@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About KYROO — your best friend on WhatsApp",
+  title: "About KYROO — your second brain, with a heart",
   description: "KYROO is an AI companion that lives inside WhatsApp, built around fitness, money, mind, and sleep. No app to download, just a phone number.",
   alternates: { canonical: "/about" },
 };

@@ -187,14 +187,14 @@ export default function Home() {
         </div>
 
         <h1 className="hero-h1 k-fade-2" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(48px,9vw,128px)", lineHeight: 0.94, letterSpacing: -2, marginBottom: 22, maxWidth: 1100, position: "relative", zIndex: 2, textTransform: "uppercase" }}>
-          Your best friend<br />
+          Your Second Brain.<br />
           <span style={{ background: "var(--k-coral)", padding: "0 14px", display: "inline-block", transform: "rotate(-1.5deg)", boxShadow: "6px 6px 0 var(--k-ink)", border: "3px solid var(--k-ink)", marginTop: 10 }}>
-            who runs your life.
+            With a Heart.
           </span>
         </h1>
 
         <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 15, color: "rgba(20,18,15,0.72)", maxWidth: 420, lineHeight: 1.8, margin: "0 auto 30px", position: "relative", zIndex: 2 }} className="k-fade-3">
-          FITNESS · MONEY · MIND · SLEEP<br />ONE FRIEND. EVERY DAY. ON WHATSAPP.
+          FITNESS · MONEY · MIND · SLEEP<br />ONE BRAIN. EVERY DAY. ON WHATSAPP.
         </p>
 
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", position: "relative", zIndex: 2 }} className="k-fade-4">
@@ -229,7 +229,7 @@ export default function Home() {
           <div style={{ marginBottom: 60, opacity: featRef.inView ? 1 : 0, transform: featRef.inView ? "translateY(0)" : "translateY(20px)", transition: "all .5s ease" }}>
             <Tag>What KYROO takes care of</Tag>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(34px,5.5vw,68px)", lineHeight: 0.98, letterSpacing: -1.5, marginTop: 18, textTransform: "uppercase" }}>
-              Your whole life.<br />One friend who<br /><span style={{ color: "var(--k-coral)" }}>actually pays attention.</span>
+              Your whole life.<br />One brain that<br /><span style={{ color: "var(--k-coral)" }}>actually pays attention.</span>
             </h2>
           </div>
 
@@ -278,10 +278,10 @@ export default function Home() {
           KYROO
         </div>
         <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(16px,2.6vw,28px)", letterSpacing: -0.5, color: "var(--k-paper)", textTransform: "uppercase", marginBottom: 22 }}>
-          The friend who never forgets.
+          Your second brain, with a heart.
         </div>
         <div style={{ display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap" }}>
-          {["YOUR LIFE", "YOUR FRIEND", "YOUR WHATSAPP"].map((w) => (
+          {["YOUR LIFE", "YOUR BRAIN", "YOUR WHATSAPP"].map((w) => (
             <span key={w} style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, letterSpacing: 3, color: "var(--k-lime)", textTransform: "uppercase" }}>{w}</span>
           ))}
         </div>
@@ -405,7 +405,7 @@ export default function Home() {
         <div style={{ maxWidth: 700, margin: "0 auto", position: "relative", zIndex: 2 }}>
           <Tag bg="var(--k-lime)">Ready?</Tag>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(32px,6vw,72px)", letterSpacing: -2, lineHeight: 1.02, margin: "20px 0", color: "var(--k-paper)", textTransform: "uppercase" }}>
-            Your best friend<br />is one message away.
+            Your second brain<br />is one message away.
           </h2>
           <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 13, color: "var(--k-paper)", opacity: 0.6, lineHeight: 1.8, margin: "36px auto 40px", maxWidth: 400 }}>
             3 MINUTES TO SET UP. SHOWS UP EVERY MORNING. REMEMBERS EVERYTHING. GETS BETTER EVERY DAY.
@@ -426,7 +426,7 @@ export default function Home() {
                 <Image src="/kyroo-logo.png" alt="KYROO" width={28} height={28} style={{ borderRadius: "50%", border: "2px solid var(--k-paper)", objectFit: "cover" }} />
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 22 }}>KYROO</div>
               </div>
-              <p style={{ fontSize: 13, opacity: 0.55, maxWidth: 220, lineHeight: 1.75 }}>The friend who never forgets. Fitness, money, mind, sleep, all in one WhatsApp chat.</p>
+              <p style={{ fontSize: 13, opacity: 0.55, maxWidth: 220, lineHeight: 1.75 }}>Your second brain, with a heart. Fitness, money, mind, sleep, all in one WhatsApp chat.</p>
             </div>
             {[
               { label: "Product", links: ["Features", "Pricing", "How it works"] },
