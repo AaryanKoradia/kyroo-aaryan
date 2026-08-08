@@ -15,12 +15,7 @@ from app.infrastructure.whatsapp.client import WhatsAppClient
 from app.brain.kyroo_brain import validate_response, kyroo_brain, finalize_chat_turn
 from app.brain.debounce import buffer_message
 from app.brain.stickers import is_sticker_war_trigger, pick_random_mood, pick_random_sticker, STICKER_MEDIA_IDS
-from app.brain.onboarding_flow import (
-    needs_onboarding, current_question, process_answer, format_prompt,
-    ONBOARDING_QUESTIONS, COMPLETE_TEXT, NOT_STARTED, AWAITING_ENTRY_CHOICE,
-    AWAITING_CONSENT, ENTRY_CHOICE_PROMPT, ENTRY_CHOICE_OPTIONS, ENTRY_WEBSITE_REPLY,
-    CONSENT_PROMPT, CONSENT_RETRY_PROMPT, resolve_entry_choice, is_consent_accepted,
-)
+from app.brain.onboarding_flow import needs_onboarding, REGISTER_ON_WEBSITE_TEXT
 from app.brain.transcription import transcribe_audio
 from app.services.user_service import UserService
 from app.services.conversation_service import ConversationService
@@ -142,100 +137,14 @@ def _send_remaining_if_needed(phone: str, result: dict):
     WhatsAppClient().send(phone, bubbles)
 
 
-def _extract_interactive_id(message: dict) -> str | None:
-    interactive = message.get("interactive", {})
-    if "list_reply" in interactive:
-        return interactive["list_reply"].get("id")
-    if "button_reply" in interactive:
-        return interactive["button_reply"].get("id")
-    return None
-
-
-def _send_onboarding_question(wa: WhatsAppClient, phone: str, question: dict, user: dict):
-    prompt = format_prompt(question, user)
-    if question["type"] == "text":
-        wa.send_one(phone, prompt)
-    else:
-        wa.send_list_message(phone, prompt, question["options"])
-
-
-def _handle_onboarding_turn(db, user: dict, message: dict, msg_type: str, message_id: str):
-    """Anyone who's never been through the website form (onboarding_step is
-    set, not the "complete" default) gets walked through the exact same
-    questions here instead of full chat — gated, so there's no personalized
-    or generic chat access until this finishes."""
+def _send_registration_redirect(user: dict, message_id: str):
+    """Registration is website-only now — anyone who hasn't completed the
+    website form gets pointed there on every message, regardless of
+    message type, instead of the old WhatsApp-native question flow."""
     wa = WhatsAppClient()
     if message_id:
         wa.send_typing_indicator(message_id)
-
-    phone = user["phone"]
-    user_service = UserService(db)
-    step = user.get("onboarding_step", NOT_STARTED)
-
-    if step == NOT_STARTED:
-        # brand new contact — offer the website as the primary path and
-        # WhatsApp-native questions as the fallback, rather than diving
-        # straight into the 13-question flow
-        wa.send_list_message(phone, ENTRY_CHOICE_PROMPT, ENTRY_CHOICE_OPTIONS, button_text="Choose")
-        user_service.update_user(user["id"], {"onboarding_step": AWAITING_ENTRY_CHOICE})
-        return
-
-    if step == AWAITING_ENTRY_CHOICE:
-        text = message.get("text", {}).get("body") if msg_type == "text" else None
-        interactive_id = _extract_interactive_id(message) if msg_type == "interactive" else None
-        choice = resolve_entry_choice(text, interactive_id)
-        if choice == "website":
-            wa.send_one(phone, ENTRY_WEBSITE_REPLY)
-            # stays at AWAITING_ENTRY_CHOICE — if they come back without
-            # finishing on the website, typing anything at all still falls
-            # through to the WhatsApp flow below next time
-            return
-        wa.send_one(phone, CONSENT_PROMPT)
-        user_service.update_user(user["id"], {"onboarding_step": AWAITING_CONSENT})
-        return
-
-    if step == AWAITING_CONSENT:
-        text = message.get("text", {}).get("body") if msg_type == "text" else None
-        if not is_consent_accepted(text):
-            wa.send_one(phone, CONSENT_RETRY_PROMPT)
-            return
-        _send_onboarding_question(wa, phone, ONBOARDING_QUESTIONS[0], user)
-        user_service.update_user(user["id"], {"onboarding_step": 0})
-        return
-
-    question = current_question(user)
-    if question is None:
-        # shouldn't normally happen (covered by the states above), but
-        # guard rather than crash on an unexpected onboarding_step value
-        _send_onboarding_question(wa, phone, ONBOARDING_QUESTIONS[0], user)
-        user_service.update_user(user["id"], {"onboarding_step": 0})
-        return
-
-    if msg_type == "text":
-        text = message["text"]["body"].strip()
-        interactive_id = None
-    elif msg_type == "interactive":
-        text = None
-        interactive_id = _extract_interactive_id(message)
-    else:
-        # image/sticker/audio etc mid-onboarding — steer back to the
-        # question rather than silently ignoring or treating it as an answer
-        wa.send_one(phone, "Let's finish setting you up first, " + format_prompt(question, user))
-        return
-
-    update, error = process_answer(user, text, interactive_id)
-    if error:
-        wa.send_one(phone, error)
-        return
-
-    user_service.update_user(user["id"], update)
-    user.update(update)
-
-    next_question = current_question(user)
-    if next_question is None:
-        wa.send_one(phone, COMPLETE_TEXT.format(name=user.get("name") or "yaar"))
-    else:
-        _send_onboarding_question(wa, phone, next_question, user)
+    wa.send_one(user["phone"], REGISTER_ON_WEBSITE_TEXT)
 
 
 @router.get("/webhook")
@@ -287,9 +196,9 @@ async def webhook(request: Request, db=Depends(get_db)):
 
     if needs_onboarding(user):
         try:
-            _handle_onboarding_turn(db, user, message, msg_type, message_id)
+            _send_registration_redirect(user, message_id)
         except Exception:
-            logger.exception(f"[webhook] Onboarding error")
+            logger.exception("[webhook] Failed to send registration redirect")
             sentry_sdk.capture_exception()
         return {"status": "ok"}
 

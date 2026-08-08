@@ -10,13 +10,13 @@ class UserService:
         """Get user by phone or create new one.
 
         Ordered by onboarding_step (then created_at) descending so that if
-        more than one row ever exists for the same phone — e.g. a stale
-        WhatsApp-first row stuck at AWAITING_ENTRY_CHOICE alongside a
-        complete row from a later website signup, before the signup
-        endpoint started upserting by phone — the most-onboarded row wins
-        instead of an arbitrary one. onboarding_step is a reliable
-        "how done is this row" signal: -1/-2/-3 are WhatsApp-native
-        onboarding states, 0-12 are in-progress questions, 99 is complete."""
+        more than one row ever exists for the same phone — e.g. an
+        unregistered WhatsApp-first row alongside a complete row from a
+        later website signup, before the signup endpoint started
+        upserting by phone — the most-onboarded row wins instead of an
+        arbitrary one. onboarding_step is a reliable "how done is this
+        row" signal: -1 is an unregistered WhatsApp-first contact
+        (registration only happens on the website now), 99 is complete."""
         try:
             res = (
                 self.db.table("users").select("*")

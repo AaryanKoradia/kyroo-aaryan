@@ -54,21 +54,7 @@ def stub_webhook_dependencies():
 
     ob = stubs["app.brain.onboarding_flow"]
     ob.needs_onboarding = lambda user: False
-    ob.current_question = lambda user: None
-    ob.process_answer = lambda *a, **k: ({}, None)
-    ob.format_prompt = lambda *a, **k: ""
-    ob.ONBOARDING_QUESTIONS = []
-    ob.COMPLETE_TEXT = "{name}"
-    ob.NOT_STARTED = -1
-    ob.AWAITING_ENTRY_CHOICE = -2
-    ob.AWAITING_CONSENT = -3
-    ob.ENTRY_CHOICE_PROMPT = ""
-    ob.ENTRY_CHOICE_OPTIONS = []
-    ob.ENTRY_WEBSITE_REPLY = ""
-    ob.CONSENT_PROMPT = ""
-    ob.CONSENT_RETRY_PROMPT = ""
-    ob.resolve_entry_choice = lambda *a, **k: "whatsapp"
-    ob.is_consent_accepted = lambda t: True
+    ob.REGISTER_ON_WEBSITE_TEXT = "register at kyroo.co.in/onboarding"
 
     stubs["app.brain.transcription"].transcribe_audio = lambda *a, **k: ""
 

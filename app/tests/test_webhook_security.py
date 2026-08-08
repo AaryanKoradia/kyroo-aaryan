@@ -171,3 +171,48 @@ def test_signature_verification_rejects_tampered_body_once_configured():
     sig = "sha256=" + hmac.new(b"test_secret", body, hashlib.sha256).hexdigest()
     assert mod._verify_meta_signature(body, sig) is True
     assert mod._verify_meta_signature(b'{"entry":[{"id":"2"}]}', sig) is False
+
+
+TEXT_BODY = {
+    "entry": [{"changes": [{"value": {"messages": [{
+        "from": "919999999999", "id": "wamid.TEXT1", "type": "text",
+        "text": {"body": "hi"},
+    }]}}]}]
+}
+
+
+def test_unregistered_user_gets_website_link_not_the_chat_pipeline():
+    """Registration is website-only now - an unregistered contact should
+    get pointed at the signup link on every message, and never reach
+    kyroo_brain/the orchestrator at all."""
+    mod, stubs = _load_webhook_module()
+    # webhook.py did `from onboarding_flow import needs_onboarding` at
+    # exec time, which copied a reference to the stub's default (False)
+    # lambda - reassigning the attribute on the stub module now wouldn't
+    # reach back into that already-bound name, so patch mod's own
+    # binding directly instead.
+    mod.needs_onboarding = lambda user: True
+    dedup_db = _make_dedup_db()
+
+    result = asyncio.run(mod.webhook(_FakeRequest(TEXT_BODY), db=dedup_db))
+
+    assert result == {"status": "ok"}
+    stubs["_mock_wa_instance"].send_one.assert_called_once_with(
+        "919999999999", mod.REGISTER_ON_WEBSITE_TEXT
+    )
+    stubs["app.brain.kyroo_brain"].kyroo_brain.assert_not_called()
+
+
+def test_registered_user_still_reaches_the_chat_pipeline():
+    """Sanity check on the other side of the same branch - a registered
+    user's text message should NOT get the registration link and should
+    reach the normal reply path."""
+    # needs_onboarding defaults to False in the stub already - nothing to
+    # override here, this just confirms that default routes correctly.
+    mod, stubs = _load_webhook_module()
+    dedup_db = _make_dedup_db()
+
+    asyncio.run(mod.webhook(_FakeRequest(TEXT_BODY), db=dedup_db))
+
+    for call in stubs["_mock_wa_instance"].send_one.call_args_list:
+        assert call.args[1] != mod.REGISTER_ON_WEBSITE_TEXT
