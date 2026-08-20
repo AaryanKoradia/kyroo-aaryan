@@ -246,7 +246,7 @@ export default function Onboarding() {
         if (!/[A-Za-z]/.test(trimmedCity)) return "Enter a valid city name.";
         if (!/^\S+@\S+\.\S+$/.test(email.trim())) return "Enter a valid email address.";
         if (!otpVerified) return "Please verify your email: send yourself a code and enter it.";
-        if (!consentGiven) return "Please agree to the Privacy Policy and WhatsApp messages to continue.";
+        if (!consentGiven) return "Please agree to the Privacy Policy to continue.";
         return null;
       }
       case 2:
@@ -272,7 +272,7 @@ export default function Onboarding() {
         return null;
       case 9: {
         const digits = phone.replace(/\D/g, "");
-        if (!digits) return "Enter your WhatsApp number.";
+        if (!digits) return "Enter your phone number.";
         if (digits.length !== 10) return "Enter a valid 10-digit number.";
         if (!/^[6-9]/.test(digits)) return "Enter a valid Indian mobile number.";
         return null;
@@ -504,7 +504,7 @@ export default function Onboarding() {
             {alreadyRegistered && (
               <div style={{ background: "var(--k-lime)", border: "3px solid var(--k-ink)", boxShadow: "4px 4px 0 var(--k-ink)", padding: "14px 16px", marginBottom: 16, fontSize: 13, lineHeight: 1.65, transform: "rotate(-0.6deg)" }}>
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 15, marginBottom: 6, textTransform: "uppercase" }}>Welcome back</div>
-                This email already has a KYROO account. No need to sign up again, just head to WhatsApp to pick up where you left off.
+                This email already has a KYROO account. No need to sign up again, just <a href="/chat" style={{ color: "var(--k-ink)", textDecoration: "underline" }}>log in and start chatting</a>.
               </div>
             )}
 
@@ -512,7 +512,7 @@ export default function Onboarding() {
               <label style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 12, opacity: 0.7, cursor: "pointer", marginTop: 4 }}>
                 <input type="checkbox" checked={consentGiven} onChange={e => setConsentGiven(e.target.checked)} style={{ marginTop: 2, flexShrink: 0 }} />
                 <span>
-                  I agree to KYROO's <a href="/privacy" target="_blank" style={{ color: "var(--k-ink)", textDecoration: "underline" }}>Privacy Policy</a>, and to receive WhatsApp messages from KYROO including replies and proactive check-ins/nudges (you can turn these off any time).
+                  I agree to KYROO's <a href="/privacy" target="_blank" style={{ color: "var(--k-ink)", textDecoration: "underline" }}>Privacy Policy</a>.
                 </span>
               </label>
             )}
@@ -631,7 +631,7 @@ export default function Onboarding() {
                 }}>{l}</button>
               ))}
             </div>
-            <label style={{ fontSize: 11, color: "rgba(20,18,15,0.5)", display: "block", marginBottom: 7 }}>WhatsApp number</label>
+            <label style={{ fontSize: 11, color: "rgba(20,18,15,0.5)", display: "block", marginBottom: 7 }}>Phone number</label>
             <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--k-paper)", border: "2.5px solid rgba(20,18,15,0.14)", borderRadius: 4, padding: "12px 16px", marginBottom: 16 }}>
               <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, border: "1.5px solid rgba(20,18,15,0.3)", borderRadius: 3, padding: "2px 5px" }}>IN</span>
               <span style={{ color: "rgba(20,18,15,0.5)", fontSize: 14 }}>+91</span>
@@ -702,9 +702,9 @@ export default function Onboarding() {
           {step === 1 && alreadyRegistered ? (
             <button
               className="k-onb-btn"
-              onClick={() => { window.location.href = `https://wa.me/917400351463?text=${encodeURIComponent(`Hi KYROO! I'm ${name || "back"}`)}`; }}
+              onClick={() => { window.location.href = "/chat"; }}
               style={{ flex: 1, height: 52, fontSize: 15, background: "var(--k-lime)", color: "var(--k-ink)" }}>
-              Continue on WhatsApp →
+              Continue to chat →
             </button>
           ) : (
             <button

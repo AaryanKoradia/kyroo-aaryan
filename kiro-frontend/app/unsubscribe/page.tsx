@@ -54,7 +54,7 @@ export default function Unsubscribe() {
           Manage your <span style={{ color: "var(--k-coral)" }}>nudges</span>
         </h1>
         <p style={{ fontSize: 14, opacity: 0.65, lineHeight: 1.7, marginBottom: 32 }}>
-          Unsubscribing stops all proactive WhatsApp messages from KYROO: daily nudges and reminders. You can still message KYROO directly any time, and you can resubscribe here whenever you want.
+          Unsubscribing stops all proactive messages from KYROO: daily nudges and reminders. You can still message KYROO directly any time, and you can resubscribe here whenever you want.
         </p>
 
         <label style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 8 }}>

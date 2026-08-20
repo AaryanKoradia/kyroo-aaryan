@@ -23,7 +23,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 const SITE_URL = "https://www.kyroo.co.in";
 const SITE_TITLE = "KYROO — Your Second Brain. With a Heart.";
-const SITE_DESCRIPTION = "KYROO is your WhatsApp companion for fitness, money, mind, and sleep. Sends reminders, reads your photos and voice notes, teaches you anything, and remembers everything. Free, no app needed.";
+const SITE_DESCRIPTION = "KYROO is your AI companion for fitness, money, mind, and sleep. Reads your photos and voice notes, teaches you anything, and remembers everything. Free, no app needed.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

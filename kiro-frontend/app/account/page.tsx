@@ -2,7 +2,6 @@
 import { useState } from "react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://kyroo-backend.onrender.com";
-const WHATSAPP_NUMBER = "917400351463";
 
 type Account = {
   name?: string;
@@ -301,10 +300,10 @@ export default function AccountPage() {
 
             <button
               className="k-btn k-btn-lime"
-              onClick={() => { window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi KYROO! I'm ${account.name || "back"}`)}`; }}
+              onClick={() => { window.location.href = "/chat"; }}
               style={{ width: "100%", marginBottom: 10 }}
             >
-              Continue on WhatsApp →
+              Continue to chat →
             </button>
 
             <div style={{ display: "flex", gap: 10 }}>
