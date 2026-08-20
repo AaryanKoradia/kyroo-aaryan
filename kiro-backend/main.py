@@ -8,7 +8,7 @@ from logging_config import configure_logging
 
 configure_logging()
 
-from routes import users, ai, payments, fitness, files, tracking, reports, otp, admin
+from routes import users, ai, payments, fitness, files, tracking, reports, otp, admin, auth
 from rate_limit import limiter
 import os
 
@@ -58,6 +58,7 @@ app.include_router(tracking.router)
 app.include_router(reports.router)
 app.include_router(otp.router)
 app.include_router(admin.router)
+app.include_router(auth.router)
 
 @app.get("/")
 async def root():

@@ -99,6 +99,22 @@ create table if not exists email_otps (
 create index if not exists idx_email_otps_email on email_otps(email, created_at desc);
 alter table email_otps add column if not exists attempts int default 0;
 
+-- ─── chat_sessions ─────────────────────────────────────────────────────────
+-- Website chat is now the primary product surface (WhatsApp retired) - this
+-- is a real, persisted login, not the 15-min "recently verified" window
+-- /account uses (that's fine for an occasional lookup, but a chat app needs
+-- to stay logged in across days, not re-send an OTP every visit). Issued by
+-- kiro-backend's /auth/login after OTP verification; validated by app/'s
+-- /chat/send on every message - both read the same Supabase table, no
+-- cross-service call needed.
+create table if not exists chat_sessions (
+    token       text primary key,
+    user_id     uuid not null references users(id) on delete cascade,
+    created_at  timestamptz default now(),
+    expires_at  timestamptz not null
+);
+create index if not exists idx_chat_sessions_user on chat_sessions(user_id);
+
 -- ─── processed_messages ────────────────────────────────────────────────────
 -- Dedup guard for Meta's WhatsApp webhook: Meta redelivers the identical
 -- payload (same message id) if it doesn't get a fast 200 back, and without
@@ -369,12 +385,13 @@ alter table user_style         enable row level security;
 alter table memory_embeddings  enable row level security;
 alter table sent_nudges        enable row level security;
 alter table message_usage      enable row level security;
+alter table chat_sessions      enable row level security;
 
 do $$
 declare
     t text;
 begin
-    foreach t in array array['users','chat_history','user_tracking','weekly_reports','reminders','emotional_memory','user_style','memory_embeddings','sent_nudges','message_usage']
+    foreach t in array array['users','chat_history','user_tracking','weekly_reports','reminders','emotional_memory','user_style','memory_embeddings','sent_nudges','message_usage','chat_sessions']
     loop
         execute format('drop policy if exists "service_role_all_%s" on %I;', t, t);
         execute format(
