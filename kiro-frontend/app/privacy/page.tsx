@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — KYROO",
-  description: "How KYROO collects, uses, and protects your data, including WhatsApp messages, payments, and retention.",
+  description: "How KYROO collects, uses, and protects your data, including chat messages, payments, and retention.",
   alternates: { canonical: "/privacy" },
 };
 
@@ -17,17 +17,17 @@ export default function Privacy() {
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "56px 28px 100px", lineHeight: 1.75, fontSize: 15 }}>
         <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,5vw,44px)", letterSpacing: -1, marginBottom: 8, textTransform: "uppercase" }}>Privacy Policy</h1>
-        <p style={{ opacity: 0.55, fontSize: 13, marginBottom: 40 }}>Last updated: 2026</p>
+        <p style={{ opacity: 0.55, fontSize: 13, marginBottom: 40 }}>Last updated: August 2026</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>What we collect</h2>
-        <p>When you sign up, we collect your name, email, phone number, and the answers you give during onboarding (city, age, fitness/sleep/money/mood details, language preference). If you use KYROO on WhatsApp, we also store the messages you send — including any photos, PDFs, or voice notes you share, since KYROO reads/listens to those to reply to you — and the day-to-day check-ins you log (workouts, spending, sleep, mood).</p>
+        <p>When you sign up, we collect your name, email, phone number, and the answers you give during onboarding (city, age, fitness/sleep/money/mood details, language preference). Once you're in, we store the messages you send KYROO — on our website chat, and on WhatsApp if that's how you reach us — including any photos, PDFs, or voice notes you share, since KYROO reads/listens to those to reply to you, plus the day-to-day check-ins you log (workouts, spending, sleep, mood).</p>
         <p>To help KYROO remember context across conversations, we also store short summaries of things you've told it (e.g. "went through a breakup recently") and a searchable memory of past messages, so it doesn't ask you the same things over and over.</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>How we use it</h2>
         <p>Your data is used to personalize KYROO's replies and check-ins, and nothing else — we don't sell your data or use it for advertising. Some of it is processed by third-party services to make KYROO work:</p>
         <ul style={{ paddingLeft: 20 }}>
           <li>Anthropic (Claude) — processes your messages to generate KYROO's replies</li>
-          <li>Meta/WhatsApp — delivers messages between you and KYROO</li>
+          <li>Meta/WhatsApp — delivers messages between you and KYROO if you message us there</li>
           <li>Groq — transcribes voice notes you send into text</li>
           <li>GIPHY — used only to search for gifs KYROO sends, no personal data is sent to it</li>
           <li>Supabase — hosts our database where your account and message data is stored</li>
@@ -36,10 +36,10 @@ export default function Privacy() {
         <p>Anthropic and Groq are based outside India, so your messages are processed there as part of generating KYROO's replies and transcribing voice notes — this is what lets KYROO exist in the way it does today; we don't have a local-only alternative.</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>Cookies</h2>
-        <p>The website uses a basic analytics cookie (Google Analytics) to see what's working, only after you accept the cookie banner shown on your first visit — declining works exactly the same, nothing on the site depends on it. This is separate from your WhatsApp data described above, which isn't cookie-based at all.</p>
+        <p>The website uses a basic analytics cookie (Google Analytics) to see what's working, only after you accept the cookie banner shown on your first visit — declining works exactly the same, nothing on the site depends on it. This is separate from the chat data described above, which isn't cookie-based at all.</p>
 
-        <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>WhatsApp messages from us</h2>
-        <p>By signing up, you agree to receive WhatsApp messages from KYROO, including replies to what you send and proactive check-ins/nudges/reminders at times you choose during onboarding. You can turn off proactive messages any time at <a href="/unsubscribe" style={{ color: "var(--k-coral)" }}>www.kyroo.co.in/unsubscribe</a>, you can still message KYROO directly afterward, you just won't get unprompted check-ins.</p>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>Proactive messages from us</h2>
+        <p>By signing up, you agree to receive messages from KYROO — replies to what you send, and, when active, proactive check-ins/nudges/reminders at times you choose during onboarding. Proactive check-ins are currently paused while we move KYROO's main chat experience to the website; when they resume, you'll be able to turn them off any time at <a href="/unsubscribe" style={{ color: "var(--k-coral)" }}>www.kyroo.co.in/unsubscribe</a>. You can always message KYROO directly regardless of whether proactive check-ins are on.</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>If you're going through something heavy</h2>
         <p>If a conversation suggests you might be in real distress, KYROO is designed to point you to real crisis helplines rather than try to handle it alone. We keep a private note that this happened (not the full message) so future check-ins can be more thoughtful — this is never shared outside KYROO.</p>

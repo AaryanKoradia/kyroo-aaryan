@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Terms of Service — KYROO",
-  description: "The terms that govern using KYROO on WhatsApp.",
+  description: "The terms that govern using KYROO.",
   alternates: { canonical: "/terms" },
 };
 
@@ -17,10 +17,10 @@ export default function Terms() {
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "56px 28px 100px", lineHeight: 1.75, fontSize: 15 }}>
         <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,5vw,44px)", letterSpacing: -1, marginBottom: 8, textTransform: "uppercase" }}>Terms of Service</h1>
-        <p style={{ opacity: 0.55, fontSize: 13, marginBottom: 40 }}>Last updated: 2026</p>
+        <p style={{ opacity: 0.55, fontSize: 13, marginBottom: 40 }}>Last updated: August 2026</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>Using KYROO</h2>
-        <p>By signing up or messaging KYROO on WhatsApp, you agree to these terms. KYROO is intended for users 13 and older. You're responsible for what you share with KYROO and for keeping the phone number and email tied to your account accurate.</p>
+        <p>By signing up or messaging KYROO, you agree to these terms. KYROO is intended for users 13 and older. You're responsible for what you share with KYROO and for keeping the phone number and email tied to your account accurate.</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>What KYROO is, and isn't</h2>
         <p>KYROO is an AI companion for fitness, money, mind, and sleep. It is not a doctor, therapist, financial advisor, or any kind of licensed professional, and nothing it says should be treated as medical, mental health, or financial advice. If you're going through a crisis, KYROO will point you to real helplines, please use them, or contact a licensed professional directly.</p>
@@ -29,7 +29,7 @@ export default function Terms() {
         <p>The Free plan is fully available today, at no cost, with no credit card required. Pro and Pro Plus are not yet on sale, anything shown for them on the pricing page is a preview of what's coming, not something you can currently purchase. If and when paid plans launch, pricing, billing terms, and a cancellation/refund policy will be clearly shown before you pay for anything, and you'll never be charged without an explicit action from you.</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>Your data</h2>
-        <p>See the <a href="/privacy" style={{ color: "var(--k-coral)" }}>Privacy Policy</a> for what's collected and how it's used. You can turn off proactive WhatsApp messages any time at <a href="/unsubscribe" style={{ color: "var(--k-coral)" }}>www.kyroo.co.in/unsubscribe</a>.</p>
+        <p>See the <a href="/privacy" style={{ color: "var(--k-coral)" }}>Privacy Policy</a> for what's collected and how it's used. You can turn off proactive messages any time at <a href="/unsubscribe" style={{ color: "var(--k-coral)" }}>www.kyroo.co.in/unsubscribe</a>.</p>
 
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginTop: 32, marginBottom: 10 }}>Acceptable use</h2>
         <p>Don't use KYROO to attempt to harm, harass, or extract harmful content, or to impersonate someone else when creating an account. We may suspend accounts that abuse the service.</p>
