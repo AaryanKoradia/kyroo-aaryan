@@ -21,7 +21,6 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
 
-  const [loginPhone, setLoginPhone] = useState("");
   const [loginEmail, setLoginEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpEmailSentFor, setOtpEmailSentFor] = useState("");
@@ -135,10 +134,6 @@ export default function ChatPage() {
   };
 
   const sendOtp = async () => {
-    if (!loginPhone.trim()) {
-      setLoginError("Enter your phone number first.");
-      return;
-    }
     const trimmedEmail = loginEmail.trim();
     if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
       setLoginError("Enter a valid email address.");
@@ -147,7 +142,10 @@ export default function ChatPage() {
     setOtpSending(true);
     setLoginError("");
     try {
-      const res = await fetch(`${BACKEND_URL}/otp/send`, {
+      // /auth/login/start checks the account exists BEFORE sending
+      // anything, so a typo'd email fails here instead of after a code's
+      // already been sent and entered
+      const res = await fetch(`${BACKEND_URL}/auth/login/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail }),
@@ -185,10 +183,13 @@ export default function ChatPage() {
         return;
       }
 
+      // Email alone identifies the account now — the /auth/login/start
+      // check above already confirmed it exists, so logging in just
+      // needs the now-verified email, no separate phone match.
       const loginRes = await fetch(`${BACKEND_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: loginPhone.trim(), email: otpEmailSentFor }),
+        body: JSON.stringify({ email: otpEmailSentFor }),
       });
       const loginData = await loginRes.json();
       if (!loginRes.ok) {
@@ -341,20 +342,8 @@ export default function ChatPage() {
             Log in to <span style={{ color: "var(--k-coral)" }}>chat</span>
           </h1>
           <p style={{ fontSize: 14, opacity: 0.65, lineHeight: 1.7, marginBottom: 32 }}>
-            Enter the phone number and email you signed up with. We&apos;ll send a code to your email to confirm it&apos;s you. Not registered yet? <a href="/onboarding" style={{ color: "var(--k-coral)" }}>Sign up here</a>.
+            Enter the email you signed up with. We&apos;ll send a code to confirm it&apos;s you — once you&apos;re in, you stay logged in on this device for {"30 days"}, no code needed next time. Not registered yet? <a href="/onboarding" style={{ color: "var(--k-coral)" }}>Sign up here</a>.
           </p>
-
-          <label style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 8 }}>
-            Phone number
-          </label>
-          <input
-            style={inputStyle}
-            type="tel"
-            placeholder="e.g. 9029392222"
-            value={loginPhone}
-            onChange={(e) => setLoginPhone(e.target.value)}
-            disabled={otpSent}
-          />
 
           <label style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 8 }}>
             Email
@@ -366,6 +355,7 @@ export default function ChatPage() {
               placeholder="the email you signed up with"
               value={loginEmail}
               onChange={(e) => handleEmailChange(e.target.value)}
+              disabled={otpSent}
             />
             <button
               onClick={sendOtp}
