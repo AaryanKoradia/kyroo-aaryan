@@ -3,25 +3,32 @@ import { useState, useEffect, useRef } from "react";
 import { Camera, Smile, Mic, Square } from "lucide-react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://kyroo-backend.onrender.com";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://kyroo-whatsapp.onrender.com";
 
 type Message = {
   role: "user" | "kyroo";
   text: string;
   module?: string;
   imagePreview?: string;
+  link?: string;
 };
 
-export default function ChatTest() {
-  const [userId, setUserId] = useState<string | null>(null);
+export default function ChatPage() {
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [token, setToken] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
 
-  const [setupName, setSetupName] = useState("");
-  const [setupPhone, setSetupPhone] = useState("");
-  const [settingUp, setSettingUp] = useState(false);
-  const [setupError, setSetupError] = useState("");
+  const [loginPhone, setLoginPhone] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpEmailSentFor, setOtpEmailSentFor] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [loginError, setLoginError] = useState("");
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [listening, setListening] = useState(false);
@@ -40,13 +47,28 @@ export default function ChatTest() {
     "😂", "❤️", "💪", "😍", "🤔", "😅", "🙈", "✨", "🎉", "😴",
   ];
 
+  // Restores a stored session by asking app/'s /chat/session whether the
+  // token is still valid, rather than trusting localStorage blindly — a
+  // token can expire (30 days) or be revoked server-side.
   useEffect(() => {
-    const savedId = localStorage.getItem("kyroo_test_user_id");
-    const savedName = localStorage.getItem("kyroo_test_user_name");
-    if (savedId) {
-      setUserId(savedId);
-      setUserName(savedName || "");
+    const savedToken = localStorage.getItem("kyroo_chat_token");
+    if (!savedToken) {
+      setCheckingSession(false);
+      return;
     }
+    fetch(`${APP_URL}/chat/session`, {
+      headers: { Authorization: `Bearer ${savedToken}` },
+    })
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => {
+        setToken(savedToken);
+        setUserName(data.name || "");
+      })
+      .catch(() => {
+        localStorage.removeItem("kyroo_chat_token");
+        localStorage.removeItem("kyroo_chat_name");
+      })
+      .finally(() => setCheckingSession(false));
   }, []);
 
   useEffect(() => {
@@ -103,41 +125,92 @@ export default function ChatTest() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const createTestUser = async () => {
-    if (!setupName.trim() || !setupPhone.trim()) return;
-    setSettingUp(true);
-    setSetupError("");
-    try {
-      const res = await fetch(`${BACKEND_URL}/users/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: setupName,
-          email: `${setupPhone}.${Date.now()}@kyroo.test`,
-          phone: setupPhone,
-          language: "Hinglish",
-          plan: "free",
-        }),
-      });
-      const data = await res.json();
-      if (data.user_id) {
-        localStorage.setItem("kyroo_test_user_id", data.user_id);
-        localStorage.setItem("kyroo_test_user_name", setupName);
-        setUserId(data.user_id);
-        setUserName(setupName);
-      } else {
-        setSetupError(data.detail || "Something went wrong");
-      }
-    } catch {
-      setSetupError("Couldn't reach the backend. Is it running?");
+  const handleEmailChange = (value: string) => {
+    setLoginEmail(value);
+    if (otpSent && value.trim().toLowerCase() !== otpEmailSentFor) {
+      setOtpSent(false);
+      setOtpCode("");
+      setLoginError("");
     }
-    setSettingUp(false);
   };
 
-  const switchUser = () => {
-    localStorage.removeItem("kyroo_test_user_id");
-    localStorage.removeItem("kyroo_test_user_name");
-    setUserId(null);
+  const sendOtp = async () => {
+    if (!loginPhone.trim()) {
+      setLoginError("Enter your phone number first.");
+      return;
+    }
+    const trimmedEmail = loginEmail.trim();
+    if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+      setLoginError("Enter a valid email address.");
+      return;
+    }
+    setOtpSending(true);
+    setLoginError("");
+    try {
+      const res = await fetch(`${BACKEND_URL}/otp/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setLoginError(data.detail || "Couldn't send code, try again.");
+      } else {
+        setOtpSent(true);
+        setOtpEmailSentFor(trimmedEmail.toLowerCase());
+      }
+    } catch {
+      setLoginError("Couldn't send code, try again.");
+    }
+    setOtpSending(false);
+  };
+
+  const verifyAndLogin = async () => {
+    if (!otpCode.trim()) {
+      setLoginError("Enter the code from your email.");
+      return;
+    }
+    setOtpVerifying(true);
+    setLoginError("");
+    try {
+      const verifyRes = await fetch(`${BACKEND_URL}/otp/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: otpEmailSentFor, code: otpCode.trim() }),
+      });
+      const verifyData = await verifyRes.json();
+      if (!verifyRes.ok) {
+        setLoginError(verifyData.detail || "Incorrect code.");
+        setOtpVerifying(false);
+        return;
+      }
+
+      const loginRes = await fetch(`${BACKEND_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: loginPhone.trim(), email: otpEmailSentFor }),
+      });
+      const loginData = await loginRes.json();
+      if (!loginRes.ok) {
+        setLoginError(loginData.detail || "Couldn't log in, try again.");
+        setOtpVerifying(false);
+        return;
+      }
+
+      localStorage.setItem("kyroo_chat_token", loginData.token);
+      localStorage.setItem("kyroo_chat_name", loginData.name || "");
+      setToken(loginData.token);
+      setUserName(loginData.name || "");
+    } catch {
+      setLoginError("Couldn't reach the server, try again.");
+    }
+    setOtpVerifying(false);
+  };
+
+  const logout = () => {
+    localStorage.removeItem("kyroo_chat_token");
+    localStorage.removeItem("kyroo_chat_name");
+    setToken(null);
     setMessages([]);
   };
 
@@ -146,7 +219,7 @@ export default function ChatTest() {
   // 2-3 texts in real chat instead of writing it all in one message.
   const sendMessage = () => {
     const text = input.trim();
-    if (!userId) return;
+    if (!token) return;
 
     // an attached image sends immediately with the current text as caption,
     // bypassing the multi-message debounce (images aren't meant to be batched)
@@ -179,16 +252,34 @@ export default function ChatTest() {
   ) => {
     setSending(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/ai/chat`, {
+      const res = await fetch(`${APP_URL}/chat/send`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          user_id: userId,
           message: text,
           ...(image ? { image_base64: image.base64, image_media_type: image.mediaType } : {}),
         }),
       });
+      if (res.status === 401) {
+        logout();
+        return;
+      }
       const data = await res.json();
+
+      if (data.status === "needs_onboarding") {
+        setMessages((m) => [
+          ...m,
+          { role: "kyroo", text: "Looks like your account isn't fully set up yet — finish registering here first:", link: data.redirect },
+        ]);
+        setSending(false);
+        return;
+      }
+      if (data.status === "limit_reached") {
+        setMessages((m) => [...m, { role: "kyroo", text: data.message }]);
+        setSending(false);
+        return;
+      }
+
       const bubbles: string[] =
         data.bubbles && data.bubbles.length ? data.bubbles : [data.response || "(no response)"];
       for (let i = 0; i < bubbles.length; i++) {
@@ -204,140 +295,169 @@ export default function ChatTest() {
     } catch {
       setMessages((m) => [
         ...m,
-        { role: "kyroo", text: "⚠️ Couldn't reach KYROO's backend. Check it's running on :8000." },
+        { role: "kyroo", text: "Couldn't reach KYROO right now, try again in a bit?" },
       ]);
     }
     setSending(false);
   };
 
-  const s: React.CSSProperties = {
-    background: "#0a0a0a",
-    minHeight: "100vh",
-    color: "#f0ede8",
-    fontFamily: "sans-serif",
-    display: "flex",
-    flexDirection: "column",
-  };
-
   const inputStyle: React.CSSProperties = {
     width: "100%",
-    background: "#111",
-    border: "0.5px solid rgba(240,237,232,0.1)",
-    borderRadius: 14,
-    padding: "13px 16px",
+    fontFamily: "var(--font-body)",
     fontSize: 15,
-    color: "#f0ede8",
-    fontFamily: "sans-serif",
-    outline: "none",
-    marginBottom: 12,
+    padding: "12px 14px",
+    border: "3px solid var(--k-ink)",
+    background: "var(--k-paper)",
+    boxSizing: "border-box",
+    marginBottom: 18,
   };
 
-  if (!userId) {
+  if (checkingSession) {
     return (
-      <div style={{ ...s, alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <div style={{ width: "100%", maxWidth: 380 }}>
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 6 }}>
-              KY<span style={{ color: "#c8f060" }}>R</span>OO test chat
-            </div>
-            <div style={{ fontSize: 13, color: "rgba(240,237,232,0.4)" }}>
-              Talk to KYROO directly in the browser — no WhatsApp needed. This hits the same AI brain that'll power WhatsApp once it's live.
-            </div>
+      <main className="k-grain" style={{ background: "var(--k-ink)", minHeight: "100vh" }} />
+    );
+  }
+
+  if (!token) {
+    return (
+      <main className="k-grain" style={{ background: "var(--k-paper)", minHeight: "100vh", color: "var(--k-ink)", fontFamily: "var(--font-body)" }}>
+        <style>{`
+          .k-btn { font-family: var(--font-body); font-weight: 700; cursor: pointer; border: 3px solid var(--k-ink); background: var(--k-ink); color: var(--k-paper); padding: 12px 24px; font-size: 14px; box-shadow: 4px 4px 0 var(--k-ink); transition: transform .12s ease, box-shadow .12s ease; }
+          .k-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--k-ink); }
+          .k-btn:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--k-ink); }
+          .k-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+          .k-btn-lime { background: var(--k-lime); color: var(--k-ink); }
+        `}</style>
+
+        <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", borderBottom: "3px solid var(--k-ink)" }}>
+          <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: "var(--k-ink)" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
+          </a>
+        </nav>
+
+        <div style={{ maxWidth: 460, margin: "0 auto", padding: "60px 28px 100px" }}>
+          <span style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, padding: "4px 10px", background: "var(--k-paper)", border: "2px solid var(--k-ink)" }}>Chat</span>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px,5vw,38px)", letterSpacing: -1, margin: "20px 0 12px", textTransform: "uppercase", lineHeight: 1.1 }}>
+            Log in to <span style={{ color: "var(--k-coral)" }}>chat</span>
+          </h1>
+          <p style={{ fontSize: 14, opacity: 0.65, lineHeight: 1.7, marginBottom: 32 }}>
+            Enter the phone number and email you signed up with. We&apos;ll send a code to your email to confirm it&apos;s you. Not registered yet? <a href="/onboarding" style={{ color: "var(--k-coral)" }}>Sign up here</a>.
+          </p>
+
+          <label style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 8 }}>
+            Phone number
+          </label>
+          <input
+            style={inputStyle}
+            type="tel"
+            placeholder="e.g. 9029392222"
+            value={loginPhone}
+            onChange={(e) => setLoginPhone(e.target.value)}
+            disabled={otpSent}
+          />
+
+          <label style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 8 }}>
+            Email
+          </label>
+          <div style={{ display: "flex", gap: 8, marginBottom: otpSent ? 10 : 0 }}>
+            <input
+              style={{ ...inputStyle, marginBottom: 0, flex: 1 }}
+              type="email"
+              placeholder="the email you signed up with"
+              value={loginEmail}
+              onChange={(e) => handleEmailChange(e.target.value)}
+            />
+            <button
+              onClick={sendOtp}
+              disabled={otpSending}
+              style={{ padding: "0 16px", border: "3px solid var(--k-ink)", background: "var(--k-lime)", color: "var(--k-ink)", fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", opacity: otpSending ? 0.6 : 1 }}
+            >
+              {otpSending ? "Sending..." : otpSent ? "Resend" : "Send code"}
+            </button>
           </div>
-          <label style={{ fontSize: 11, color: "rgba(240,237,232,0.35)", display: "block", marginBottom: 7 }}>
-            Test name
-          </label>
-          <input
-            style={inputStyle}
-            placeholder="Aarya"
-            value={setupName}
-            onChange={(e) => setSetupName(e.target.value)}
-          />
-          <label style={{ fontSize: 11, color: "rgba(240,237,232,0.35)", display: "block", marginBottom: 7 }}>
-            Any phone number (doesn't need to be real for this test mode)
-          </label>
-          <input
-            style={inputStyle}
-            placeholder="9876543210"
-            value={setupPhone}
-            onChange={(e) => setSetupPhone(e.target.value)}
-          />
-          {setupError && (
-            <div style={{ color: "#ff6b6b", fontSize: 12, marginBottom: 12 }}>{setupError}</div>
+
+          {otpSent && (
+            <>
+              <div style={{ fontSize: 11.5, opacity: 0.55, margin: "10px 0" }}>Sent a code to {otpEmailSentFor}, check your inbox.</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  style={{ ...inputStyle, marginBottom: 0, flex: 1, letterSpacing: 3 }}
+                  placeholder="6-digit code"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
+                />
+                <button
+                  className="k-btn k-btn-lime"
+                  disabled={otpVerifying}
+                  onClick={verifyAndLogin}
+                  style={{ whiteSpace: "nowrap" }}
+                >
+                  {otpVerifying ? "Logging in..." : "Verify & log in"}
+                </button>
+              </div>
+            </>
           )}
-          <button
-            onClick={createTestUser}
-            disabled={settingUp || !setupName.trim() || !setupPhone.trim()}
-            style={{
-              width: "100%",
-              height: 50,
-              borderRadius: 14,
-              background: "#c8f060",
-              color: "#0a0a0a",
-              border: "none",
-              fontSize: 15,
-              fontWeight: 500,
-              cursor: "pointer",
-              fontFamily: "sans-serif",
-              opacity: settingUp ? 0.7 : 1,
-            }}
-          >
-            {settingUp ? "Setting up..." : "Start chatting →"}
-          </button>
+
+          {loginError && (
+            <p style={{ marginTop: 20, padding: "12px 14px", border: "3px solid var(--k-ink)", background: "#ffdcd6", fontSize: 14, lineHeight: 1.6 }}>
+              {loginError}
+            </p>
+          )}
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div style={s}>
+    <div style={{ background: "var(--k-ink)", minHeight: "100vh", color: "var(--k-paper)", fontFamily: "var(--font-body)", display: "flex", flexDirection: "column" }}>
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           padding: "16px 20px",
-          borderBottom: "0.5px solid rgba(240,237,232,0.07)",
+          borderBottom: "3px solid rgba(244,239,228,0.12)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "var(--k-paper)" }}>
           <div
             style={{
               width: 34,
               height: 34,
               borderRadius: "50%",
-              background: "#c8f060",
+              background: "var(--k-lime)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontWeight: 800,
-              color: "#0a0a0a",
+              fontFamily: "var(--font-display)",
+              color: "var(--k-ink)",
               fontSize: 13,
             }}
           >
             K
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>KYROO</div>
-            <div style={{ fontSize: 11, color: "rgba(240,237,232,0.35)" }}>
-              testing as {userName}
-            </div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 14, textTransform: "uppercase" }}>KYROO</div>
+            <div style={{ fontSize: 11, opacity: 0.4 }}>chatting as {userName}</div>
           </div>
-        </div>
+        </a>
         <button
-          onClick={switchUser}
+          onClick={logout}
           style={{
             background: "transparent",
-            border: "0.5px solid rgba(240,237,232,0.15)",
+            border: "2px solid rgba(244,239,228,0.25)",
             borderRadius: 100,
             padding: "7px 14px",
             fontSize: 12,
-            color: "rgba(240,237,232,0.5)",
+            color: "rgba(244,239,228,0.6)",
             cursor: "pointer",
-            fontFamily: "sans-serif",
+            fontFamily: "var(--font-body)",
+            fontWeight: 700,
           }}
         >
-          Switch user
+          Log out
         </button>
       </div>
 
@@ -347,7 +467,7 @@ export default function ChatTest() {
             <div
               style={{
                 textAlign: "center",
-                color: "rgba(240,237,232,0.3)",
+                color: "rgba(244,239,228,0.35)",
                 fontSize: 13,
                 marginTop: 40,
               }}
@@ -371,8 +491,8 @@ export default function ChatTest() {
                   borderRadius: 16,
                   borderBottomRightRadius: m.role === "user" ? 4 : 16,
                   borderBottomLeftRadius: m.role === "kyroo" ? 4 : 16,
-                  background: m.role === "user" ? "#c8f060" : "#161616",
-                  color: m.role === "user" ? "#0a0a0a" : "#f0ede8",
+                  background: m.role === "user" ? "var(--k-lime)" : "rgba(244,239,228,0.08)",
+                  color: m.role === "user" ? "var(--k-ink)" : "var(--k-paper)",
                   fontSize: 14,
                   lineHeight: 1.5,
                   whiteSpace: "pre-wrap",
@@ -391,6 +511,14 @@ export default function ChatTest() {
                   />
                 )}
                 {m.text && <span style={{ padding: m.imagePreview ? "0 8px 6px" : 0 }}>{m.text}</span>}
+                {m.link && (
+                  <a
+                    href={m.link}
+                    style={{ display: "block", marginTop: 8, color: "var(--k-coral)", fontWeight: 700, fontSize: 13 }}
+                  >
+                    {m.link} →
+                  </a>
+                )}
               </div>
             </div>
           ))}
@@ -401,8 +529,8 @@ export default function ChatTest() {
                   padding: "11px 15px",
                   borderRadius: 16,
                   borderBottomLeftRadius: 4,
-                  background: "#161616",
-                  color: "rgba(240,237,232,0.4)",
+                  background: "rgba(244,239,228,0.08)",
+                  color: "rgba(244,239,228,0.4)",
                   fontSize: 14,
                 }}
               >
@@ -417,7 +545,7 @@ export default function ChatTest() {
       <div
         style={{
           padding: "14px 16px",
-          borderTop: "0.5px solid rgba(240,237,232,0.06)",
+          borderTop: "3px solid rgba(244,239,228,0.1)",
           position: "relative",
         }}
       >
@@ -429,8 +557,8 @@ export default function ChatTest() {
               left: "50%",
               transform: "translateX(-50%)",
               marginBottom: 8,
-              background: "#161616",
-              border: "0.5px solid rgba(240,237,232,0.1)",
+              background: "#1c1a16",
+              border: "2px solid rgba(244,239,228,0.15)",
               borderRadius: 14,
               padding: 10,
               display: "grid",
@@ -484,7 +612,7 @@ export default function ChatTest() {
                   width: 20,
                   height: 20,
                   borderRadius: "50%",
-                  background: "#ff5050",
+                  background: "var(--k-coral)",
                   color: "#fff",
                   border: "none",
                   fontSize: 12,
@@ -496,7 +624,7 @@ export default function ChatTest() {
                 ×
               </button>
             </div>
-            <span style={{ fontSize: 12, color: "rgba(240,237,232,0.4)" }}>
+            <span style={{ fontSize: 12, opacity: 0.4 }}>
               Add a caption or just hit send
             </span>
           </div>
@@ -515,9 +643,9 @@ export default function ChatTest() {
               width: 44,
               height: 50,
               borderRadius: 14,
-              background: pendingImage ? "rgba(200,240,96,0.15)" : "transparent",
-              border: "0.5px solid rgba(240,237,232,0.12)",
-              color: "#f0ede8",
+              background: pendingImage ? "rgba(207,255,61,0.15)" : "transparent",
+              border: "2px solid rgba(244,239,228,0.15)",
+              color: "var(--k-paper)",
               fontSize: 18,
               cursor: "pointer",
               flexShrink: 0,
@@ -535,9 +663,9 @@ export default function ChatTest() {
               width: 44,
               height: 50,
               borderRadius: 14,
-              background: showEmojiPicker ? "rgba(200,240,96,0.15)" : "transparent",
-              border: "0.5px solid rgba(240,237,232,0.12)",
-              color: "#f0ede8",
+              background: showEmojiPicker ? "rgba(207,255,61,0.15)" : "transparent",
+              border: "2px solid rgba(244,239,228,0.15)",
+              color: "var(--k-paper)",
               fontSize: 18,
               cursor: "pointer",
               flexShrink: 0,
@@ -556,9 +684,9 @@ export default function ChatTest() {
                 width: 44,
                 height: 50,
                 borderRadius: 14,
-                background: listening ? "rgba(255,80,80,0.15)" : "transparent",
-                border: listening ? "0.5px solid rgba(255,80,80,0.4)" : "0.5px solid rgba(240,237,232,0.12)",
-                color: listening ? "#ff5050" : "#f0ede8",
+                background: listening ? "rgba(255,74,46,0.15)" : "transparent",
+                border: listening ? "2px solid rgba(255,74,46,0.4)" : "2px solid rgba(244,239,228,0.15)",
+                color: listening ? "var(--k-coral)" : "var(--k-paper)",
                 fontSize: 18,
                 cursor: "pointer",
                 flexShrink: 0,
@@ -573,12 +701,18 @@ export default function ChatTest() {
           )}
           <textarea
             style={{
-              ...inputStyle,
-              marginBottom: 0,
+              width: "100%",
+              fontFamily: "var(--font-body)",
+              fontSize: 15,
+              padding: "13px 16px",
+              border: "2px solid rgba(244,239,228,0.15)",
+              borderRadius: 14,
+              background: "rgba(244,239,228,0.05)",
+              color: "var(--k-paper)",
+              outline: "none",
               flex: 1,
               resize: "none",
               maxHeight: 120,
-              fontFamily: "sans-serif",
             }}
             placeholder="Type a message... (Shift+Enter for new line)"
             value={input}
@@ -598,10 +732,11 @@ export default function ChatTest() {
               width: 50,
               height: 50,
               borderRadius: 14,
-              background: "#c8f060",
-              color: "#0a0a0a",
+              background: "var(--k-lime)",
+              color: "var(--k-ink)",
               border: "none",
               fontSize: 18,
+              fontWeight: 700,
               cursor: "pointer",
               flexShrink: 0,
               opacity: !input.trim() && !pendingImage ? 0.5 : 1,
