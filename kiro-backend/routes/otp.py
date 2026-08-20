@@ -51,10 +51,11 @@ def _send_email(to_email: str, code: str):
     resp.raise_for_status()
 
 
-@router.post("/send")
-@limiter.limit("5/minute")
-async def send_otp(request: Request, req: SendOtpRequest):
-    email = req.email.strip().lower()
+def send_otp_code(email: str) -> None:
+    """Core send logic, factored out of the /send route so callers that
+    need a different rate-limit tier (e.g. /auth/login/start) can trigger
+    a code without duplicating the cooldown/expiry/email-send logic.
+    Expects an already-normalized (stripped+lowercased) email."""
     if "@" not in email or "." not in email.split("@")[-1]:
         raise HTTPException(status_code=400, detail="Enter a valid email address")
 
@@ -90,6 +91,11 @@ async def send_otp(request: Request, req: SendOtpRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Couldn't send verification email: {e}")
 
+
+@router.post("/send")
+@limiter.limit("5/minute")
+async def send_otp(request: Request, req: SendOtpRequest):
+    send_otp_code(req.email.strip().lower())
     return {"status": "sent"}
 
 
