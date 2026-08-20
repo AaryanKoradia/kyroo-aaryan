@@ -162,9 +162,14 @@ export default function Home() {
           {[["How it works", "#how"], ["Features", "#features"], ["Pricing", "#pricing"]].map(([l, h]) => (
             <a key={l} className="k-nav-a" href={h} onClick={(e) => { e.preventDefault(); document.querySelector(h)?.scrollIntoView({ behavior: "smooth" }); }}>{l}</a>
           ))}
-          <a className="k-nav-a" href="/chat" onClick={go("/chat")}>Chat</a>
         </div>
-        <button className="k-btn k-btn-coral" onClick={go("/onboarding")} style={{ padding: "9px 20px", fontSize: 13, boxShadow: "4px 4px 0 var(--k-ink)" }}>Start free →</button>
+        {/* Deliberately outside .k-nav-links, which display:none's below 680px —
+            "Log in" needs to stay visible on mobile, it's the only way back in
+            for anyone who already has an account. */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <button className="k-btn k-btn-ghost" onClick={go("/chat")} style={{ padding: "9px 16px", fontSize: 13, boxShadow: "4px 4px 0 var(--k-ink)" }}>Log in</button>
+          <button className="k-btn k-btn-coral" onClick={go("/onboarding")} style={{ padding: "9px 20px", fontSize: 13, boxShadow: "4px 4px 0 var(--k-ink)" }}>Start free →</button>
+        </div>
       </nav>
 
       {/* HERO */}

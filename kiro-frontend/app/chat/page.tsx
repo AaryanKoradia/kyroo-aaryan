@@ -342,7 +342,7 @@ export default function ChatPage() {
             Log in to <span style={{ color: "var(--k-coral)" }}>chat</span>
           </h1>
           <p style={{ fontSize: 14, opacity: 0.65, lineHeight: 1.7, marginBottom: 32 }}>
-            Enter the email you signed up with. We&apos;ll send a code to confirm it&apos;s you — once you&apos;re in, you stay logged in on this device for {"30 days"}, no code needed next time. Not registered yet? <a href="/onboarding" style={{ color: "var(--k-coral)" }}>Sign up here</a>.
+            Enter the email you signed up with. We&apos;ll send a code to confirm it&apos;s you — once you&apos;re in, you stay logged in on this device for {"30 days"}, no code needed next time. Not registered yet? <a href="/onboarding" style={{ color: "var(--k-coral)" }}>Sign up here</a>. Managing your subscription or account settings instead? <a href="/account" style={{ color: "var(--k-coral)" }}>Go to account</a>.
           </p>
 
           <label style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 8 }}>
@@ -433,22 +433,40 @@ export default function ChatPage() {
             <div style={{ fontSize: 11, opacity: 0.4 }}>chatting as {userName}</div>
           </div>
         </a>
-        <button
-          onClick={logout}
-          style={{
-            background: "transparent",
-            border: "2px solid rgba(244,239,228,0.25)",
-            borderRadius: 100,
-            padding: "7px 14px",
-            fontSize: 12,
-            color: "rgba(244,239,228,0.6)",
-            cursor: "pointer",
-            fontFamily: "var(--font-body)",
-            fontWeight: 700,
-          }}
-        >
-          Log out
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <a
+            href="/account"
+            style={{
+              background: "transparent",
+              border: "2px solid rgba(244,239,228,0.25)",
+              borderRadius: 100,
+              padding: "7px 14px",
+              fontSize: 12,
+              color: "rgba(244,239,228,0.6)",
+              textDecoration: "none",
+              fontFamily: "var(--font-body)",
+              fontWeight: 700,
+            }}
+          >
+            Account
+          </a>
+          <button
+            onClick={logout}
+            style={{
+              background: "transparent",
+              border: "2px solid rgba(244,239,228,0.25)",
+              borderRadius: 100,
+              padding: "7px 14px",
+              fontSize: 12,
+              color: "rgba(244,239,228,0.6)",
+              cursor: "pointer",
+              fontFamily: "var(--font-body)",
+              fontWeight: 700,
+            }}
+          >
+            Log out
+          </button>
+        </div>
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px" }}>
