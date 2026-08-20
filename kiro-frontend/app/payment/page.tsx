@@ -5,7 +5,6 @@ import { RefreshCw, Lock } from "lucide-react";
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://kyroo-backend.onrender.com";
 // Test key — swap for a live key once Pro/Pro Plus are ready to take real payments.
 const RAZORPAY_KEY = "rzp_test_Slcdo1LLMUlvul";
-const WHATSAPP_NUMBER = "917400351463";
 
 declare global {
   interface Window { Razorpay: any; }
@@ -39,8 +38,7 @@ export default function Payment() {
 
   const handlePayment = async () => {
     if (selectedPlan === "free") {
-      const greeting = userName ? `Hi KYROO! I'm ${userName}, just signed up` : "Hi KYROO! I just signed up";
-      window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(greeting)}`;
+      window.location.href = "/chat";
       return;
     }
     if (!userId && !phone) {
@@ -117,7 +115,7 @@ export default function Payment() {
             {userName ? `Welcome, ${userName}!` : "Choose your plan"}
           </h1>
           <p style={{ fontSize: 15, opacity: 0.6 }}>
-            Start free. Cancel a paid plan anytime via WhatsApp.
+            Start free. Cancel a paid plan anytime by messaging KYROO.
           </p>
         </div>
 
@@ -148,7 +146,7 @@ export default function Payment() {
 
         <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginBottom: 40 }}>
           {[
-            { icon: RefreshCw, label: "Cancel anytime via WhatsApp" },
+            { icon: RefreshCw, label: "Cancel anytime by messaging KYROO" },
             { icon: Lock, label: "Secure connection" },
           ].map(t => (
             <span key={t.label} style={{ fontFamily: "var(--font-mono-tag)", fontSize: 10.5, fontWeight: 700, padding: "5px 10px", border: "2px solid var(--k-ink)", background: "var(--k-paper)", display: "inline-flex", alignItems: "center", gap: 6 }}>

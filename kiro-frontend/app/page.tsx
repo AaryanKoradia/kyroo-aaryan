@@ -55,10 +55,10 @@ const FEATURES: { icon: LucideIcon; title: string; desc: string; tags: string[];
   { icon: Brain,      title: "Mind",       desc: "The one place you can vent without being judged. Remembers how you felt last Tuesday. Shows up when things get heavy.", tags: ["Mood", "Memory"], color: "var(--k-purple)" },
   { icon: BedDouble,  title: "Sleep",      desc: "Tracks your sleep, reminds you to wind down, and notices when you've been running on 5 hours all week, then actually says something about it.", tags: [], color: "var(--k-blue)" },
   { icon: Target,     title: "Goals",      desc: "Tell her once. She will not let you forget. Gentle enough to not stress you out, persistent enough to actually work.", tags: [], color: "var(--k-coral)" },
-  { icon: FolderOpen, title: "File Tools", desc: "Send a PDF, a photo, a voice note, or a screenshot. She reads it, understands it, and responds to it, right there in WhatsApp.", tags: ["Photos", "PDFs", "Voice"], color: "var(--k-lime)" },
+  { icon: FolderOpen, title: "File Tools", desc: "Send a PDF, a photo, a voice note, or a screenshot. She reads it, understands it, and responds to it, right there in chat.", tags: ["Photos", "PDFs", "Voice"], color: "var(--k-lime)" },
 ];
 
-const TICKER = ["Fitness tracked", "Money managed", "Sleep scored", "Mood understood", "Daily brief delivered", "Hindi + English", "8 languages", "WhatsApp native", "No app download", "Hinglish supported"];
+const TICKER = ["Fitness tracked", "Money managed", "Sleep scored", "Mood understood", "Daily brief delivered", "Hindi + English", "8 languages", "Always available", "No app download", "Hinglish supported"];
 
 const WHAT_ELSE: { icon: LucideIcon; title: string; desc: string; color: string }[] = [
   { icon: Mic, title: "Send a voice note", desc: "Can't type? Just talk. Hindi, Hinglish, English, whatever feels natural. She listens to the whole thing and actually gets it.", color: "var(--k-lime)" },
@@ -73,7 +73,7 @@ const WHAT_ELSE: { icon: LucideIcon; title: string; desc: string; color: string 
 
 const STEPS: { n: string; icon: LucideIcon; title: string; desc: string; time: string; color: string }[] = [
   { n: "01", icon: PenLine,      title: "Sign up", desc: "10 quick questions. Tell KYROO your goals, lifestyle, habits, and how you like to be spoken to.", time: "~2 min", color: "var(--k-lime)" },
-  { n: "02", icon: MessageCircle,title: "Connect WhatsApp", desc: "She shows up in WhatsApp. No download, no new app. Just your number and one quick verify.", time: "~1 min", color: "var(--k-coral)" },
+  { n: "02", icon: MessageCircle,title: "Start chatting", desc: "She's ready the moment you sign up, right here on the site. No download, no separate app.", time: "~1 min", color: "var(--k-coral)" },
   { n: "03", icon: Rocket,       title: "Let her run", desc: "Morning briefs, real-time nudges, study sessions, reminders, GIFs. She learns who you are every day and gets sharper every week.", time: "Forever", color: "var(--k-blue)" },
 ];
 
@@ -184,7 +184,7 @@ export default function Home() {
 
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--k-ink)", color: "var(--k-lime)", border: "2px solid var(--k-ink)", padding: "7px 18px", fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 32, transform: "rotate(-2deg)", position: "relative", zIndex: 2 }} className="k-fade-1">
           <span className="k-blink" style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--k-lime)", display: "inline-block" }} />
-            Free on WhatsApp, no app needed
+            Free on the website, no app needed
         </div>
 
         <h1 className="hero-h1 k-fade-2" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(48px,9vw,128px)", lineHeight: 0.94, letterSpacing: -2, marginBottom: 22, maxWidth: 1100, position: "relative", zIndex: 2, textTransform: "uppercase" }}>
@@ -195,12 +195,12 @@ export default function Home() {
         </h1>
 
         <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 15, color: "rgba(20,18,15,0.72)", maxWidth: 420, lineHeight: 1.8, margin: "0 auto 30px", position: "relative", zIndex: 2 }} className="k-fade-3">
-          FITNESS · MONEY · MIND · SLEEP<br />ONE BRAIN. EVERY DAY. ON WHATSAPP.
+          FITNESS · MONEY · MIND · SLEEP<br />ONE BRAIN. EVERY DAY.
         </p>
 
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", position: "relative", zIndex: 2 }} className="k-fade-4">
           <button className="k-btn k-btn-lime" onClick={go("/onboarding")} style={{ padding: "18px 40px", fontSize: 16, display: "inline-flex", alignItems: "center", gap: 10 }}>
-            <MessageCircle size={19} strokeWidth={2.4} />Start on WhatsApp, it's free
+            <MessageCircle size={19} strokeWidth={2.4} />Start for free →
           </button>
           <button className="k-btn k-btn-ghost" onClick={() => document.querySelector("#features")?.scrollIntoView({ behavior: "smooth" })}>
             See what she does →
@@ -282,7 +282,7 @@ export default function Home() {
           Your second brain, with a heart.
         </div>
         <div style={{ display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap" }}>
-          {["YOUR LIFE", "YOUR BRAIN", "YOUR WHATSAPP"].map((w) => (
+          {["YOUR LIFE", "YOUR BRAIN", "YOUR KYROO"].map((w) => (
             <span key={w} style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, letterSpacing: 3, color: "var(--k-lime)", textTransform: "uppercase" }}>{w}</span>
           ))}
         </div>
@@ -356,7 +356,7 @@ export default function Home() {
             { target: 4, suffix: "", label: "Life domains", dec: 0, color: "var(--k-lime)" },
             { target: 8, suffix: "", label: "Languages", dec: 0, color: "var(--k-coral)" },
             { target: 24, suffix: "/7", label: "Always on", dec: 0, color: "#fff" },
-            { target: 100, suffix: "%", label: "WhatsApp native", dec: 0, color: "var(--k-lime)" },
+            { target: 100, suffix: "%", label: "Free to start", dec: 0, color: "var(--k-lime)" },
           ].map((s, i) => (
             <div key={s.label} style={{ textAlign: "center", opacity: statsRef.inView ? 1 : 0, transition: `opacity .5s ease ${i * 0.08}s` }}>
               <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,4vw,44px)", color: s.color }}>
@@ -394,7 +394,7 @@ export default function Home() {
               className="k-btn"
               onClick={go("/onboarding")}
               style={{ width: "100%", padding: "14px", fontSize: 14, background: "var(--k-ink)", color: "var(--k-lime)", boxShadow: "4px 4px 0 var(--k-ink)" }}>
-              Start on WhatsApp →
+              Start free →
             </button>
           </div>
           <p style={{ textAlign: "center", fontSize: 12.5, opacity: 0.55, marginTop: 20, lineHeight: 1.7 }}>No subscription. No hidden tiers.<br />Just start and see what she does.</p>
@@ -412,7 +412,7 @@ export default function Home() {
             3 MINUTES TO SET UP. SHOWS UP EVERY MORNING. REMEMBERS EVERYTHING. GETS BETTER EVERY DAY.
           </p>
           <button className="k-btn k-btn-lime" onClick={go("/onboarding")} style={{ padding: "19px 46px", fontSize: 16, display: "inline-flex", alignItems: "center", gap: 12 }}>
-            <MessageCircle size={19} strokeWidth={2.4} /> Start for free on WhatsApp
+            <MessageCircle size={19} strokeWidth={2.4} /> Start for free
           </button>
           <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, color: "var(--k-paper)", opacity: 0.45, marginTop: 18, letterSpacing: 0.5 }}>NO APP. NO CARD. NO CATCH.</p>
         </div>
@@ -427,7 +427,7 @@ export default function Home() {
                 <Image src="/kyroo-logo.png" alt="KYROO" width={28} height={28} style={{ borderRadius: "50%", border: "2px solid var(--k-paper)", objectFit: "cover" }} />
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 22 }}>KYROO</div>
               </div>
-              <p style={{ fontSize: 13, opacity: 0.55, maxWidth: 220, lineHeight: 1.75 }}>Your second brain, with a heart. Fitness, money, mind, sleep, all in one WhatsApp chat.</p>
+              <p style={{ fontSize: 13, opacity: 0.55, maxWidth: 220, lineHeight: 1.75 }}>Your second brain, with a heart. Fitness, money, mind, sleep, all in one chat.</p>
             </div>
             {[
               { label: "Product", links: ["Features", "Pricing", "How it works"] },

@@ -105,7 +105,7 @@ export default function PricingClient() {
           });
           const result = await verify.json();
           if (result.status === "success") setTopupDone(true);
-          else setTopupError("Payment went through but we couldn't confirm it — message KYROO on WhatsApp and we'll sort it out.");
+          else setTopupError("Payment went through but we couldn't confirm it — message KYROO in chat and we'll sort it out.");
         },
         theme: { color: "#ff4a2e" },
         modal: { ondismiss: () => setToppingUp(false) },
@@ -193,7 +193,7 @@ export default function PricingClient() {
             <div style={{ fontFamily: "var(--font-display)", fontSize: 17, marginBottom: 4, textTransform: "uppercase" }}>Need more messages today?</div>
             <div style={{ fontSize: 13, opacity: 0.65 }}>
               {topupDone
-                ? "Added! Go back to WhatsApp and message KYROO — you're good to go."
+                ? "Added! Go back to chat and message KYROO — you're good to go."
                 : "₹49 for 25 extra messages, right now, no subscription needed."}
             </div>
             {topupError && <div style={{ fontSize: 12.5, color: "var(--k-coral)", marginTop: 8 }}>{topupError}</div>}
