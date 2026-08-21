@@ -382,6 +382,80 @@ export default function LandingChat() {
     }
   `;
 
+  // Shared between the centered empty-state layout and the bottom-pinned
+  // one that takes over once a conversation starts — same composer either
+  // way, just repositioned by its parent.
+  const composer = (
+    <div style={{ position: "relative", width: "100%", maxWidth: 560, margin: "0 auto" }}>
+      {showEmojiPicker && (
+        <div
+          style={{
+            position: "absolute", bottom: "100%", left: "50%", transform: "translateX(-50%)", marginBottom: 8,
+            background: "var(--k-paper)", border: "3px solid var(--k-ink)", boxShadow: "6px 6px 0 var(--k-ink)", padding: 10,
+            display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4, width: "100%",
+          }}
+        >
+          {EMOJI_OPTIONS.map((emoji) => (
+            <button key={emoji} onClick={() => addEmoji(emoji)} style={{ background: "transparent", border: "none", fontSize: 22, padding: 8, cursor: "pointer" }}>
+              {emoji}
+            </button>
+          ))}
+        </div>
+      )}
+      {pendingImage && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <div style={{ position: "relative" }}>
+            <img src={pendingImage.previewUrl} alt="preview" style={{ height: 56, width: 56, objectFit: "cover", border: "2.5px solid var(--k-ink)" }} />
+            <button
+              onClick={() => setPendingImage(null)}
+              style={{ position: "absolute", top: -8, right: -8, width: 20, height: 20, borderRadius: "50%", background: "var(--k-coral)", color: "#fff", border: "2px solid var(--k-ink)", fontSize: 12, cursor: "pointer", lineHeight: "16px" }}
+              type="button"
+            >
+              ×
+            </button>
+          </div>
+          <span style={{ fontSize: 12, opacity: 0.55 }}>Add a caption or just hit send</span>
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 8 }}>
+        <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageSelect} />
+        <button onClick={() => fileInputRef.current?.click()} className="k-icon-btn" style={{ background: pendingImage ? "var(--k-lime)" : "var(--k-paper)" }} type="button">
+          <Camera size={18} strokeWidth={2} />
+        </button>
+        <button onClick={() => setShowEmojiPicker((v) => !v)} className="k-icon-btn" style={{ background: showEmojiPicker ? "var(--k-lime)" : "var(--k-paper)" }} type="button">
+          <Smile size={18} strokeWidth={2} />
+        </button>
+        {voiceSupported && (
+          <button onClick={toggleVoiceInput} className="k-icon-btn" style={{ background: listening ? "var(--k-coral)" : "var(--k-paper)", color: listening ? "#fff" : "var(--k-ink)" }} type="button">
+            {listening ? <Square size={16} strokeWidth={2} /> : <Mic size={18} strokeWidth={2} />}
+          </button>
+        )}
+        <textarea
+          className="k-input"
+          style={{ flex: 1, resize: "none", maxHeight: 120 }}
+          placeholder="Message..."
+          value={input}
+          rows={Math.min(5, input.split("\n").length)}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              sendMessage();
+            }
+          }}
+        />
+        <button
+          onClick={sendMessage}
+          disabled={!input.trim() && !pendingImage}
+          className="k-btn k-btn-lime"
+          style={{ width: 48, height: 48, padding: 0, fontSize: 18, flexShrink: 0 }}
+        >
+          →
+        </button>
+      </div>
+    </div>
+  );
+
   if (mode === "checking") {
     return <div style={{ background: "var(--k-paper)", minHeight: "100vh" }} />;
   }
@@ -500,15 +574,27 @@ export default function LandingChat() {
         </div>
       </div>
 
+      {messages.length === 0 && !capReached ? (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px", gap: 28 }}>
+          <div style={{ textAlign: "center", maxWidth: 480 }}>
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,5vw,44px)", letterSpacing: -1, textTransform: "uppercase", lineHeight: 1.1, marginBottom: 14 }}>
+              {isGuest ? (
+                <>What&apos;s on your <span style={{ color: "var(--k-coral)" }}>mind?</span></>
+              ) : (
+                <>How can I help, <span style={{ color: "var(--k-coral)" }}>{userName}</span>?</>
+              )}
+            </h1>
+            <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, opacity: 0.55, lineHeight: 1.8 }}>
+              {isGuest
+                ? `Try Hinglish, Gen-Z slang, or plain English · First ${GUEST_MESSAGE_CAP} messages free, no signup`
+                : "Try Hinglish, Gen-Z slang, or plain English and see how it adapts"}
+            </p>
+          </div>
+          {composer}
+        </div>
+      ) : (
       <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px" }}>
         <div style={{ maxWidth: 560, margin: "0 auto" }}>
-          {messages.length === 0 && (
-            <div style={{ textAlign: "center", opacity: 0.55, fontSize: 13, lineHeight: 1.7, marginTop: 40, fontFamily: "var(--font-mono-tag)", textTransform: "uppercase", letterSpacing: 0.3 }}>
-              {isGuest
-                ? `Say hi to KYROO — try Hinglish, Gen-Z slang, or plain English.\nFirst ${GUEST_MESSAGE_CAP} messages are free, no signup needed.`
-                : "Say hi to KYROO — try Hinglish, Gen-Z slang, or plain English and see how it adapts."}
-            </div>
-          )}
           {messages.map((m, i) => (
             <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", marginBottom: 10 }}>
               <div
@@ -565,75 +651,11 @@ export default function LandingChat() {
           <div ref={bottomRef} />
         </div>
       </div>
+      )}
 
-      {!capReached && (
-        <div style={{ padding: "14px 16px", borderTop: "3px solid var(--k-ink)", position: "relative", background: "var(--k-paper)" }}>
-          {showEmojiPicker && (
-            <div
-              style={{
-                position: "absolute", bottom: "100%", left: "50%", transform: "translateX(-50%)", marginBottom: 8,
-                background: "var(--k-paper)", border: "3px solid var(--k-ink)", boxShadow: "6px 6px 0 var(--k-ink)", padding: 10,
-                display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4, maxWidth: 560, width: "calc(100% - 32px)",
-              }}
-            >
-              {EMOJI_OPTIONS.map((emoji) => (
-                <button key={emoji} onClick={() => addEmoji(emoji)} style={{ background: "transparent", border: "none", fontSize: 22, padding: 8, cursor: "pointer" }}>
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          )}
-          {pendingImage && (
-            <div style={{ maxWidth: 560, margin: "0 auto 10px", display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ position: "relative" }}>
-                <img src={pendingImage.previewUrl} alt="preview" style={{ height: 56, width: 56, objectFit: "cover", border: "2.5px solid var(--k-ink)" }} />
-                <button
-                  onClick={() => setPendingImage(null)}
-                  style={{ position: "absolute", top: -8, right: -8, width: 20, height: 20, borderRadius: "50%", background: "var(--k-coral)", color: "#fff", border: "2px solid var(--k-ink)", fontSize: 12, cursor: "pointer", lineHeight: "16px" }}
-                  type="button"
-                >
-                  ×
-                </button>
-              </div>
-              <span style={{ fontSize: 12, opacity: 0.55 }}>Add a caption or just hit send</span>
-            </div>
-          )}
-          <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", gap: 8 }}>
-            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageSelect} />
-            <button onClick={() => fileInputRef.current?.click()} className="k-icon-btn" style={{ background: pendingImage ? "var(--k-lime)" : "var(--k-paper)" }} type="button">
-              <Camera size={18} strokeWidth={2} />
-            </button>
-            <button onClick={() => setShowEmojiPicker((v) => !v)} className="k-icon-btn" style={{ background: showEmojiPicker ? "var(--k-lime)" : "var(--k-paper)" }} type="button">
-              <Smile size={18} strokeWidth={2} />
-            </button>
-            {voiceSupported && (
-              <button onClick={toggleVoiceInput} className="k-icon-btn" style={{ background: listening ? "var(--k-coral)" : "var(--k-paper)", color: listening ? "#fff" : "var(--k-ink)" }} type="button">
-                {listening ? <Square size={16} strokeWidth={2} /> : <Mic size={18} strokeWidth={2} />}
-              </button>
-            )}
-            <textarea
-              className="k-input"
-              style={{ flex: 1, resize: "none", maxHeight: 120 }}
-              placeholder="Message..."
-              value={input}
-              rows={Math.min(5, input.split("\n").length)}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  sendMessage();
-                }
-              }}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={!input.trim() && !pendingImage}
-              className="k-btn k-btn-lime"
-              style={{ width: 48, height: 48, padding: 0, fontSize: 18, flexShrink: 0 }}
-            >
-              →
-            </button>
-          </div>
+      {!capReached && messages.length > 0 && (
+        <div style={{ padding: "14px 16px", borderTop: "3px solid var(--k-ink)", background: "var(--k-paper)" }}>
+          {composer}
         </div>
       )}
     </div>
