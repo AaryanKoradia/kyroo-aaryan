@@ -576,15 +576,15 @@ export default function LandingChat() {
 
       {messages.length === 0 && !capReached ? (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px", gap: 28 }}>
-          <div style={{ textAlign: "center", maxWidth: 480 }}>
-            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,5vw,44px)", letterSpacing: -1, textTransform: "uppercase", lineHeight: 1.1, marginBottom: 14 }}>
+          <div style={{ textAlign: "center", maxWidth: 720, padding: "0 16px" }}>
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(24px,4vw,40px)", letterSpacing: -1, textTransform: "uppercase", lineHeight: 1.1, marginBottom: 14 }}>
               {isGuest ? (
                 <>What&apos;s on your <span style={{ color: "var(--k-coral)" }}>mind?</span></>
               ) : (
                 <>How can I help, <span style={{ color: "var(--k-coral)" }}>{userName}</span>?</>
               )}
             </h1>
-            <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, opacity: 0.55, lineHeight: 1.8 }}>
+            <p style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, opacity: 0.55, lineHeight: 1.8, maxWidth: 480, margin: "0 auto" }}>
               {isGuest
                 ? `Try Hinglish, Gen-Z slang, or plain English · First ${GUEST_MESSAGE_CAP} messages free, no signup`
                 : "Try Hinglish, Gen-Z slang, or plain English and see how it adapts"}
