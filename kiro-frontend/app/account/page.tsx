@@ -190,7 +190,7 @@ export default function AccountPage() {
         {!account && (
           <>
             <p style={{ fontSize: 14, opacity: 0.65, lineHeight: 1.7, marginBottom: 32 }}>
-              Enter the phone number and email you signed up with. We&apos;ll send a code to your email to confirm it&apos;s you. Looking to chat with KYROO instead of managing your account? <a href="/chat" style={{ color: "var(--k-coral)" }}>Log in to chat</a>.
+              Enter the phone number and email you signed up with. We&apos;ll send a code to your email to confirm it&apos;s you. Looking to chat with KYROO instead of managing your account? <a href="/" style={{ color: "var(--k-coral)" }}>Log in to chat</a>.
             </p>
 
             <label style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 8 }}>
@@ -300,7 +300,7 @@ export default function AccountPage() {
 
             <button
               className="k-btn k-btn-lime"
-              onClick={() => { window.location.href = "/chat"; }}
+              onClick={() => { window.location.href = "/"; }}
               style={{ width: "100%", marginBottom: 10 }}
             >
               Continue to chat →

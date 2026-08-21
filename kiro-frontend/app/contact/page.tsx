@@ -26,7 +26,7 @@ export default function Contact() {
 
         <div className="k-card" style={{ border: "3px solid var(--k-ink)", boxShadow: "6px 6px 0 var(--k-ink)", padding: 22, background: "var(--k-paper)" }}>
           <div style={{ fontFamily: "var(--font-mono-tag)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, opacity: 0.55, marginBottom: 8 }}>Already using KYROO?</div>
-          <p style={{ fontSize: 14, lineHeight: 1.7 }}>Just message KYROO directly in <a href="/chat" style={{ color: "var(--k-coral)" }}>chat</a>, that's the fastest way to reach us for anything account-related.</p>
+          <p style={{ fontSize: 14, lineHeight: 1.7 }}>Just message KYROO directly in <a href="/" style={{ color: "var(--k-coral)" }}>chat</a>, that's the fastest way to reach us for anything account-related.</p>
         </div>
       </div>
     </main>

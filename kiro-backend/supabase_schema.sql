@@ -115,6 +115,22 @@ create table if not exists chat_sessions (
 );
 create index if not exists idx_chat_sessions_user on chat_sessions(user_id);
 
+-- ─── guest_rate_limit ──────────────────────────────────────────────────────
+-- Anonymous landing-page chat (try KYROO for 5 messages before signing up)
+-- hits the real brain - real Claude calls, real cost - before anyone has
+-- proven they're a real person. A guest identity itself doesn't gate that
+-- (app/'s POST /chat/guest/start mints a fresh one on request), so this
+-- throttles session CREATION by IP instead: a generous cap (see
+-- GUEST_SESSIONS_PER_IP_PER_DAY in app/api/routes/chat.py) that a shared
+-- office/campus IP won't realistically hit, but a script minting sessions
+-- for free API usage will.
+create table if not exists guest_rate_limit (
+    id          uuid primary key default gen_random_uuid(),
+    ip_address  text not null,
+    created_at  timestamptz default now()
+);
+create index if not exists idx_guest_rate_limit_ip on guest_rate_limit(ip_address, created_at desc);
+
 -- ─── processed_messages ────────────────────────────────────────────────────
 -- Dedup guard for Meta's WhatsApp webhook: Meta redelivers the identical
 -- payload (same message id) if it doesn't get a fast 200 back, and without
@@ -386,12 +402,13 @@ alter table memory_embeddings  enable row level security;
 alter table sent_nudges        enable row level security;
 alter table message_usage      enable row level security;
 alter table chat_sessions      enable row level security;
+alter table guest_rate_limit   enable row level security;
 
 do $$
 declare
     t text;
 begin
-    foreach t in array array['users','chat_history','user_tracking','weekly_reports','reminders','emotional_memory','user_style','memory_embeddings','sent_nudges','message_usage','chat_sessions']
+    foreach t in array array['users','chat_history','user_tracking','weekly_reports','reminders','emotional_memory','user_style','memory_embeddings','sent_nudges','message_usage','chat_sessions','guest_rate_limit']
     loop
         execute format('drop policy if exists "service_role_all_%s" on %I;', t, t);
         execute format(

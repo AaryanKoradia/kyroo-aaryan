@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from database import get_db
+from guest_merge import merge_guest_into_user, resolve_guest
 from routes.otp import is_recently_verified, send_otp_code
 from rate_limit import limiter
 
@@ -51,6 +52,7 @@ async def login_start(request: Request, req: LoginStartRequest):
 
 class LoginRequest(BaseModel):
     email: str
+    guest_token: str = ""
 
 
 @router.post("/login")
@@ -66,12 +68,21 @@ async def login(request: Request, req: LoginRequest):
     same token directly against chat_sessions (shared Supabase DB, no
     cross-service call needed). Email alone identifies the account —
     unlike /users/account's phone+email pair, this isn't a lookup form,
-    it's a login, so one verified credential is enough."""
+    it's a login, so one verified credential is enough.
+
+    guest_token: if someone hit the landing-page trial's 5-message cap
+    and logged into an EXISTING account (rather than signing up fresh,
+    which just upgrades the guest row in place — see /users/signup), fold
+    their trial chat history into the real account instead of losing it."""
     db = get_db()
     user = _find_user_by_email(db, req.email)
 
     if not is_recently_verified(req.email.strip().lower()):
         raise HTTPException(status_code=403, detail="Please verify your email first")
+
+    guest = resolve_guest(db, req.guest_token)
+    if guest:
+        merge_guest_into_user(db, guest["id"], user["id"])
 
     token = secrets.token_urlsafe(32)
     expires_at = (datetime.now(timezone.utc) + timedelta(days=SESSION_TTL_DAYS)).isoformat()

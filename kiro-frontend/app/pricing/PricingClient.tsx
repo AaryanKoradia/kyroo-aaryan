@@ -136,7 +136,7 @@ export default function PricingClient() {
           <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>KYROO<span style={{ color: "var(--k-coral)" }}>.</span></div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button className="k-btn" onClick={() => window.location.href = "/chat"} style={{ padding: "9px 16px", fontSize: 12, background: "var(--k-paper)", color: "var(--k-ink)" }}>Log in</button>
+          <button className="k-btn" onClick={() => window.location.href = "/"} style={{ padding: "9px 16px", fontSize: 12, background: "var(--k-paper)", color: "var(--k-ink)" }}>Log in</button>
           <button className="k-btn k-btn-lime" onClick={() => window.location.href = "/onboarding"} style={{ padding: "9px 18px", fontSize: 12 }}>Start free →</button>
         </div>
       </nav>

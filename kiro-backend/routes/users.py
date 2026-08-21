@@ -1,8 +1,14 @@
+import secrets
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from database import get_db
+from guest_merge import resolve_guest
 from routes.otp import is_email_verified, is_recently_verified
 from rate_limit import limiter
+
+CHAT_SESSION_TTL_DAYS = 30  # keep in sync with routes/auth.py's SESSION_TTL_DAYS
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -43,6 +49,7 @@ class UserSignup(BaseModel):
     eat_habits: list[str] = []
     diet_restrictions: str = ""
     job_type: str = ""
+    guest_token: str = ""
 
 @router.post("/signup")
 @limiter.limit("10/hour")
@@ -56,6 +63,7 @@ async def signup(request: Request, user: UserSignup):
         # /otp/send + /otp/verify — the frontend gate alone isn't enough
         raise HTTPException(status_code=400, detail="Email not verified. Please verify your email first.")
     phone = normalize_phone(user.phone)
+    guest = resolve_guest(db, user.guest_token)
     fields = {
         "name": user.name,
         "email": user.email,
@@ -85,30 +93,50 @@ async def signup(request: Request, user: UserSignup):
         "onboarding_step": 99,
     }
 
-    # If this phone already has a row — e.g. they messaged KYROO on WhatsApp
-    # first and got sent here to finish setup, which creates a row with
-    # onboarding_step=-1 — finish THAT row instead of inserting a second
-    # one. Otherwise the WhatsApp webhook can keep reading the old,
-    # unregistered row (it has no way to know this new one is "them"),
-    # and re-sends the registration link even though signup just completed.
-    existing_by_phone = (
-        db.table("users").select("id")
-        .eq("phone", phone)
-        .order("onboarding_step", desc=True)
-        .order("created_at", desc=True)
-        .limit(1)
-        .execute()
-    )
-    if existing_by_phone.data:
-        user_id = existing_by_phone.data[0]["id"]
+    if guest:
+        # They chatted anonymously on the landing page before signing up —
+        # finish THAT row in place instead of inserting a new one, so the
+        # trial messages already in chat_history are just theirs, no
+        # separate merge step needed (unlike logging into an EXISTING
+        # account with a guest_token, which does need one — see
+        # /auth/login).
+        user_id = guest["id"]
         db.table("users").update(fields).eq("id", user_id).execute()
     else:
-        new_user = db.table("users").insert(fields).execute()
-        user_id = new_user.data[0]["id"]
+        # If this phone already has a row — e.g. they messaged KYROO on
+        # WhatsApp first and got sent here to finish setup, which creates a
+        # row with onboarding_step=-1 — finish THAT row instead of
+        # inserting a second one. Otherwise the WhatsApp webhook can keep
+        # reading the old, unregistered row (it has no way to know this new
+        # one is "them"), and re-sends the registration link even though
+        # signup just completed.
+        existing_by_phone = (
+            db.table("users").select("id")
+            .eq("phone", phone)
+            .order("onboarding_step", desc=True)
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+        if existing_by_phone.data:
+            user_id = existing_by_phone.data[0]["id"]
+            db.table("users").update(fields).eq("id", user_id).execute()
+        else:
+            new_user = db.table("users").insert(fields).execute()
+            user_id = new_user.data[0]["id"]
+
+    # Issued right away so the frontend can drop straight into authenticated
+    # chat post-signup instead of a separate log-in step — the whole point
+    # of chat-first landing is that the transition from guest to real
+    # account shouldn't feel like starting over.
+    token = secrets.token_urlsafe(32)
+    expires_at = (datetime.now(timezone.utc) + timedelta(days=CHAT_SESSION_TTL_DAYS)).isoformat()
+    db.table("chat_sessions").insert({"token": token, "user_id": user_id, "expires_at": expires_at}).execute()
 
     return {
         "message": f"Welcome to KYROO, {user.name}!",
         "user_id": user_id,
+        "token": token,
         "status": "success"
     }
 

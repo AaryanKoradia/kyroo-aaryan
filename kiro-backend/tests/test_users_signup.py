@@ -28,7 +28,10 @@ def test_existing_phone_is_updated_not_duplicated():
     update_fields = mock_users_table.update.call_args[0][0]
     assert update_fields["onboarding_step"] == 99
     assert update_fields["phone"] == "919876543210"
-    mock_users_table.insert.assert_not_called()
+    # the one insert() call is the chat_sessions token issued on completion
+    # (see routes/users.py) - the user row itself was updated, not inserted
+    mock_users_table.insert.assert_called_once()
+    assert "token" in result
 
 
 def test_brand_new_phone_still_inserts():
@@ -48,7 +51,10 @@ def test_brand_new_phone_still_inserts():
 
     assert result["user_id"] == "brand-new-id"
     mock_users_table.update.assert_not_called()
-    mock_users_table.insert.assert_called_once()
+    # two inserts: the new user row, then the chat_sessions token issued
+    # on completion (see routes/users.py)
+    assert mock_users_table.insert.call_count == 2
+    assert "token" in result
 
 
 def test_normalize_phone_variants():
