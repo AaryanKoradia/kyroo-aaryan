@@ -267,6 +267,19 @@ export default function ChatPage() {
       }
       const data = await res.json();
 
+      // fetch() doesn't throw on a non-2xx status (only on a network
+      // failure), so a 500 was silently falling through to the "(no
+      // response)" placeholder below instead of showing what actually
+      // happened.
+      if (!res.ok) {
+        setMessages((m) => [
+          ...m,
+          { role: "kyroo", text: data.detail || "Something went wrong on my end, try sending that again?" },
+        ]);
+        setSending(false);
+        return;
+      }
+
       if (data.status === "needs_onboarding") {
         setMessages((m) => [
           ...m,
