@@ -38,7 +38,7 @@ export default function Payment() {
 
   const handlePayment = async () => {
     if (selectedPlan === "free") {
-      window.location.href = "/chat";
+      window.location.href = "/";
       return;
     }
     if (!userId && !phone) {

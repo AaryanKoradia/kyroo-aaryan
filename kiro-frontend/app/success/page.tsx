@@ -42,7 +42,7 @@ export default function Success() {
           </p>
         </div>
 
-        <button className="k-btn k-btn-lime" onClick={() => window.location.href = "/chat"}>
+        <button className="k-btn k-btn-lime" onClick={() => window.location.href = "/"}>
           Start chatting →
         </button>
       </div>

@@ -299,6 +299,7 @@ export default function Onboarding() {
     setLoading(true);
     setFinishError("");
     try {
+      const guestToken = localStorage.getItem("kyroo_guest_token") || "";
       const res = await fetch(`${BACKEND_URL}/users/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -322,7 +323,8 @@ export default function Onboarding() {
           income_range: incomeRange,
           eat_habits: selectedEatHabits,
           diet_restrictions: dietRestrictions,
-          job_type: selectedJobType
+          job_type: selectedJobType,
+          guest_token: guestToken,
         })
       });
       const data = await res.json();
@@ -334,6 +336,15 @@ export default function Onboarding() {
       localStorage.setItem("kiro_user_id", data.user_id);
       localStorage.setItem("kiro_user_name", name);
       localStorage.setItem("kiro_nudge_time", nudgeTime);
+      // Drops straight into authenticated chat post-signup instead of a
+      // separate log-in step — /users/signup issues this token itself
+      // (see kiro-backend/routes/users.py), and if a guest trial was in
+      // progress, the same account row picks up right where it left off.
+      if (data.token) {
+        localStorage.setItem("kyroo_chat_token", data.token);
+        localStorage.setItem("kyroo_chat_name", name);
+      }
+      localStorage.removeItem("kyroo_guest_token");
     } catch (err) {
       console.error(err);
       setFinishError("Couldn't reach the server, try again.");
@@ -341,7 +352,7 @@ export default function Onboarding() {
       return;
     }
     setLoading(false);
-    window.location.href = "/pricing";
+    window.location.href = "/";
   };
 
   const s: React.CSSProperties = {
@@ -504,7 +515,7 @@ export default function Onboarding() {
             {alreadyRegistered && (
               <div style={{ background: "var(--k-lime)", border: "3px solid var(--k-ink)", boxShadow: "4px 4px 0 var(--k-ink)", padding: "14px 16px", marginBottom: 16, fontSize: 13, lineHeight: 1.65, transform: "rotate(-0.6deg)" }}>
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 15, marginBottom: 6, textTransform: "uppercase" }}>Welcome back</div>
-                This email already has a KYROO account. No need to sign up again, just <a href="/chat" style={{ color: "var(--k-ink)", textDecoration: "underline" }}>log in and start chatting</a>.
+                This email already has a KYROO account. No need to sign up again, just <a href="/" style={{ color: "var(--k-ink)", textDecoration: "underline" }}>log in and start chatting</a>.
               </div>
             )}
 
@@ -702,7 +713,7 @@ export default function Onboarding() {
           {step === 1 && alreadyRegistered ? (
             <button
               className="k-onb-btn"
-              onClick={() => { window.location.href = "/chat"; }}
+              onClick={() => { window.location.href = "/"; }}
               style={{ flex: 1, height: 52, fontSize: 15, background: "var(--k-lime)", color: "var(--k-ink)" }}>
               Continue to chat →
             </button>
@@ -712,7 +723,7 @@ export default function Onboarding() {
               onClick={handleNext}
               disabled={loading}
               style={{ flex: 1, height: 52, fontSize: 15, background: "var(--k-lime)", color: "var(--k-ink)" }}>
-              {loading ? "Setting up KYROO..." : step === 10 ? "Choose your plan →" : step === 1 ? "Let's go! →" : "Next →"}
+              {loading ? "Setting up KYROO..." : step === 10 ? "Start chatting →" : step === 1 ? "Let's go! →" : "Next →"}
             </button>
           )}
         </div>
